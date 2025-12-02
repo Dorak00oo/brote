@@ -1,0 +1,49 @@
+{
+  "entorno": {
+    "fondo_y_paisaje": {
+      "cielo_dia": "#E1F5FE",
+      "cielo_tarde": "#B3E5FC",
+      "cielo_acento_nubes": "#FFFFFF",
+      "pasto_base_suelo": "#DCEDC8",
+      "colina_fondo_lejana": "#C5E1A5",
+      "colina_primer_plano": "#AED581",
+      "tierra_camino": "#F5F5F5",
+      "madera_cercas_granero": "#8D6E63",
+      "madera_oscura_bordes": "#5D4037"
+    }
+  },
+  "personajes": {
+    "animales": {
+      "vaca_cuerpo": "#FAFAFA",
+      "vaca_manchas": "#37474F",
+      "cerdito_piel": "#F8BBD0",
+      "cerdito_hocico_orejas": "#F06292",
+      "pollito_pato": "#FFF176",
+      "pico_patas_naranjas": "#FFB74D",
+      "oveja_lana": "#F5F5F5"
+    }
+  },
+  "cultivos": {
+    "vegetacion": {
+      "hoja_planta_joven": "#81C784",
+      "hoja_planta_madura": "#43A047",
+      "tomate_fruto_rojo": "#EF5350",
+      "zanahoria": "#FF7043",
+      "maiz_trigo": "#FFD54F",
+      "berenjena": "#9575CD"
+    }
+  },
+  "interfaz": {
+    "ui_y_finanzas": {
+      "color_primario_botones_accion": "#66BB6A",
+      "color_secundario_botones_cancelar": "#FFAB91",
+      "texto_principal_titulos": "#263238",
+      "texto_secundario_subtitulos": "#78909C",
+      "dinero_monedas_gold": "#FFCA28",
+      "borde_monedas_brillo": "#FF6F00",
+      "alerta_error_gastos_excesivos": "#E57373",
+      "graficos_barra_progreso": "#29B6F6"
+    }
+  }
+}
+

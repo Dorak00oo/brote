@@ -1,0 +1,70 @@
+<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g id="tree" transform="translate(300, 250)">
+        <path d="M-15 0 L-10 -80 L10 -80 L15 0 Z" fill="#8D6E63"/>
+        <g transform="translate(0, -90)">
+            <circle cx="0" cy="-20" r="50" fill="#43A047"/>
+            <circle cx="-40" cy="10" r="40" fill="#43A047"/>
+            <circle cx="40" cy="10" r="40" fill="#43A047"/>
+            <circle cx="-30" cy="-30" r="35" fill="#66BB6A"/>
+            <circle cx="30" cy="-30" r="35" fill="#66BB6A"/>
+        </g>
+    </g>
+
+    <ellipse cx="300" cy="300" rx="220" ry="50" fill="#C5E1A5"/>
+
+    <g id="decorations">
+        <g transform="translate(120, 280)">
+            <circle cx="0" cy="0" r="25" fill="#FFEB3B"/> 
+            <circle cx="0" cy="0" r="40" stroke="#FBC02D" stroke-width="12" stroke-dasharray="15 8"/> 
+        </g>
+        <g transform="translate(480, 280)">
+            <circle cx="0" cy="0" r="25" fill="#FFEB3B"/>
+            <circle cx="0" cy="0" r="40" stroke="#FBC02D" stroke-width="12" stroke-dasharray="15 8"/>
+        </g>
+    </g>
+    
+    <g id="small_flowers">
+        <defs>
+            <g id="flowerWhite">
+                <circle r="4" fill="#FFD54F"/>
+                <circle cx="6" r="4" fill="#FFFFFF"/> <circle cx="-6" r="4" fill="#FFFFFF"/>
+                <circle cy="6" r="4" fill="#FFFFFF"/> <circle cy="-6" r="4" fill="#FFFFFF"/>
+            </g>
+             <g id="flowerYellow">
+                <circle r="4" fill="#FFFFFF"/>
+                <circle cx="6" r="4" fill="#FFEB3B"/> <circle cx="-6" r="4" fill="#FFEB3B"/>
+                <circle cy="6" r="4" fill="#FFEB3B"/> <circle cy="-6" r="4" fill="#FFEB3B"/>
+            </g>
+        </defs>
+        <use href="#flowerWhite" x="180" y="280"/> <use href="#flowerYellow" x="220" y="310"/>
+        <use href="#flowerWhite" x="250" y="270"/> <use href="#flowerYellow" x="280" y="330"/>
+        <use href="#flowerWhite" x="320" y="280"/> <use href="#flowerYellow" x="350" y="310"/>
+        <use href="#flowerWhite" x="380" y="270"/> <use href="#flowerYellow" x="420" y="290"/>
+        <use href="#flowerWhite" x="200" y="320"/> <use href="#flowerYellow" x="400" y="330"/>
+    </g>
+
+    <g transform="translate(200, 220)">
+        <rect x="0" y="0" width="70" height="60" rx="15" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="2"/>
+        
+        <circle cx="15" cy="50" r="8" fill="#37474F"/>
+        
+        <rect x="15" y="25" width="40" height="20" rx="10" fill="#FFAB91"/>
+        <circle cx="20" cy="15" r="4" fill="#333333"/> <circle cx="50" cy="15" r="4" fill="#333333"/>
+    </g>
+
+    <g transform="translate(300, 240)">
+        <circle cx="0" cy="10" r="30" fill="#FFF176"/>
+        <polygon points="0,0 8,10 -8,10" fill="#FF9800"/>
+        <circle cx="-10" cy="-10" r="3" fill="#333333"/> <circle cx="10" cy="-10" r="3" fill="#333333"/>
+    </g>
+
+    <g transform="translate(400, 230)">
+         <ellipse cx="0" cy="20" rx="35" ry="30" fill="#F8BBD0"/>
+         <ellipse cx="0" cy="0" rx="30" ry="25" fill="#F8BBD0"/>
+         <ellipse cx="0" cy="5" rx="12" ry="8" fill="#F06292"/>
+         <circle cx="-5" cy="5" r="2" fill="#880E4F"/> <circle cx="5" cy="5" r="2" fill="#880E4F"/>
+         <circle cx="-15" cy="-5" r="3" fill="#333333"/> <circle cx="15" cy="-5" r="3" fill="#333333"/>
+         <path d="M-20 -15 L-30 0 L-15 0 Z" fill="#F8BBD0" transform="rotate(-30)"/>
+         <path d="M20 -15 L30 0 L15 0 Z" fill="#F8BBD0" transform="rotate(30)"/>
+    </g>
+</svg>

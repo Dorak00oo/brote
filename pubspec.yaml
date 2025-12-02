@@ -1,0 +1,87 @@
+name: brote
+description: Aplicación de gestión financiera personal
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI
+  cupertino_icons: ^1.0.6
+  google_fonts: ^6.1.0
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # Database - Drift
+  drift: ^2.14.1
+  sqlite3_flutter_libs: ^0.5.18
+  path: ^1.8.3
+  
+  # Charts
+  fl_chart: ^0.66.0
+  
+  # Icons
+  flutter_svg: ^2.0.9
+  
+  # Date formatting
+  intl: ^0.19.0
+  
+  # Excel export
+  excel: ^3.0.0
+  
+  # PDF export
+  pdf: ^3.10.7
+  printing: ^5.12.0
+  
+  # File picker
+  file_picker: ^8.1.0
+  path_provider: ^2.1.1
+  
+  # Share & Open files
+  share_plus: ^7.2.1
+  open_filex: ^4.3.4
+  
+  # Table
+  data_table_2: ^2.5.15
+  
+  # Rive animations
+  rive: ^0.13.0
+  
+  # Local notifications
+  flutter_local_notifications: ^17.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  drift_dev: ^2.14.1
+  build_runner: ^2.4.7
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/brote_icon.png"
+  adaptive_icon_background: "#FAFAFA"
+  adaptive_icon_foreground: "assets/icon/brote_icon.png"
+
+flutter:
+  uses-material-design: true
+  
+  # Assets
+  assets:
+    - assets/icon/
+    - assets/animations/
+    - assets/images/vectors/farm/farm_background.svg
+    - assets/images/vectors/farm/cards/harvest_basket_stats.svg
+    - assets/images/vectors/farm/cards/selection_trio_header.svg
+    - assets/images/vectors/farm/animals/cow/cow_phase_1.svg
+    - assets/images/vectors/farm/animals/cow/cow_phase_2.svg
+    - assets/images/vectors/farm/animals/cow/cow_phase_3.svg
+    - assets/images/vectors/farm/animals/cow/cow_phase_4.svg
+

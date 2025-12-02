@@ -1,0 +1,29 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="95" fill="#FFF176"/>
+    <circle cx="100" cy="100" r="85" fill="#FFD54F"/>
+    
+    <rect x="60" y="90" width="80" height="60" rx="15" fill="#FFFFFF"/>
+    <rect x="75" y="130" width="12" height="35" fill="#FFFFFF"/>
+    <rect x="113" y="130" width="12" height="35" fill="#FFFFFF"/>
+    
+    <circle cx="80" cy="120" r="10" fill="#2E7D32"/>
+    <circle cx="120" cy="105" r="8" fill="#2E7D32"/>
+
+    <rect x="70" y="60" width="60" height="50" rx="12" fill="#FFFFFF"/>
+    
+    <path d="M72 62 Q65 50 75 45" stroke="#5D4037" stroke-width="4" stroke-linecap="round"/>
+    <path d="M128 62 Q135 50 125 45" stroke="#5D4037" stroke-width="4" stroke-linecap="round"/>
+
+    <circle cx="100" cy="115" r="12" fill="#FFA000"/>
+    <circle cx="100" cy="115" r="8" fill="#FFD700"/>
+    <path d="M96 112 L104 112" stroke="#B71C1C" stroke-width="2"/>
+
+    <rect x="82" y="90" width="36" height="18" rx="8" fill="#FFAB91"/>
+    <path d="M90 100 Q100 105 110 100" stroke="#B71C1C" stroke-width="2" fill="none"/>
+
+    <path d="M85 80 Q90 75 95 80" stroke="#333333" stroke-width="3" fill="none"/>
+    <path d="M105 80 Q110 75 115 80" stroke="#333333" stroke-width="3" fill="none"/>
+    
+    <rect x="50" y="50" width="10" height="10" transform="rotate(45 50 50)" fill="#FFD700"/>
+    <rect x="150" y="60" width="8" height="8" transform="rotate(20 150 60)" fill="#FFD700"/>
+</svg>
