@@ -1575,6 +1575,329 @@ class CustomIncomeSourcesCompanion extends UpdateCompanion<CustomIncomeSource> {
   }
 }
 
+class $HiddenDefaultIncomeSourcesTable extends HiddenDefaultIncomeSources
+    with
+        TableInfo<$HiddenDefaultIncomeSourcesTable, HiddenDefaultIncomeSource> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HiddenDefaultIncomeSourcesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [name];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'hidden_default_income_sources';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<HiddenDefaultIncomeSource> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {name};
+  @override
+  HiddenDefaultIncomeSource map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HiddenDefaultIncomeSource(
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+    );
+  }
+
+  @override
+  $HiddenDefaultIncomeSourcesTable createAlias(String alias) {
+    return $HiddenDefaultIncomeSourcesTable(attachedDatabase, alias);
+  }
+}
+
+class HiddenDefaultIncomeSource extends DataClass
+    implements Insertable<HiddenDefaultIncomeSource> {
+  final String name;
+  const HiddenDefaultIncomeSource({required this.name});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['name'] = Variable<String>(name);
+    return map;
+  }
+
+  HiddenDefaultIncomeSourcesCompanion toCompanion(bool nullToAbsent) {
+    return HiddenDefaultIncomeSourcesCompanion(
+      name: Value(name),
+    );
+  }
+
+  factory HiddenDefaultIncomeSource.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HiddenDefaultIncomeSource(
+      name: serializer.fromJson<String>(json['name']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'name': serializer.toJson<String>(name),
+    };
+  }
+
+  HiddenDefaultIncomeSource copyWith({String? name}) =>
+      HiddenDefaultIncomeSource(
+        name: name ?? this.name,
+      );
+  HiddenDefaultIncomeSource copyWithCompanion(
+      HiddenDefaultIncomeSourcesCompanion data) {
+    return HiddenDefaultIncomeSource(
+      name: data.name.present ? data.name.value : this.name,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HiddenDefaultIncomeSource(')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => name.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HiddenDefaultIncomeSource && other.name == this.name);
+}
+
+class HiddenDefaultIncomeSourcesCompanion
+    extends UpdateCompanion<HiddenDefaultIncomeSource> {
+  final Value<String> name;
+  final Value<int> rowid;
+  const HiddenDefaultIncomeSourcesCompanion({
+    this.name = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HiddenDefaultIncomeSourcesCompanion.insert({
+    required String name,
+    this.rowid = const Value.absent(),
+  }) : name = Value(name);
+  static Insertable<HiddenDefaultIncomeSource> custom({
+    Expression<String>? name,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (name != null) 'name': name,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HiddenDefaultIncomeSourcesCompanion copyWith(
+      {Value<String>? name, Value<int>? rowid}) {
+    return HiddenDefaultIncomeSourcesCompanion(
+      name: name ?? this.name,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HiddenDefaultIncomeSourcesCompanion(')
+          ..write('name: $name, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HiddenDefaultCategoriesTable extends HiddenDefaultCategories
+    with TableInfo<$HiddenDefaultCategoriesTable, HiddenDefaultCategory> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HiddenDefaultCategoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [name];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'hidden_default_categories';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<HiddenDefaultCategory> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {name};
+  @override
+  HiddenDefaultCategory map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HiddenDefaultCategory(
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+    );
+  }
+
+  @override
+  $HiddenDefaultCategoriesTable createAlias(String alias) {
+    return $HiddenDefaultCategoriesTable(attachedDatabase, alias);
+  }
+}
+
+class HiddenDefaultCategory extends DataClass
+    implements Insertable<HiddenDefaultCategory> {
+  final String name;
+  const HiddenDefaultCategory({required this.name});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['name'] = Variable<String>(name);
+    return map;
+  }
+
+  HiddenDefaultCategoriesCompanion toCompanion(bool nullToAbsent) {
+    return HiddenDefaultCategoriesCompanion(
+      name: Value(name),
+    );
+  }
+
+  factory HiddenDefaultCategory.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HiddenDefaultCategory(
+      name: serializer.fromJson<String>(json['name']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'name': serializer.toJson<String>(name),
+    };
+  }
+
+  HiddenDefaultCategory copyWith({String? name}) => HiddenDefaultCategory(
+        name: name ?? this.name,
+      );
+  HiddenDefaultCategory copyWithCompanion(
+      HiddenDefaultCategoriesCompanion data) {
+    return HiddenDefaultCategory(
+      name: data.name.present ? data.name.value : this.name,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HiddenDefaultCategory(')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => name.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HiddenDefaultCategory && other.name == this.name);
+}
+
+class HiddenDefaultCategoriesCompanion
+    extends UpdateCompanion<HiddenDefaultCategory> {
+  final Value<String> name;
+  final Value<int> rowid;
+  const HiddenDefaultCategoriesCompanion({
+    this.name = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HiddenDefaultCategoriesCompanion.insert({
+    required String name,
+    this.rowid = const Value.absent(),
+  }) : name = Value(name);
+  static Insertable<HiddenDefaultCategory> custom({
+    Expression<String>? name,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (name != null) 'name': name,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HiddenDefaultCategoriesCompanion copyWith(
+      {Value<String>? name, Value<int>? rowid}) {
+    return HiddenDefaultCategoriesCompanion(
+      name: name ?? this.name,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HiddenDefaultCategoriesCompanion(')
+          ..write('name: $name, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SavingsGoalsTable extends SavingsGoals
     with TableInfo<$SavingsGoalsTable, SavingsGoal> {
   @override
@@ -1641,11 +1964,25 @@ class $SavingsGoalsTable extends SavingsGoals
   late final GeneratedColumn<String> color = GeneratedColumn<String>(
       'color', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _contributionFrequencyMeta =
+      const VerificationMeta('contributionFrequency');
+  @override
+  late final GeneratedColumn<String> contributionFrequency =
+      GeneratedColumn<String>('contribution_frequency', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const Constant('monthly'));
   static const VerificationMeta _notificationDaysMeta =
       const VerificationMeta('notificationDays');
   @override
   late final GeneratedColumn<String> notificationDays = GeneratedColumn<String>(
       'notification_days', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _notificationTimeMeta =
+      const VerificationMeta('notificationTime');
+  @override
+  late final GeneratedColumn<String> notificationTime = GeneratedColumn<String>(
+      'notification_time', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
@@ -1659,7 +1996,9 @@ class $SavingsGoalsTable extends SavingsGoals
         status,
         iconName,
         color,
-        notificationDays
+        contributionFrequency,
+        notificationDays,
+        notificationTime
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1726,11 +2065,23 @@ class $SavingsGoalsTable extends SavingsGoals
       context.handle(
           _colorMeta, color.isAcceptableOrUnknown(data['color']!, _colorMeta));
     }
+    if (data.containsKey('contribution_frequency')) {
+      context.handle(
+          _contributionFrequencyMeta,
+          contributionFrequency.isAcceptableOrUnknown(
+              data['contribution_frequency']!, _contributionFrequencyMeta));
+    }
     if (data.containsKey('notification_days')) {
       context.handle(
           _notificationDaysMeta,
           notificationDays.isAcceptableOrUnknown(
               data['notification_days']!, _notificationDaysMeta));
+    }
+    if (data.containsKey('notification_time')) {
+      context.handle(
+          _notificationTimeMeta,
+          notificationTime.isAcceptableOrUnknown(
+              data['notification_time']!, _notificationTimeMeta));
     }
     return context;
   }
@@ -1761,8 +2112,13 @@ class $SavingsGoalsTable extends SavingsGoals
           .read(DriftSqlType.string, data['${effectivePrefix}icon_name']),
       color: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}color']),
+      contributionFrequency: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}contribution_frequency'])!,
       notificationDays: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}notification_days']),
+      notificationTime: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}notification_time']),
     );
   }
 
@@ -1783,7 +2139,9 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
   final String status;
   final String? iconName;
   final String? color;
+  final String contributionFrequency;
   final String? notificationDays;
+  final String? notificationTime;
   const SavingsGoal(
       {required this.id,
       required this.name,
@@ -1795,7 +2153,9 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
       required this.status,
       this.iconName,
       this.color,
-      this.notificationDays});
+      required this.contributionFrequency,
+      this.notificationDays,
+      this.notificationTime});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1817,8 +2177,12 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
     if (!nullToAbsent || color != null) {
       map['color'] = Variable<String>(color);
     }
+    map['contribution_frequency'] = Variable<String>(contributionFrequency);
     if (!nullToAbsent || notificationDays != null) {
       map['notification_days'] = Variable<String>(notificationDays);
+    }
+    if (!nullToAbsent || notificationTime != null) {
+      map['notification_time'] = Variable<String>(notificationTime);
     }
     return map;
   }
@@ -1842,9 +2206,13 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
           : Value(iconName),
       color:
           color == null && nullToAbsent ? const Value.absent() : Value(color),
+      contributionFrequency: Value(contributionFrequency),
       notificationDays: notificationDays == null && nullToAbsent
           ? const Value.absent()
           : Value(notificationDays),
+      notificationTime: notificationTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notificationTime),
     );
   }
 
@@ -1862,7 +2230,10 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
       status: serializer.fromJson<String>(json['status']),
       iconName: serializer.fromJson<String?>(json['iconName']),
       color: serializer.fromJson<String?>(json['color']),
+      contributionFrequency:
+          serializer.fromJson<String>(json['contributionFrequency']),
       notificationDays: serializer.fromJson<String?>(json['notificationDays']),
+      notificationTime: serializer.fromJson<String?>(json['notificationTime']),
     );
   }
   @override
@@ -1879,7 +2250,9 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
       'status': serializer.toJson<String>(status),
       'iconName': serializer.toJson<String?>(iconName),
       'color': serializer.toJson<String?>(color),
+      'contributionFrequency': serializer.toJson<String>(contributionFrequency),
       'notificationDays': serializer.toJson<String?>(notificationDays),
+      'notificationTime': serializer.toJson<String?>(notificationTime),
     };
   }
 
@@ -1894,7 +2267,9 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
           String? status,
           Value<String?> iconName = const Value.absent(),
           Value<String?> color = const Value.absent(),
-          Value<String?> notificationDays = const Value.absent()}) =>
+          String? contributionFrequency,
+          Value<String?> notificationDays = const Value.absent(),
+          Value<String?> notificationTime = const Value.absent()}) =>
       SavingsGoal(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -1906,9 +2281,14 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
         status: status ?? this.status,
         iconName: iconName.present ? iconName.value : this.iconName,
         color: color.present ? color.value : this.color,
+        contributionFrequency:
+            contributionFrequency ?? this.contributionFrequency,
         notificationDays: notificationDays.present
             ? notificationDays.value
             : this.notificationDays,
+        notificationTime: notificationTime.present
+            ? notificationTime.value
+            : this.notificationTime,
       );
   SavingsGoal copyWithCompanion(SavingsGoalsCompanion data) {
     return SavingsGoal(
@@ -1928,9 +2308,15 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
       status: data.status.present ? data.status.value : this.status,
       iconName: data.iconName.present ? data.iconName.value : this.iconName,
       color: data.color.present ? data.color.value : this.color,
+      contributionFrequency: data.contributionFrequency.present
+          ? data.contributionFrequency.value
+          : this.contributionFrequency,
       notificationDays: data.notificationDays.present
           ? data.notificationDays.value
           : this.notificationDays,
+      notificationTime: data.notificationTime.present
+          ? data.notificationTime.value
+          : this.notificationTime,
     );
   }
 
@@ -1947,7 +2333,9 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
           ..write('status: $status, ')
           ..write('iconName: $iconName, ')
           ..write('color: $color, ')
-          ..write('notificationDays: $notificationDays')
+          ..write('contributionFrequency: $contributionFrequency, ')
+          ..write('notificationDays: $notificationDays, ')
+          ..write('notificationTime: $notificationTime')
           ..write(')'))
         .toString();
   }
@@ -1964,7 +2352,9 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
       status,
       iconName,
       color,
-      notificationDays);
+      contributionFrequency,
+      notificationDays,
+      notificationTime);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1979,7 +2369,9 @@ class SavingsGoal extends DataClass implements Insertable<SavingsGoal> {
           other.status == this.status &&
           other.iconName == this.iconName &&
           other.color == this.color &&
-          other.notificationDays == this.notificationDays);
+          other.contributionFrequency == this.contributionFrequency &&
+          other.notificationDays == this.notificationDays &&
+          other.notificationTime == this.notificationTime);
 }
 
 class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoal> {
@@ -1993,7 +2385,9 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoal> {
   final Value<String> status;
   final Value<String?> iconName;
   final Value<String?> color;
+  final Value<String> contributionFrequency;
   final Value<String?> notificationDays;
+  final Value<String?> notificationTime;
   final Value<int> rowid;
   const SavingsGoalsCompanion({
     this.id = const Value.absent(),
@@ -2006,7 +2400,9 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoal> {
     this.status = const Value.absent(),
     this.iconName = const Value.absent(),
     this.color = const Value.absent(),
+    this.contributionFrequency = const Value.absent(),
     this.notificationDays = const Value.absent(),
+    this.notificationTime = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SavingsGoalsCompanion.insert({
@@ -2020,7 +2416,9 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoal> {
     this.status = const Value.absent(),
     this.iconName = const Value.absent(),
     this.color = const Value.absent(),
+    this.contributionFrequency = const Value.absent(),
     this.notificationDays = const Value.absent(),
+    this.notificationTime = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
@@ -2037,7 +2435,9 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoal> {
     Expression<String>? status,
     Expression<String>? iconName,
     Expression<String>? color,
+    Expression<String>? contributionFrequency,
     Expression<String>? notificationDays,
+    Expression<String>? notificationTime,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2051,7 +2451,10 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoal> {
       if (status != null) 'status': status,
       if (iconName != null) 'icon_name': iconName,
       if (color != null) 'color': color,
+      if (contributionFrequency != null)
+        'contribution_frequency': contributionFrequency,
       if (notificationDays != null) 'notification_days': notificationDays,
+      if (notificationTime != null) 'notification_time': notificationTime,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2067,7 +2470,9 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoal> {
       Value<String>? status,
       Value<String?>? iconName,
       Value<String?>? color,
+      Value<String>? contributionFrequency,
       Value<String?>? notificationDays,
+      Value<String?>? notificationTime,
       Value<int>? rowid}) {
     return SavingsGoalsCompanion(
       id: id ?? this.id,
@@ -2080,7 +2485,10 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoal> {
       status: status ?? this.status,
       iconName: iconName ?? this.iconName,
       color: color ?? this.color,
+      contributionFrequency:
+          contributionFrequency ?? this.contributionFrequency,
       notificationDays: notificationDays ?? this.notificationDays,
+      notificationTime: notificationTime ?? this.notificationTime,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2118,8 +2526,15 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoal> {
     if (color.present) {
       map['color'] = Variable<String>(color.value);
     }
+    if (contributionFrequency.present) {
+      map['contribution_frequency'] =
+          Variable<String>(contributionFrequency.value);
+    }
     if (notificationDays.present) {
       map['notification_days'] = Variable<String>(notificationDays.value);
+    }
+    if (notificationTime.present) {
+      map['notification_time'] = Variable<String>(notificationTime.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -2140,7 +2555,9 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoal> {
           ..write('status: $status, ')
           ..write('iconName: $iconName, ')
           ..write('color: $color, ')
+          ..write('contributionFrequency: $contributionFrequency, ')
           ..write('notificationDays: $notificationDays, ')
+          ..write('notificationTime: $notificationTime, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2506,6 +2923,14 @@ class $InvestmentsTable extends Investments
   late final GeneratedColumn<double> expectedReturnRate =
       GeneratedColumn<double>('expected_return_rate', aliasedName, false,
           type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _returnRatePeriodMeta =
+      const VerificationMeta('returnRatePeriod');
+  @override
+  late final GeneratedColumn<String> returnRatePeriod = GeneratedColumn<String>(
+      'return_rate_period', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('yearly'));
   static const VerificationMeta _purchaseDateMeta =
       const VerificationMeta('purchaseDate');
   @override
@@ -2567,6 +2992,12 @@ class $InvestmentsTable extends Investments
   late final GeneratedColumn<String> notificationDays = GeneratedColumn<String>(
       'notification_days', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _notificationTimeMeta =
+      const VerificationMeta('notificationTime');
+  @override
+  late final GeneratedColumn<String> notificationTime = GeneratedColumn<String>(
+      'notification_time', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -2576,6 +3007,7 @@ class $InvestmentsTable extends Investments
         initialAmount,
         currentValue,
         expectedReturnRate,
+        returnRatePeriod,
         purchaseDate,
         soldDate,
         soldAmount,
@@ -2585,7 +3017,8 @@ class $InvestmentsTable extends Investments
         compoundingFrequency,
         iconName,
         color,
-        notificationDays
+        notificationDays,
+        notificationTime
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2644,6 +3077,12 @@ class $InvestmentsTable extends Investments
     } else if (isInserting) {
       context.missing(_expectedReturnRateMeta);
     }
+    if (data.containsKey('return_rate_period')) {
+      context.handle(
+          _returnRatePeriodMeta,
+          returnRatePeriod.isAcceptableOrUnknown(
+              data['return_rate_period']!, _returnRatePeriodMeta));
+    }
     if (data.containsKey('purchase_date')) {
       context.handle(
           _purchaseDateMeta,
@@ -2696,6 +3135,12 @@ class $InvestmentsTable extends Investments
           notificationDays.isAcceptableOrUnknown(
               data['notification_days']!, _notificationDaysMeta));
     }
+    if (data.containsKey('notification_time')) {
+      context.handle(
+          _notificationTimeMeta,
+          notificationTime.isAcceptableOrUnknown(
+              data['notification_time']!, _notificationTimeMeta));
+    }
     return context;
   }
 
@@ -2719,6 +3164,8 @@ class $InvestmentsTable extends Investments
           .read(DriftSqlType.double, data['${effectivePrefix}current_value'])!,
       expectedReturnRate: attachedDatabase.typeMapping.read(
           DriftSqlType.double, data['${effectivePrefix}expected_return_rate'])!,
+      returnRatePeriod: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}return_rate_period'])!,
       purchaseDate: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}purchase_date'])!,
       soldDate: attachedDatabase.typeMapping
@@ -2739,6 +3186,8 @@ class $InvestmentsTable extends Investments
           .read(DriftSqlType.string, data['${effectivePrefix}color']),
       notificationDays: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}notification_days']),
+      notificationTime: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}notification_time']),
     );
   }
 
@@ -2756,6 +3205,7 @@ class Investment extends DataClass implements Insertable<Investment> {
   final double initialAmount;
   final double currentValue;
   final double expectedReturnRate;
+  final String returnRatePeriod;
   final DateTime purchaseDate;
   final DateTime? soldDate;
   final double? soldAmount;
@@ -2766,6 +3216,7 @@ class Investment extends DataClass implements Insertable<Investment> {
   final String? iconName;
   final String? color;
   final String? notificationDays;
+  final String? notificationTime;
   const Investment(
       {required this.id,
       required this.name,
@@ -2774,6 +3225,7 @@ class Investment extends DataClass implements Insertable<Investment> {
       required this.initialAmount,
       required this.currentValue,
       required this.expectedReturnRate,
+      required this.returnRatePeriod,
       required this.purchaseDate,
       this.soldDate,
       this.soldAmount,
@@ -2783,7 +3235,8 @@ class Investment extends DataClass implements Insertable<Investment> {
       required this.compoundingFrequency,
       this.iconName,
       this.color,
-      this.notificationDays});
+      this.notificationDays,
+      this.notificationTime});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2796,6 +3249,7 @@ class Investment extends DataClass implements Insertable<Investment> {
     map['initial_amount'] = Variable<double>(initialAmount);
     map['current_value'] = Variable<double>(currentValue);
     map['expected_return_rate'] = Variable<double>(expectedReturnRate);
+    map['return_rate_period'] = Variable<String>(returnRatePeriod);
     map['purchase_date'] = Variable<DateTime>(purchaseDate);
     if (!nullToAbsent || soldDate != null) {
       map['sold_date'] = Variable<DateTime>(soldDate);
@@ -2820,6 +3274,9 @@ class Investment extends DataClass implements Insertable<Investment> {
     if (!nullToAbsent || notificationDays != null) {
       map['notification_days'] = Variable<String>(notificationDays);
     }
+    if (!nullToAbsent || notificationTime != null) {
+      map['notification_time'] = Variable<String>(notificationTime);
+    }
     return map;
   }
 
@@ -2834,6 +3291,7 @@ class Investment extends DataClass implements Insertable<Investment> {
       initialAmount: Value(initialAmount),
       currentValue: Value(currentValue),
       expectedReturnRate: Value(expectedReturnRate),
+      returnRatePeriod: Value(returnRatePeriod),
       purchaseDate: Value(purchaseDate),
       soldDate: soldDate == null && nullToAbsent
           ? const Value.absent()
@@ -2856,6 +3314,9 @@ class Investment extends DataClass implements Insertable<Investment> {
       notificationDays: notificationDays == null && nullToAbsent
           ? const Value.absent()
           : Value(notificationDays),
+      notificationTime: notificationTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notificationTime),
     );
   }
 
@@ -2871,6 +3332,7 @@ class Investment extends DataClass implements Insertable<Investment> {
       currentValue: serializer.fromJson<double>(json['currentValue']),
       expectedReturnRate:
           serializer.fromJson<double>(json['expectedReturnRate']),
+      returnRatePeriod: serializer.fromJson<String>(json['returnRatePeriod']),
       purchaseDate: serializer.fromJson<DateTime>(json['purchaseDate']),
       soldDate: serializer.fromJson<DateTime?>(json['soldDate']),
       soldAmount: serializer.fromJson<double?>(json['soldAmount']),
@@ -2882,6 +3344,7 @@ class Investment extends DataClass implements Insertable<Investment> {
       iconName: serializer.fromJson<String?>(json['iconName']),
       color: serializer.fromJson<String?>(json['color']),
       notificationDays: serializer.fromJson<String?>(json['notificationDays']),
+      notificationTime: serializer.fromJson<String?>(json['notificationTime']),
     );
   }
   @override
@@ -2895,6 +3358,7 @@ class Investment extends DataClass implements Insertable<Investment> {
       'initialAmount': serializer.toJson<double>(initialAmount),
       'currentValue': serializer.toJson<double>(currentValue),
       'expectedReturnRate': serializer.toJson<double>(expectedReturnRate),
+      'returnRatePeriod': serializer.toJson<String>(returnRatePeriod),
       'purchaseDate': serializer.toJson<DateTime>(purchaseDate),
       'soldDate': serializer.toJson<DateTime?>(soldDate),
       'soldAmount': serializer.toJson<double?>(soldAmount),
@@ -2905,6 +3369,7 @@ class Investment extends DataClass implements Insertable<Investment> {
       'iconName': serializer.toJson<String?>(iconName),
       'color': serializer.toJson<String?>(color),
       'notificationDays': serializer.toJson<String?>(notificationDays),
+      'notificationTime': serializer.toJson<String?>(notificationTime),
     };
   }
 
@@ -2916,6 +3381,7 @@ class Investment extends DataClass implements Insertable<Investment> {
           double? initialAmount,
           double? currentValue,
           double? expectedReturnRate,
+          String? returnRatePeriod,
           DateTime? purchaseDate,
           Value<DateTime?> soldDate = const Value.absent(),
           Value<double?> soldAmount = const Value.absent(),
@@ -2925,7 +3391,8 @@ class Investment extends DataClass implements Insertable<Investment> {
           int? compoundingFrequency,
           Value<String?> iconName = const Value.absent(),
           Value<String?> color = const Value.absent(),
-          Value<String?> notificationDays = const Value.absent()}) =>
+          Value<String?> notificationDays = const Value.absent(),
+          Value<String?> notificationTime = const Value.absent()}) =>
       Investment(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -2934,6 +3401,7 @@ class Investment extends DataClass implements Insertable<Investment> {
         initialAmount: initialAmount ?? this.initialAmount,
         currentValue: currentValue ?? this.currentValue,
         expectedReturnRate: expectedReturnRate ?? this.expectedReturnRate,
+        returnRatePeriod: returnRatePeriod ?? this.returnRatePeriod,
         purchaseDate: purchaseDate ?? this.purchaseDate,
         soldDate: soldDate.present ? soldDate.value : this.soldDate,
         soldAmount: soldAmount.present ? soldAmount.value : this.soldAmount,
@@ -2948,6 +3416,9 @@ class Investment extends DataClass implements Insertable<Investment> {
         notificationDays: notificationDays.present
             ? notificationDays.value
             : this.notificationDays,
+        notificationTime: notificationTime.present
+            ? notificationTime.value
+            : this.notificationTime,
       );
   Investment copyWithCompanion(InvestmentsCompanion data) {
     return Investment(
@@ -2965,6 +3436,9 @@ class Investment extends DataClass implements Insertable<Investment> {
       expectedReturnRate: data.expectedReturnRate.present
           ? data.expectedReturnRate.value
           : this.expectedReturnRate,
+      returnRatePeriod: data.returnRatePeriod.present
+          ? data.returnRatePeriod.value
+          : this.returnRatePeriod,
       purchaseDate: data.purchaseDate.present
           ? data.purchaseDate.value
           : this.purchaseDate,
@@ -2984,6 +3458,9 @@ class Investment extends DataClass implements Insertable<Investment> {
       notificationDays: data.notificationDays.present
           ? data.notificationDays.value
           : this.notificationDays,
+      notificationTime: data.notificationTime.present
+          ? data.notificationTime.value
+          : this.notificationTime,
     );
   }
 
@@ -2997,6 +3474,7 @@ class Investment extends DataClass implements Insertable<Investment> {
           ..write('initialAmount: $initialAmount, ')
           ..write('currentValue: $currentValue, ')
           ..write('expectedReturnRate: $expectedReturnRate, ')
+          ..write('returnRatePeriod: $returnRatePeriod, ')
           ..write('purchaseDate: $purchaseDate, ')
           ..write('soldDate: $soldDate, ')
           ..write('soldAmount: $soldAmount, ')
@@ -3006,7 +3484,8 @@ class Investment extends DataClass implements Insertable<Investment> {
           ..write('compoundingFrequency: $compoundingFrequency, ')
           ..write('iconName: $iconName, ')
           ..write('color: $color, ')
-          ..write('notificationDays: $notificationDays')
+          ..write('notificationDays: $notificationDays, ')
+          ..write('notificationTime: $notificationTime')
           ..write(')'))
         .toString();
   }
@@ -3020,6 +3499,7 @@ class Investment extends DataClass implements Insertable<Investment> {
       initialAmount,
       currentValue,
       expectedReturnRate,
+      returnRatePeriod,
       purchaseDate,
       soldDate,
       soldAmount,
@@ -3029,7 +3509,8 @@ class Investment extends DataClass implements Insertable<Investment> {
       compoundingFrequency,
       iconName,
       color,
-      notificationDays);
+      notificationDays,
+      notificationTime);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3041,6 +3522,7 @@ class Investment extends DataClass implements Insertable<Investment> {
           other.initialAmount == this.initialAmount &&
           other.currentValue == this.currentValue &&
           other.expectedReturnRate == this.expectedReturnRate &&
+          other.returnRatePeriod == this.returnRatePeriod &&
           other.purchaseDate == this.purchaseDate &&
           other.soldDate == this.soldDate &&
           other.soldAmount == this.soldAmount &&
@@ -3050,7 +3532,8 @@ class Investment extends DataClass implements Insertable<Investment> {
           other.compoundingFrequency == this.compoundingFrequency &&
           other.iconName == this.iconName &&
           other.color == this.color &&
-          other.notificationDays == this.notificationDays);
+          other.notificationDays == this.notificationDays &&
+          other.notificationTime == this.notificationTime);
 }
 
 class InvestmentsCompanion extends UpdateCompanion<Investment> {
@@ -3061,6 +3544,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
   final Value<double> initialAmount;
   final Value<double> currentValue;
   final Value<double> expectedReturnRate;
+  final Value<String> returnRatePeriod;
   final Value<DateTime> purchaseDate;
   final Value<DateTime?> soldDate;
   final Value<double?> soldAmount;
@@ -3071,6 +3555,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
   final Value<String?> iconName;
   final Value<String?> color;
   final Value<String?> notificationDays;
+  final Value<String?> notificationTime;
   final Value<int> rowid;
   const InvestmentsCompanion({
     this.id = const Value.absent(),
@@ -3080,6 +3565,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
     this.initialAmount = const Value.absent(),
     this.currentValue = const Value.absent(),
     this.expectedReturnRate = const Value.absent(),
+    this.returnRatePeriod = const Value.absent(),
     this.purchaseDate = const Value.absent(),
     this.soldDate = const Value.absent(),
     this.soldAmount = const Value.absent(),
@@ -3090,6 +3576,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
     this.iconName = const Value.absent(),
     this.color = const Value.absent(),
     this.notificationDays = const Value.absent(),
+    this.notificationTime = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   InvestmentsCompanion.insert({
@@ -3100,6 +3587,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
     required double initialAmount,
     required double currentValue,
     required double expectedReturnRate,
+    this.returnRatePeriod = const Value.absent(),
     required DateTime purchaseDate,
     this.soldDate = const Value.absent(),
     this.soldAmount = const Value.absent(),
@@ -3110,6 +3598,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
     this.iconName = const Value.absent(),
     this.color = const Value.absent(),
     this.notificationDays = const Value.absent(),
+    this.notificationTime = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
@@ -3126,6 +3615,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
     Expression<double>? initialAmount,
     Expression<double>? currentValue,
     Expression<double>? expectedReturnRate,
+    Expression<String>? returnRatePeriod,
     Expression<DateTime>? purchaseDate,
     Expression<DateTime>? soldDate,
     Expression<double>? soldAmount,
@@ -3136,6 +3626,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
     Expression<String>? iconName,
     Expression<String>? color,
     Expression<String>? notificationDays,
+    Expression<String>? notificationTime,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3147,6 +3638,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
       if (currentValue != null) 'current_value': currentValue,
       if (expectedReturnRate != null)
         'expected_return_rate': expectedReturnRate,
+      if (returnRatePeriod != null) 'return_rate_period': returnRatePeriod,
       if (purchaseDate != null) 'purchase_date': purchaseDate,
       if (soldDate != null) 'sold_date': soldDate,
       if (soldAmount != null) 'sold_amount': soldAmount,
@@ -3158,6 +3650,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
       if (iconName != null) 'icon_name': iconName,
       if (color != null) 'color': color,
       if (notificationDays != null) 'notification_days': notificationDays,
+      if (notificationTime != null) 'notification_time': notificationTime,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3170,6 +3663,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
       Value<double>? initialAmount,
       Value<double>? currentValue,
       Value<double>? expectedReturnRate,
+      Value<String>? returnRatePeriod,
       Value<DateTime>? purchaseDate,
       Value<DateTime?>? soldDate,
       Value<double?>? soldAmount,
@@ -3180,6 +3674,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
       Value<String?>? iconName,
       Value<String?>? color,
       Value<String?>? notificationDays,
+      Value<String?>? notificationTime,
       Value<int>? rowid}) {
     return InvestmentsCompanion(
       id: id ?? this.id,
@@ -3189,6 +3684,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
       initialAmount: initialAmount ?? this.initialAmount,
       currentValue: currentValue ?? this.currentValue,
       expectedReturnRate: expectedReturnRate ?? this.expectedReturnRate,
+      returnRatePeriod: returnRatePeriod ?? this.returnRatePeriod,
       purchaseDate: purchaseDate ?? this.purchaseDate,
       soldDate: soldDate ?? this.soldDate,
       soldAmount: soldAmount ?? this.soldAmount,
@@ -3199,6 +3695,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
       iconName: iconName ?? this.iconName,
       color: color ?? this.color,
       notificationDays: notificationDays ?? this.notificationDays,
+      notificationTime: notificationTime ?? this.notificationTime,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3226,6 +3723,9 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
     }
     if (expectedReturnRate.present) {
       map['expected_return_rate'] = Variable<double>(expectedReturnRate.value);
+    }
+    if (returnRatePeriod.present) {
+      map['return_rate_period'] = Variable<String>(returnRatePeriod.value);
     }
     if (purchaseDate.present) {
       map['purchase_date'] = Variable<DateTime>(purchaseDate.value);
@@ -3257,6 +3757,9 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
     if (notificationDays.present) {
       map['notification_days'] = Variable<String>(notificationDays.value);
     }
+    if (notificationTime.present) {
+      map['notification_time'] = Variable<String>(notificationTime.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3273,6 +3776,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
           ..write('initialAmount: $initialAmount, ')
           ..write('currentValue: $currentValue, ')
           ..write('expectedReturnRate: $expectedReturnRate, ')
+          ..write('returnRatePeriod: $returnRatePeriod, ')
           ..write('purchaseDate: $purchaseDate, ')
           ..write('soldDate: $soldDate, ')
           ..write('soldAmount: $soldAmount, ')
@@ -3283,6 +3787,7 @@ class InvestmentsCompanion extends UpdateCompanion<Investment> {
           ..write('iconName: $iconName, ')
           ..write('color: $color, ')
           ..write('notificationDays: $notificationDays, ')
+          ..write('notificationTime: $notificationTime, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3605,6 +4110,14 @@ class $LoansTable extends Loans with TableInfo<$LoansTable, Loan> {
   late final GeneratedColumn<double> interestRate = GeneratedColumn<double>(
       'interest_rate', aliasedName, false,
       type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _interestRatePeriodMeta =
+      const VerificationMeta('interestRatePeriod');
+  @override
+  late final GeneratedColumn<String> interestRatePeriod =
+      GeneratedColumn<String>('interest_rate_period', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const Constant('yearly'));
   static const VerificationMeta _totalInstallmentsMeta =
       const VerificationMeta('totalInstallments');
   @override
@@ -3682,6 +4195,18 @@ class $LoansTable extends Loans with TableInfo<$LoansTable, Loan> {
   late final GeneratedColumn<String> notificationDays = GeneratedColumn<String>(
       'notification_days', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _notificationDayOfMonthMeta =
+      const VerificationMeta('notificationDayOfMonth');
+  @override
+  late final GeneratedColumn<int> notificationDayOfMonth = GeneratedColumn<int>(
+      'notification_day_of_month', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _notificationTimeMeta =
+      const VerificationMeta('notificationTime');
+  @override
+  late final GeneratedColumn<String> notificationTime = GeneratedColumn<String>(
+      'notification_time', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -3690,6 +4215,7 @@ class $LoansTable extends Loans with TableInfo<$LoansTable, Loan> {
         type,
         principalAmount,
         interestRate,
+        interestRatePeriod,
         totalInstallments,
         installmentAmount,
         startDate,
@@ -3701,7 +4227,9 @@ class $LoansTable extends Loans with TableInfo<$LoansTable, Loan> {
         paidInstallments,
         iconName,
         color,
-        notificationDays
+        notificationDays,
+        notificationDayOfMonth,
+        notificationTime
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3751,6 +4279,12 @@ class $LoansTable extends Loans with TableInfo<$LoansTable, Loan> {
               data['interest_rate']!, _interestRateMeta));
     } else if (isInserting) {
       context.missing(_interestRateMeta);
+    }
+    if (data.containsKey('interest_rate_period')) {
+      context.handle(
+          _interestRatePeriodMeta,
+          interestRatePeriod.isAcceptableOrUnknown(
+              data['interest_rate_period']!, _interestRatePeriodMeta));
     }
     if (data.containsKey('total_installments')) {
       context.handle(
@@ -3818,6 +4352,18 @@ class $LoansTable extends Loans with TableInfo<$LoansTable, Loan> {
           notificationDays.isAcceptableOrUnknown(
               data['notification_days']!, _notificationDaysMeta));
     }
+    if (data.containsKey('notification_day_of_month')) {
+      context.handle(
+          _notificationDayOfMonthMeta,
+          notificationDayOfMonth.isAcceptableOrUnknown(
+              data['notification_day_of_month']!, _notificationDayOfMonthMeta));
+    }
+    if (data.containsKey('notification_time')) {
+      context.handle(
+          _notificationTimeMeta,
+          notificationTime.isAcceptableOrUnknown(
+              data['notification_time']!, _notificationTimeMeta));
+    }
     return context;
   }
 
@@ -3839,6 +4385,8 @@ class $LoansTable extends Loans with TableInfo<$LoansTable, Loan> {
           DriftSqlType.double, data['${effectivePrefix}principal_amount'])!,
       interestRate: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}interest_rate'])!,
+      interestRatePeriod: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}interest_rate_period'])!,
       totalInstallments: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}total_installments'])!,
       installmentAmount: attachedDatabase.typeMapping.read(
@@ -3863,6 +4411,11 @@ class $LoansTable extends Loans with TableInfo<$LoansTable, Loan> {
           .read(DriftSqlType.string, data['${effectivePrefix}color']),
       notificationDays: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}notification_days']),
+      notificationDayOfMonth: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}notification_day_of_month']),
+      notificationTime: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}notification_time']),
     );
   }
 
@@ -3879,6 +4432,7 @@ class Loan extends DataClass implements Insertable<Loan> {
   final String type;
   final double principalAmount;
   final double interestRate;
+  final String interestRatePeriod;
   final int totalInstallments;
   final double installmentAmount;
   final DateTime startDate;
@@ -3891,6 +4445,8 @@ class Loan extends DataClass implements Insertable<Loan> {
   final String? iconName;
   final String? color;
   final String? notificationDays;
+  final int? notificationDayOfMonth;
+  final String? notificationTime;
   const Loan(
       {required this.id,
       required this.name,
@@ -3898,6 +4454,7 @@ class Loan extends DataClass implements Insertable<Loan> {
       required this.type,
       required this.principalAmount,
       required this.interestRate,
+      required this.interestRatePeriod,
       required this.totalInstallments,
       required this.installmentAmount,
       required this.startDate,
@@ -3909,7 +4466,9 @@ class Loan extends DataClass implements Insertable<Loan> {
       required this.paidInstallments,
       this.iconName,
       this.color,
-      this.notificationDays});
+      this.notificationDays,
+      this.notificationDayOfMonth,
+      this.notificationTime});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3921,6 +4480,7 @@ class Loan extends DataClass implements Insertable<Loan> {
     map['type'] = Variable<String>(type);
     map['principal_amount'] = Variable<double>(principalAmount);
     map['interest_rate'] = Variable<double>(interestRate);
+    map['interest_rate_period'] = Variable<String>(interestRatePeriod);
     map['total_installments'] = Variable<int>(totalInstallments);
     map['installment_amount'] = Variable<double>(installmentAmount);
     map['start_date'] = Variable<DateTime>(startDate);
@@ -3943,6 +4503,12 @@ class Loan extends DataClass implements Insertable<Loan> {
     if (!nullToAbsent || notificationDays != null) {
       map['notification_days'] = Variable<String>(notificationDays);
     }
+    if (!nullToAbsent || notificationDayOfMonth != null) {
+      map['notification_day_of_month'] = Variable<int>(notificationDayOfMonth);
+    }
+    if (!nullToAbsent || notificationTime != null) {
+      map['notification_time'] = Variable<String>(notificationTime);
+    }
     return map;
   }
 
@@ -3956,6 +4522,7 @@ class Loan extends DataClass implements Insertable<Loan> {
       type: Value(type),
       principalAmount: Value(principalAmount),
       interestRate: Value(interestRate),
+      interestRatePeriod: Value(interestRatePeriod),
       totalInstallments: Value(totalInstallments),
       installmentAmount: Value(installmentAmount),
       startDate: Value(startDate),
@@ -3976,6 +4543,12 @@ class Loan extends DataClass implements Insertable<Loan> {
       notificationDays: notificationDays == null && nullToAbsent
           ? const Value.absent()
           : Value(notificationDays),
+      notificationDayOfMonth: notificationDayOfMonth == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notificationDayOfMonth),
+      notificationTime: notificationTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notificationTime),
     );
   }
 
@@ -3989,6 +4562,8 @@ class Loan extends DataClass implements Insertable<Loan> {
       type: serializer.fromJson<String>(json['type']),
       principalAmount: serializer.fromJson<double>(json['principalAmount']),
       interestRate: serializer.fromJson<double>(json['interestRate']),
+      interestRatePeriod:
+          serializer.fromJson<String>(json['interestRatePeriod']),
       totalInstallments: serializer.fromJson<int>(json['totalInstallments']),
       installmentAmount: serializer.fromJson<double>(json['installmentAmount']),
       startDate: serializer.fromJson<DateTime>(json['startDate']),
@@ -4001,6 +4576,9 @@ class Loan extends DataClass implements Insertable<Loan> {
       iconName: serializer.fromJson<String?>(json['iconName']),
       color: serializer.fromJson<String?>(json['color']),
       notificationDays: serializer.fromJson<String?>(json['notificationDays']),
+      notificationDayOfMonth:
+          serializer.fromJson<int?>(json['notificationDayOfMonth']),
+      notificationTime: serializer.fromJson<String?>(json['notificationTime']),
     );
   }
   @override
@@ -4013,6 +4591,7 @@ class Loan extends DataClass implements Insertable<Loan> {
       'type': serializer.toJson<String>(type),
       'principalAmount': serializer.toJson<double>(principalAmount),
       'interestRate': serializer.toJson<double>(interestRate),
+      'interestRatePeriod': serializer.toJson<String>(interestRatePeriod),
       'totalInstallments': serializer.toJson<int>(totalInstallments),
       'installmentAmount': serializer.toJson<double>(installmentAmount),
       'startDate': serializer.toJson<DateTime>(startDate),
@@ -4025,6 +4604,8 @@ class Loan extends DataClass implements Insertable<Loan> {
       'iconName': serializer.toJson<String?>(iconName),
       'color': serializer.toJson<String?>(color),
       'notificationDays': serializer.toJson<String?>(notificationDays),
+      'notificationDayOfMonth': serializer.toJson<int?>(notificationDayOfMonth),
+      'notificationTime': serializer.toJson<String?>(notificationTime),
     };
   }
 
@@ -4035,6 +4616,7 @@ class Loan extends DataClass implements Insertable<Loan> {
           String? type,
           double? principalAmount,
           double? interestRate,
+          String? interestRatePeriod,
           int? totalInstallments,
           double? installmentAmount,
           DateTime? startDate,
@@ -4046,7 +4628,9 @@ class Loan extends DataClass implements Insertable<Loan> {
           int? paidInstallments,
           Value<String?> iconName = const Value.absent(),
           Value<String?> color = const Value.absent(),
-          Value<String?> notificationDays = const Value.absent()}) =>
+          Value<String?> notificationDays = const Value.absent(),
+          Value<int?> notificationDayOfMonth = const Value.absent(),
+          Value<String?> notificationTime = const Value.absent()}) =>
       Loan(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -4056,6 +4640,7 @@ class Loan extends DataClass implements Insertable<Loan> {
         type: type ?? this.type,
         principalAmount: principalAmount ?? this.principalAmount,
         interestRate: interestRate ?? this.interestRate,
+        interestRatePeriod: interestRatePeriod ?? this.interestRatePeriod,
         totalInstallments: totalInstallments ?? this.totalInstallments,
         installmentAmount: installmentAmount ?? this.installmentAmount,
         startDate: startDate ?? this.startDate,
@@ -4070,6 +4655,12 @@ class Loan extends DataClass implements Insertable<Loan> {
         notificationDays: notificationDays.present
             ? notificationDays.value
             : this.notificationDays,
+        notificationDayOfMonth: notificationDayOfMonth.present
+            ? notificationDayOfMonth.value
+            : this.notificationDayOfMonth,
+        notificationTime: notificationTime.present
+            ? notificationTime.value
+            : this.notificationTime,
       );
   Loan copyWithCompanion(LoansCompanion data) {
     return Loan(
@@ -4085,6 +4676,9 @@ class Loan extends DataClass implements Insertable<Loan> {
       interestRate: data.interestRate.present
           ? data.interestRate.value
           : this.interestRate,
+      interestRatePeriod: data.interestRatePeriod.present
+          ? data.interestRatePeriod.value
+          : this.interestRatePeriod,
       totalInstallments: data.totalInstallments.present
           ? data.totalInstallments.value
           : this.totalInstallments,
@@ -4108,6 +4702,12 @@ class Loan extends DataClass implements Insertable<Loan> {
       notificationDays: data.notificationDays.present
           ? data.notificationDays.value
           : this.notificationDays,
+      notificationDayOfMonth: data.notificationDayOfMonth.present
+          ? data.notificationDayOfMonth.value
+          : this.notificationDayOfMonth,
+      notificationTime: data.notificationTime.present
+          ? data.notificationTime.value
+          : this.notificationTime,
     );
   }
 
@@ -4120,6 +4720,7 @@ class Loan extends DataClass implements Insertable<Loan> {
           ..write('type: $type, ')
           ..write('principalAmount: $principalAmount, ')
           ..write('interestRate: $interestRate, ')
+          ..write('interestRatePeriod: $interestRatePeriod, ')
           ..write('totalInstallments: $totalInstallments, ')
           ..write('installmentAmount: $installmentAmount, ')
           ..write('startDate: $startDate, ')
@@ -4131,31 +4732,37 @@ class Loan extends DataClass implements Insertable<Loan> {
           ..write('paidInstallments: $paidInstallments, ')
           ..write('iconName: $iconName, ')
           ..write('color: $color, ')
-          ..write('notificationDays: $notificationDays')
+          ..write('notificationDays: $notificationDays, ')
+          ..write('notificationDayOfMonth: $notificationDayOfMonth, ')
+          ..write('notificationTime: $notificationTime')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id,
-      name,
-      borrowerOrLender,
-      type,
-      principalAmount,
-      interestRate,
-      totalInstallments,
-      installmentAmount,
-      startDate,
-      endDate,
-      paymentFrequency,
-      status,
-      notes,
-      paidAmount,
-      paidInstallments,
-      iconName,
-      color,
-      notificationDays);
+  int get hashCode => Object.hashAll([
+        id,
+        name,
+        borrowerOrLender,
+        type,
+        principalAmount,
+        interestRate,
+        interestRatePeriod,
+        totalInstallments,
+        installmentAmount,
+        startDate,
+        endDate,
+        paymentFrequency,
+        status,
+        notes,
+        paidAmount,
+        paidInstallments,
+        iconName,
+        color,
+        notificationDays,
+        notificationDayOfMonth,
+        notificationTime
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4166,6 +4773,7 @@ class Loan extends DataClass implements Insertable<Loan> {
           other.type == this.type &&
           other.principalAmount == this.principalAmount &&
           other.interestRate == this.interestRate &&
+          other.interestRatePeriod == this.interestRatePeriod &&
           other.totalInstallments == this.totalInstallments &&
           other.installmentAmount == this.installmentAmount &&
           other.startDate == this.startDate &&
@@ -4177,7 +4785,9 @@ class Loan extends DataClass implements Insertable<Loan> {
           other.paidInstallments == this.paidInstallments &&
           other.iconName == this.iconName &&
           other.color == this.color &&
-          other.notificationDays == this.notificationDays);
+          other.notificationDays == this.notificationDays &&
+          other.notificationDayOfMonth == this.notificationDayOfMonth &&
+          other.notificationTime == this.notificationTime);
 }
 
 class LoansCompanion extends UpdateCompanion<Loan> {
@@ -4187,6 +4797,7 @@ class LoansCompanion extends UpdateCompanion<Loan> {
   final Value<String> type;
   final Value<double> principalAmount;
   final Value<double> interestRate;
+  final Value<String> interestRatePeriod;
   final Value<int> totalInstallments;
   final Value<double> installmentAmount;
   final Value<DateTime> startDate;
@@ -4199,6 +4810,8 @@ class LoansCompanion extends UpdateCompanion<Loan> {
   final Value<String?> iconName;
   final Value<String?> color;
   final Value<String?> notificationDays;
+  final Value<int?> notificationDayOfMonth;
+  final Value<String?> notificationTime;
   final Value<int> rowid;
   const LoansCompanion({
     this.id = const Value.absent(),
@@ -4207,6 +4820,7 @@ class LoansCompanion extends UpdateCompanion<Loan> {
     this.type = const Value.absent(),
     this.principalAmount = const Value.absent(),
     this.interestRate = const Value.absent(),
+    this.interestRatePeriod = const Value.absent(),
     this.totalInstallments = const Value.absent(),
     this.installmentAmount = const Value.absent(),
     this.startDate = const Value.absent(),
@@ -4219,6 +4833,8 @@ class LoansCompanion extends UpdateCompanion<Loan> {
     this.iconName = const Value.absent(),
     this.color = const Value.absent(),
     this.notificationDays = const Value.absent(),
+    this.notificationDayOfMonth = const Value.absent(),
+    this.notificationTime = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   LoansCompanion.insert({
@@ -4228,6 +4844,7 @@ class LoansCompanion extends UpdateCompanion<Loan> {
     required String type,
     required double principalAmount,
     required double interestRate,
+    this.interestRatePeriod = const Value.absent(),
     required int totalInstallments,
     required double installmentAmount,
     required DateTime startDate,
@@ -4240,6 +4857,8 @@ class LoansCompanion extends UpdateCompanion<Loan> {
     this.iconName = const Value.absent(),
     this.color = const Value.absent(),
     this.notificationDays = const Value.absent(),
+    this.notificationDayOfMonth = const Value.absent(),
+    this.notificationTime = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
@@ -4256,6 +4875,7 @@ class LoansCompanion extends UpdateCompanion<Loan> {
     Expression<String>? type,
     Expression<double>? principalAmount,
     Expression<double>? interestRate,
+    Expression<String>? interestRatePeriod,
     Expression<int>? totalInstallments,
     Expression<double>? installmentAmount,
     Expression<DateTime>? startDate,
@@ -4268,6 +4888,8 @@ class LoansCompanion extends UpdateCompanion<Loan> {
     Expression<String>? iconName,
     Expression<String>? color,
     Expression<String>? notificationDays,
+    Expression<int>? notificationDayOfMonth,
+    Expression<String>? notificationTime,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4277,6 +4899,8 @@ class LoansCompanion extends UpdateCompanion<Loan> {
       if (type != null) 'type': type,
       if (principalAmount != null) 'principal_amount': principalAmount,
       if (interestRate != null) 'interest_rate': interestRate,
+      if (interestRatePeriod != null)
+        'interest_rate_period': interestRatePeriod,
       if (totalInstallments != null) 'total_installments': totalInstallments,
       if (installmentAmount != null) 'installment_amount': installmentAmount,
       if (startDate != null) 'start_date': startDate,
@@ -4289,6 +4913,9 @@ class LoansCompanion extends UpdateCompanion<Loan> {
       if (iconName != null) 'icon_name': iconName,
       if (color != null) 'color': color,
       if (notificationDays != null) 'notification_days': notificationDays,
+      if (notificationDayOfMonth != null)
+        'notification_day_of_month': notificationDayOfMonth,
+      if (notificationTime != null) 'notification_time': notificationTime,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4300,6 +4927,7 @@ class LoansCompanion extends UpdateCompanion<Loan> {
       Value<String>? type,
       Value<double>? principalAmount,
       Value<double>? interestRate,
+      Value<String>? interestRatePeriod,
       Value<int>? totalInstallments,
       Value<double>? installmentAmount,
       Value<DateTime>? startDate,
@@ -4312,6 +4940,8 @@ class LoansCompanion extends UpdateCompanion<Loan> {
       Value<String?>? iconName,
       Value<String?>? color,
       Value<String?>? notificationDays,
+      Value<int?>? notificationDayOfMonth,
+      Value<String?>? notificationTime,
       Value<int>? rowid}) {
     return LoansCompanion(
       id: id ?? this.id,
@@ -4320,6 +4950,7 @@ class LoansCompanion extends UpdateCompanion<Loan> {
       type: type ?? this.type,
       principalAmount: principalAmount ?? this.principalAmount,
       interestRate: interestRate ?? this.interestRate,
+      interestRatePeriod: interestRatePeriod ?? this.interestRatePeriod,
       totalInstallments: totalInstallments ?? this.totalInstallments,
       installmentAmount: installmentAmount ?? this.installmentAmount,
       startDate: startDate ?? this.startDate,
@@ -4332,6 +4963,9 @@ class LoansCompanion extends UpdateCompanion<Loan> {
       iconName: iconName ?? this.iconName,
       color: color ?? this.color,
       notificationDays: notificationDays ?? this.notificationDays,
+      notificationDayOfMonth:
+          notificationDayOfMonth ?? this.notificationDayOfMonth,
+      notificationTime: notificationTime ?? this.notificationTime,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4356,6 +4990,9 @@ class LoansCompanion extends UpdateCompanion<Loan> {
     }
     if (interestRate.present) {
       map['interest_rate'] = Variable<double>(interestRate.value);
+    }
+    if (interestRatePeriod.present) {
+      map['interest_rate_period'] = Variable<String>(interestRatePeriod.value);
     }
     if (totalInstallments.present) {
       map['total_installments'] = Variable<int>(totalInstallments.value);
@@ -4393,6 +5030,13 @@ class LoansCompanion extends UpdateCompanion<Loan> {
     if (notificationDays.present) {
       map['notification_days'] = Variable<String>(notificationDays.value);
     }
+    if (notificationDayOfMonth.present) {
+      map['notification_day_of_month'] =
+          Variable<int>(notificationDayOfMonth.value);
+    }
+    if (notificationTime.present) {
+      map['notification_time'] = Variable<String>(notificationTime.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4408,6 +5052,7 @@ class LoansCompanion extends UpdateCompanion<Loan> {
           ..write('type: $type, ')
           ..write('principalAmount: $principalAmount, ')
           ..write('interestRate: $interestRate, ')
+          ..write('interestRatePeriod: $interestRatePeriod, ')
           ..write('totalInstallments: $totalInstallments, ')
           ..write('installmentAmount: $installmentAmount, ')
           ..write('startDate: $startDate, ')
@@ -4420,6 +5065,8 @@ class LoansCompanion extends UpdateCompanion<Loan> {
           ..write('iconName: $iconName, ')
           ..write('color: $color, ')
           ..write('notificationDays: $notificationDays, ')
+          ..write('notificationDayOfMonth: $notificationDayOfMonth, ')
+          ..write('notificationTime: $notificationTime, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4877,6 +5524,26 @@ class $UserSettingsTableTable extends UserSettingsTable
           defaultConstraints: GeneratedColumn.constraintIsAlways(
               'CHECK ("notification_permission_asked" IN (0, 1))'),
           defaultValue: const Constant(false));
+  static const VerificationMeta _balanceResetPeriodMeta =
+      const VerificationMeta('balanceResetPeriod');
+  @override
+  late final GeneratedColumn<String> balanceResetPeriod =
+      GeneratedColumn<String>('balance_reset_period', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const Constant('total'));
+  static const VerificationMeta _balanceResetDayOfMonthMeta =
+      const VerificationMeta('balanceResetDayOfMonth');
+  @override
+  late final GeneratedColumn<int> balanceResetDayOfMonth = GeneratedColumn<int>(
+      'balance_reset_day_of_month', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _balanceResetDayOfWeekMeta =
+      const VerificationMeta('balanceResetDayOfWeek');
+  @override
+  late final GeneratedColumn<int> balanceResetDayOfWeek = GeneratedColumn<int>(
+      'balance_reset_day_of_week', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _themeMeta = const VerificationMeta('theme');
   @override
   late final GeneratedColumn<String> theme = GeneratedColumn<String>(
@@ -4907,6 +5574,9 @@ class $UserSettingsTableTable extends UserSettingsTable
         loanRemindersEnabled,
         savingsRemindersEnabled,
         notificationPermissionAsked,
+        balanceResetPeriod,
+        balanceResetDayOfMonth,
+        balanceResetDayOfWeek,
         theme,
         createdAt,
         updatedAt
@@ -4987,6 +5657,25 @@ class $UserSettingsTableTable extends UserSettingsTable
               data['notification_permission_asked']!,
               _notificationPermissionAskedMeta));
     }
+    if (data.containsKey('balance_reset_period')) {
+      context.handle(
+          _balanceResetPeriodMeta,
+          balanceResetPeriod.isAcceptableOrUnknown(
+              data['balance_reset_period']!, _balanceResetPeriodMeta));
+    }
+    if (data.containsKey('balance_reset_day_of_month')) {
+      context.handle(
+          _balanceResetDayOfMonthMeta,
+          balanceResetDayOfMonth.isAcceptableOrUnknown(
+              data['balance_reset_day_of_month']!,
+              _balanceResetDayOfMonthMeta));
+    }
+    if (data.containsKey('balance_reset_day_of_week')) {
+      context.handle(
+          _balanceResetDayOfWeekMeta,
+          balanceResetDayOfWeek.isAcceptableOrUnknown(
+              data['balance_reset_day_of_week']!, _balanceResetDayOfWeekMeta));
+    }
     if (data.containsKey('theme')) {
       context.handle(
           _themeMeta, theme.isAcceptableOrUnknown(data['theme']!, _themeMeta));
@@ -5034,6 +5723,13 @@ class $UserSettingsTableTable extends UserSettingsTable
       notificationPermissionAsked: attachedDatabase.typeMapping.read(
           DriftSqlType.bool,
           data['${effectivePrefix}notification_permission_asked'])!,
+      balanceResetPeriod: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}balance_reset_period'])!,
+      balanceResetDayOfMonth: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}balance_reset_day_of_month']),
+      balanceResetDayOfWeek: attachedDatabase.typeMapping.read(DriftSqlType.int,
+          data['${effectivePrefix}balance_reset_day_of_week']),
       theme: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}theme']),
       createdAt: attachedDatabase.typeMapping
@@ -5062,6 +5758,9 @@ class UserSettingsTableData extends DataClass
   final bool loanRemindersEnabled;
   final bool savingsRemindersEnabled;
   final bool notificationPermissionAsked;
+  final String balanceResetPeriod;
+  final int? balanceResetDayOfMonth;
+  final int? balanceResetDayOfWeek;
   final String? theme;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -5077,6 +5776,9 @@ class UserSettingsTableData extends DataClass
       required this.loanRemindersEnabled,
       required this.savingsRemindersEnabled,
       required this.notificationPermissionAsked,
+      required this.balanceResetPeriod,
+      this.balanceResetDayOfMonth,
+      this.balanceResetDayOfWeek,
       this.theme,
       required this.createdAt,
       this.updatedAt});
@@ -5095,6 +5797,13 @@ class UserSettingsTableData extends DataClass
     map['savings_reminders_enabled'] = Variable<bool>(savingsRemindersEnabled);
     map['notification_permission_asked'] =
         Variable<bool>(notificationPermissionAsked);
+    map['balance_reset_period'] = Variable<String>(balanceResetPeriod);
+    if (!nullToAbsent || balanceResetDayOfMonth != null) {
+      map['balance_reset_day_of_month'] = Variable<int>(balanceResetDayOfMonth);
+    }
+    if (!nullToAbsent || balanceResetDayOfWeek != null) {
+      map['balance_reset_day_of_week'] = Variable<int>(balanceResetDayOfWeek);
+    }
     if (!nullToAbsent || theme != null) {
       map['theme'] = Variable<String>(theme);
     }
@@ -5118,6 +5827,13 @@ class UserSettingsTableData extends DataClass
       loanRemindersEnabled: Value(loanRemindersEnabled),
       savingsRemindersEnabled: Value(savingsRemindersEnabled),
       notificationPermissionAsked: Value(notificationPermissionAsked),
+      balanceResetPeriod: Value(balanceResetPeriod),
+      balanceResetDayOfMonth: balanceResetDayOfMonth == null && nullToAbsent
+          ? const Value.absent()
+          : Value(balanceResetDayOfMonth),
+      balanceResetDayOfWeek: balanceResetDayOfWeek == null && nullToAbsent
+          ? const Value.absent()
+          : Value(balanceResetDayOfWeek),
       theme:
           theme == null && nullToAbsent ? const Value.absent() : Value(theme),
       createdAt: Value(createdAt),
@@ -5148,6 +5864,12 @@ class UserSettingsTableData extends DataClass
           serializer.fromJson<bool>(json['savingsRemindersEnabled']),
       notificationPermissionAsked:
           serializer.fromJson<bool>(json['notificationPermissionAsked']),
+      balanceResetPeriod:
+          serializer.fromJson<String>(json['balanceResetPeriod']),
+      balanceResetDayOfMonth:
+          serializer.fromJson<int?>(json['balanceResetDayOfMonth']),
+      balanceResetDayOfWeek:
+          serializer.fromJson<int?>(json['balanceResetDayOfWeek']),
       theme: serializer.fromJson<String?>(json['theme']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
@@ -5170,6 +5892,9 @@ class UserSettingsTableData extends DataClass
           serializer.toJson<bool>(savingsRemindersEnabled),
       'notificationPermissionAsked':
           serializer.toJson<bool>(notificationPermissionAsked),
+      'balanceResetPeriod': serializer.toJson<String>(balanceResetPeriod),
+      'balanceResetDayOfMonth': serializer.toJson<int?>(balanceResetDayOfMonth),
+      'balanceResetDayOfWeek': serializer.toJson<int?>(balanceResetDayOfWeek),
       'theme': serializer.toJson<String?>(theme),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
@@ -5188,6 +5913,9 @@ class UserSettingsTableData extends DataClass
           bool? loanRemindersEnabled,
           bool? savingsRemindersEnabled,
           bool? notificationPermissionAsked,
+          String? balanceResetPeriod,
+          Value<int?> balanceResetDayOfMonth = const Value.absent(),
+          Value<int?> balanceResetDayOfWeek = const Value.absent(),
           Value<String?> theme = const Value.absent(),
           DateTime? createdAt,
           Value<DateTime?> updatedAt = const Value.absent()}) =>
@@ -5205,6 +5933,13 @@ class UserSettingsTableData extends DataClass
             savingsRemindersEnabled ?? this.savingsRemindersEnabled,
         notificationPermissionAsked:
             notificationPermissionAsked ?? this.notificationPermissionAsked,
+        balanceResetPeriod: balanceResetPeriod ?? this.balanceResetPeriod,
+        balanceResetDayOfMonth: balanceResetDayOfMonth.present
+            ? balanceResetDayOfMonth.value
+            : this.balanceResetDayOfMonth,
+        balanceResetDayOfWeek: balanceResetDayOfWeek.present
+            ? balanceResetDayOfWeek.value
+            : this.balanceResetDayOfWeek,
         theme: theme.present ? theme.value : this.theme,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
@@ -5240,6 +5975,15 @@ class UserSettingsTableData extends DataClass
       notificationPermissionAsked: data.notificationPermissionAsked.present
           ? data.notificationPermissionAsked.value
           : this.notificationPermissionAsked,
+      balanceResetPeriod: data.balanceResetPeriod.present
+          ? data.balanceResetPeriod.value
+          : this.balanceResetPeriod,
+      balanceResetDayOfMonth: data.balanceResetDayOfMonth.present
+          ? data.balanceResetDayOfMonth.value
+          : this.balanceResetDayOfMonth,
+      balanceResetDayOfWeek: data.balanceResetDayOfWeek.present
+          ? data.balanceResetDayOfWeek.value
+          : this.balanceResetDayOfWeek,
       theme: data.theme.present ? data.theme.value : this.theme,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -5260,6 +6004,9 @@ class UserSettingsTableData extends DataClass
           ..write('loanRemindersEnabled: $loanRemindersEnabled, ')
           ..write('savingsRemindersEnabled: $savingsRemindersEnabled, ')
           ..write('notificationPermissionAsked: $notificationPermissionAsked, ')
+          ..write('balanceResetPeriod: $balanceResetPeriod, ')
+          ..write('balanceResetDayOfMonth: $balanceResetDayOfMonth, ')
+          ..write('balanceResetDayOfWeek: $balanceResetDayOfWeek, ')
           ..write('theme: $theme, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -5280,6 +6027,9 @@ class UserSettingsTableData extends DataClass
       loanRemindersEnabled,
       savingsRemindersEnabled,
       notificationPermissionAsked,
+      balanceResetPeriod,
+      balanceResetDayOfMonth,
+      balanceResetDayOfWeek,
       theme,
       createdAt,
       updatedAt);
@@ -5299,6 +6049,9 @@ class UserSettingsTableData extends DataClass
           other.savingsRemindersEnabled == this.savingsRemindersEnabled &&
           other.notificationPermissionAsked ==
               this.notificationPermissionAsked &&
+          other.balanceResetPeriod == this.balanceResetPeriod &&
+          other.balanceResetDayOfMonth == this.balanceResetDayOfMonth &&
+          other.balanceResetDayOfWeek == this.balanceResetDayOfWeek &&
           other.theme == this.theme &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -5317,6 +6070,9 @@ class UserSettingsTableCompanion
   final Value<bool> loanRemindersEnabled;
   final Value<bool> savingsRemindersEnabled;
   final Value<bool> notificationPermissionAsked;
+  final Value<String> balanceResetPeriod;
+  final Value<int?> balanceResetDayOfMonth;
+  final Value<int?> balanceResetDayOfWeek;
   final Value<String?> theme;
   final Value<DateTime> createdAt;
   final Value<DateTime?> updatedAt;
@@ -5333,6 +6089,9 @@ class UserSettingsTableCompanion
     this.loanRemindersEnabled = const Value.absent(),
     this.savingsRemindersEnabled = const Value.absent(),
     this.notificationPermissionAsked = const Value.absent(),
+    this.balanceResetPeriod = const Value.absent(),
+    this.balanceResetDayOfMonth = const Value.absent(),
+    this.balanceResetDayOfWeek = const Value.absent(),
     this.theme = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -5350,6 +6109,9 @@ class UserSettingsTableCompanion
     this.loanRemindersEnabled = const Value.absent(),
     this.savingsRemindersEnabled = const Value.absent(),
     this.notificationPermissionAsked = const Value.absent(),
+    this.balanceResetPeriod = const Value.absent(),
+    this.balanceResetDayOfMonth = const Value.absent(),
+    this.balanceResetDayOfWeek = const Value.absent(),
     this.theme = const Value.absent(),
     required DateTime createdAt,
     this.updatedAt = const Value.absent(),
@@ -5368,6 +6130,9 @@ class UserSettingsTableCompanion
     Expression<bool>? loanRemindersEnabled,
     Expression<bool>? savingsRemindersEnabled,
     Expression<bool>? notificationPermissionAsked,
+    Expression<String>? balanceResetPeriod,
+    Expression<int>? balanceResetDayOfMonth,
+    Expression<int>? balanceResetDayOfWeek,
     Expression<String>? theme,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -5390,6 +6155,12 @@ class UserSettingsTableCompanion
         'savings_reminders_enabled': savingsRemindersEnabled,
       if (notificationPermissionAsked != null)
         'notification_permission_asked': notificationPermissionAsked,
+      if (balanceResetPeriod != null)
+        'balance_reset_period': balanceResetPeriod,
+      if (balanceResetDayOfMonth != null)
+        'balance_reset_day_of_month': balanceResetDayOfMonth,
+      if (balanceResetDayOfWeek != null)
+        'balance_reset_day_of_week': balanceResetDayOfWeek,
       if (theme != null) 'theme': theme,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -5409,6 +6180,9 @@ class UserSettingsTableCompanion
       Value<bool>? loanRemindersEnabled,
       Value<bool>? savingsRemindersEnabled,
       Value<bool>? notificationPermissionAsked,
+      Value<String>? balanceResetPeriod,
+      Value<int?>? balanceResetDayOfMonth,
+      Value<int?>? balanceResetDayOfWeek,
       Value<String?>? theme,
       Value<DateTime>? createdAt,
       Value<DateTime?>? updatedAt,
@@ -5427,6 +6201,11 @@ class UserSettingsTableCompanion
           savingsRemindersEnabled ?? this.savingsRemindersEnabled,
       notificationPermissionAsked:
           notificationPermissionAsked ?? this.notificationPermissionAsked,
+      balanceResetPeriod: balanceResetPeriod ?? this.balanceResetPeriod,
+      balanceResetDayOfMonth:
+          balanceResetDayOfMonth ?? this.balanceResetDayOfMonth,
+      balanceResetDayOfWeek:
+          balanceResetDayOfWeek ?? this.balanceResetDayOfWeek,
       theme: theme ?? this.theme,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -5473,6 +6252,17 @@ class UserSettingsTableCompanion
       map['notification_permission_asked'] =
           Variable<bool>(notificationPermissionAsked.value);
     }
+    if (balanceResetPeriod.present) {
+      map['balance_reset_period'] = Variable<String>(balanceResetPeriod.value);
+    }
+    if (balanceResetDayOfMonth.present) {
+      map['balance_reset_day_of_month'] =
+          Variable<int>(balanceResetDayOfMonth.value);
+    }
+    if (balanceResetDayOfWeek.present) {
+      map['balance_reset_day_of_week'] =
+          Variable<int>(balanceResetDayOfWeek.value);
+    }
     if (theme.present) {
       map['theme'] = Variable<String>(theme.value);
     }
@@ -5502,6 +6292,9 @@ class UserSettingsTableCompanion
           ..write('loanRemindersEnabled: $loanRemindersEnabled, ')
           ..write('savingsRemindersEnabled: $savingsRemindersEnabled, ')
           ..write('notificationPermissionAsked: $notificationPermissionAsked, ')
+          ..write('balanceResetPeriod: $balanceResetPeriod, ')
+          ..write('balanceResetDayOfMonth: $balanceResetDayOfMonth, ')
+          ..write('balanceResetDayOfWeek: $balanceResetDayOfWeek, ')
           ..write('theme: $theme, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -6211,6 +7004,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $CustomCategoriesTable(this);
   late final $CustomIncomeSourcesTable customIncomeSources =
       $CustomIncomeSourcesTable(this);
+  late final $HiddenDefaultIncomeSourcesTable hiddenDefaultIncomeSources =
+      $HiddenDefaultIncomeSourcesTable(this);
+  late final $HiddenDefaultCategoriesTable hiddenDefaultCategories =
+      $HiddenDefaultCategoriesTable(this);
   late final $SavingsGoalsTable savingsGoals = $SavingsGoalsTable(this);
   late final $SavingsContributionsTable savingsContributions =
       $SavingsContributionsTable(this);
@@ -6233,6 +7030,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         alerts,
         customCategories,
         customIncomeSources,
+        hiddenDefaultIncomeSources,
+        hiddenDefaultCategories,
         savingsGoals,
         savingsContributions,
         investments,
@@ -7102,6 +7901,246 @@ typedef $$CustomIncomeSourcesTableProcessedTableManager = ProcessedTableManager<
     ),
     CustomIncomeSource,
     PrefetchHooks Function()>;
+typedef $$HiddenDefaultIncomeSourcesTableCreateCompanionBuilder
+    = HiddenDefaultIncomeSourcesCompanion Function({
+  required String name,
+  Value<int> rowid,
+});
+typedef $$HiddenDefaultIncomeSourcesTableUpdateCompanionBuilder
+    = HiddenDefaultIncomeSourcesCompanion Function({
+  Value<String> name,
+  Value<int> rowid,
+});
+
+class $$HiddenDefaultIncomeSourcesTableFilterComposer
+    extends Composer<_$AppDatabase, $HiddenDefaultIncomeSourcesTable> {
+  $$HiddenDefaultIncomeSourcesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+}
+
+class $$HiddenDefaultIncomeSourcesTableOrderingComposer
+    extends Composer<_$AppDatabase, $HiddenDefaultIncomeSourcesTable> {
+  $$HiddenDefaultIncomeSourcesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+}
+
+class $$HiddenDefaultIncomeSourcesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HiddenDefaultIncomeSourcesTable> {
+  $$HiddenDefaultIncomeSourcesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+}
+
+class $$HiddenDefaultIncomeSourcesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $HiddenDefaultIncomeSourcesTable,
+    HiddenDefaultIncomeSource,
+    $$HiddenDefaultIncomeSourcesTableFilterComposer,
+    $$HiddenDefaultIncomeSourcesTableOrderingComposer,
+    $$HiddenDefaultIncomeSourcesTableAnnotationComposer,
+    $$HiddenDefaultIncomeSourcesTableCreateCompanionBuilder,
+    $$HiddenDefaultIncomeSourcesTableUpdateCompanionBuilder,
+    (
+      HiddenDefaultIncomeSource,
+      BaseReferences<_$AppDatabase, $HiddenDefaultIncomeSourcesTable,
+          HiddenDefaultIncomeSource>
+    ),
+    HiddenDefaultIncomeSource,
+    PrefetchHooks Function()> {
+  $$HiddenDefaultIncomeSourcesTableTableManager(
+      _$AppDatabase db, $HiddenDefaultIncomeSourcesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HiddenDefaultIncomeSourcesTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HiddenDefaultIncomeSourcesTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HiddenDefaultIncomeSourcesTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> name = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HiddenDefaultIncomeSourcesCompanion(
+            name: name,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String name,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HiddenDefaultIncomeSourcesCompanion.insert(
+            name: name,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$HiddenDefaultIncomeSourcesTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $HiddenDefaultIncomeSourcesTable,
+        HiddenDefaultIncomeSource,
+        $$HiddenDefaultIncomeSourcesTableFilterComposer,
+        $$HiddenDefaultIncomeSourcesTableOrderingComposer,
+        $$HiddenDefaultIncomeSourcesTableAnnotationComposer,
+        $$HiddenDefaultIncomeSourcesTableCreateCompanionBuilder,
+        $$HiddenDefaultIncomeSourcesTableUpdateCompanionBuilder,
+        (
+          HiddenDefaultIncomeSource,
+          BaseReferences<_$AppDatabase, $HiddenDefaultIncomeSourcesTable,
+              HiddenDefaultIncomeSource>
+        ),
+        HiddenDefaultIncomeSource,
+        PrefetchHooks Function()>;
+typedef $$HiddenDefaultCategoriesTableCreateCompanionBuilder
+    = HiddenDefaultCategoriesCompanion Function({
+  required String name,
+  Value<int> rowid,
+});
+typedef $$HiddenDefaultCategoriesTableUpdateCompanionBuilder
+    = HiddenDefaultCategoriesCompanion Function({
+  Value<String> name,
+  Value<int> rowid,
+});
+
+class $$HiddenDefaultCategoriesTableFilterComposer
+    extends Composer<_$AppDatabase, $HiddenDefaultCategoriesTable> {
+  $$HiddenDefaultCategoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+}
+
+class $$HiddenDefaultCategoriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $HiddenDefaultCategoriesTable> {
+  $$HiddenDefaultCategoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+}
+
+class $$HiddenDefaultCategoriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HiddenDefaultCategoriesTable> {
+  $$HiddenDefaultCategoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+}
+
+class $$HiddenDefaultCategoriesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $HiddenDefaultCategoriesTable,
+    HiddenDefaultCategory,
+    $$HiddenDefaultCategoriesTableFilterComposer,
+    $$HiddenDefaultCategoriesTableOrderingComposer,
+    $$HiddenDefaultCategoriesTableAnnotationComposer,
+    $$HiddenDefaultCategoriesTableCreateCompanionBuilder,
+    $$HiddenDefaultCategoriesTableUpdateCompanionBuilder,
+    (
+      HiddenDefaultCategory,
+      BaseReferences<_$AppDatabase, $HiddenDefaultCategoriesTable,
+          HiddenDefaultCategory>
+    ),
+    HiddenDefaultCategory,
+    PrefetchHooks Function()> {
+  $$HiddenDefaultCategoriesTableTableManager(
+      _$AppDatabase db, $HiddenDefaultCategoriesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HiddenDefaultCategoriesTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HiddenDefaultCategoriesTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HiddenDefaultCategoriesTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> name = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HiddenDefaultCategoriesCompanion(
+            name: name,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String name,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HiddenDefaultCategoriesCompanion.insert(
+            name: name,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$HiddenDefaultCategoriesTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $HiddenDefaultCategoriesTable,
+        HiddenDefaultCategory,
+        $$HiddenDefaultCategoriesTableFilterComposer,
+        $$HiddenDefaultCategoriesTableOrderingComposer,
+        $$HiddenDefaultCategoriesTableAnnotationComposer,
+        $$HiddenDefaultCategoriesTableCreateCompanionBuilder,
+        $$HiddenDefaultCategoriesTableUpdateCompanionBuilder,
+        (
+          HiddenDefaultCategory,
+          BaseReferences<_$AppDatabase, $HiddenDefaultCategoriesTable,
+              HiddenDefaultCategory>
+        ),
+        HiddenDefaultCategory,
+        PrefetchHooks Function()>;
 typedef $$SavingsGoalsTableCreateCompanionBuilder = SavingsGoalsCompanion
     Function({
   required String id,
@@ -7114,7 +8153,9 @@ typedef $$SavingsGoalsTableCreateCompanionBuilder = SavingsGoalsCompanion
   Value<String> status,
   Value<String?> iconName,
   Value<String?> color,
+  Value<String> contributionFrequency,
   Value<String?> notificationDays,
+  Value<String?> notificationTime,
   Value<int> rowid,
 });
 typedef $$SavingsGoalsTableUpdateCompanionBuilder = SavingsGoalsCompanion
@@ -7129,7 +8170,9 @@ typedef $$SavingsGoalsTableUpdateCompanionBuilder = SavingsGoalsCompanion
   Value<String> status,
   Value<String?> iconName,
   Value<String?> color,
+  Value<String> contributionFrequency,
   Value<String?> notificationDays,
+  Value<String?> notificationTime,
   Value<int> rowid,
 });
 
@@ -7197,8 +8240,16 @@ class $$SavingsGoalsTableFilterComposer
   ColumnFilters<String> get color => $composableBuilder(
       column: $table.color, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get contributionFrequency => $composableBuilder(
+      column: $table.contributionFrequency,
+      builder: (column) => ColumnFilters(column));
+
   ColumnFilters<String> get notificationDays => $composableBuilder(
       column: $table.notificationDays,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get notificationTime => $composableBuilder(
+      column: $table.notificationTime,
       builder: (column) => ColumnFilters(column));
 
   Expression<bool> savingsContributionsRefs(
@@ -7265,8 +8316,16 @@ class $$SavingsGoalsTableOrderingComposer
   ColumnOrderings<String> get color => $composableBuilder(
       column: $table.color, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get contributionFrequency => $composableBuilder(
+      column: $table.contributionFrequency,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get notificationDays => $composableBuilder(
       column: $table.notificationDays,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get notificationTime => $composableBuilder(
+      column: $table.notificationTime,
       builder: (column) => ColumnOrderings(column));
 }
 
@@ -7309,8 +8368,14 @@ class $$SavingsGoalsTableAnnotationComposer
   GeneratedColumn<String> get color =>
       $composableBuilder(column: $table.color, builder: (column) => column);
 
+  GeneratedColumn<String> get contributionFrequency => $composableBuilder(
+      column: $table.contributionFrequency, builder: (column) => column);
+
   GeneratedColumn<String> get notificationDays => $composableBuilder(
       column: $table.notificationDays, builder: (column) => column);
+
+  GeneratedColumn<String> get notificationTime => $composableBuilder(
+      column: $table.notificationTime, builder: (column) => column);
 
   Expression<T> savingsContributionsRefs<T extends Object>(
       Expression<T> Function($$SavingsContributionsTableAnnotationComposer a)
@@ -7369,7 +8434,9 @@ class $$SavingsGoalsTableTableManager extends RootTableManager<
             Value<String> status = const Value.absent(),
             Value<String?> iconName = const Value.absent(),
             Value<String?> color = const Value.absent(),
+            Value<String> contributionFrequency = const Value.absent(),
             Value<String?> notificationDays = const Value.absent(),
+            Value<String?> notificationTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SavingsGoalsCompanion(
@@ -7383,7 +8450,9 @@ class $$SavingsGoalsTableTableManager extends RootTableManager<
             status: status,
             iconName: iconName,
             color: color,
+            contributionFrequency: contributionFrequency,
             notificationDays: notificationDays,
+            notificationTime: notificationTime,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -7397,7 +8466,9 @@ class $$SavingsGoalsTableTableManager extends RootTableManager<
             Value<String> status = const Value.absent(),
             Value<String?> iconName = const Value.absent(),
             Value<String?> color = const Value.absent(),
+            Value<String> contributionFrequency = const Value.absent(),
             Value<String?> notificationDays = const Value.absent(),
+            Value<String?> notificationTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SavingsGoalsCompanion.insert(
@@ -7411,7 +8482,9 @@ class $$SavingsGoalsTableTableManager extends RootTableManager<
             status: status,
             iconName: iconName,
             color: color,
+            contributionFrequency: contributionFrequency,
             notificationDays: notificationDays,
+            notificationTime: notificationTime,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -7751,6 +8824,7 @@ typedef $$InvestmentsTableCreateCompanionBuilder = InvestmentsCompanion
   required double initialAmount,
   required double currentValue,
   required double expectedReturnRate,
+  Value<String> returnRatePeriod,
   required DateTime purchaseDate,
   Value<DateTime?> soldDate,
   Value<double?> soldAmount,
@@ -7761,6 +8835,7 @@ typedef $$InvestmentsTableCreateCompanionBuilder = InvestmentsCompanion
   Value<String?> iconName,
   Value<String?> color,
   Value<String?> notificationDays,
+  Value<String?> notificationTime,
   Value<int> rowid,
 });
 typedef $$InvestmentsTableUpdateCompanionBuilder = InvestmentsCompanion
@@ -7772,6 +8847,7 @@ typedef $$InvestmentsTableUpdateCompanionBuilder = InvestmentsCompanion
   Value<double> initialAmount,
   Value<double> currentValue,
   Value<double> expectedReturnRate,
+  Value<String> returnRatePeriod,
   Value<DateTime> purchaseDate,
   Value<DateTime?> soldDate,
   Value<double?> soldAmount,
@@ -7782,6 +8858,7 @@ typedef $$InvestmentsTableUpdateCompanionBuilder = InvestmentsCompanion
   Value<String?> iconName,
   Value<String?> color,
   Value<String?> notificationDays,
+  Value<String?> notificationTime,
   Value<int> rowid,
 });
 
@@ -7841,6 +8918,10 @@ class $$InvestmentsTableFilterComposer
       column: $table.expectedReturnRate,
       builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get returnRatePeriod => $composableBuilder(
+      column: $table.returnRatePeriod,
+      builder: (column) => ColumnFilters(column));
+
   ColumnFilters<DateTime> get purchaseDate => $composableBuilder(
       column: $table.purchaseDate, builder: (column) => ColumnFilters(column));
 
@@ -7872,6 +8953,10 @@ class $$InvestmentsTableFilterComposer
 
   ColumnFilters<String> get notificationDays => $composableBuilder(
       column: $table.notificationDays,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get notificationTime => $composableBuilder(
+      column: $table.notificationTime,
       builder: (column) => ColumnFilters(column));
 
   Expression<bool> investmentValueHistoryRefs(
@@ -7931,6 +9016,10 @@ class $$InvestmentsTableOrderingComposer
       column: $table.expectedReturnRate,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get returnRatePeriod => $composableBuilder(
+      column: $table.returnRatePeriod,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get purchaseDate => $composableBuilder(
       column: $table.purchaseDate,
       builder: (column) => ColumnOrderings(column));
@@ -7964,6 +9053,10 @@ class $$InvestmentsTableOrderingComposer
   ColumnOrderings<String> get notificationDays => $composableBuilder(
       column: $table.notificationDays,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get notificationTime => $composableBuilder(
+      column: $table.notificationTime,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$InvestmentsTableAnnotationComposer
@@ -7996,6 +9089,9 @@ class $$InvestmentsTableAnnotationComposer
   GeneratedColumn<double> get expectedReturnRate => $composableBuilder(
       column: $table.expectedReturnRate, builder: (column) => column);
 
+  GeneratedColumn<String> get returnRatePeriod => $composableBuilder(
+      column: $table.returnRatePeriod, builder: (column) => column);
+
   GeneratedColumn<DateTime> get purchaseDate => $composableBuilder(
       column: $table.purchaseDate, builder: (column) => column);
 
@@ -8025,6 +9121,9 @@ class $$InvestmentsTableAnnotationComposer
 
   GeneratedColumn<String> get notificationDays => $composableBuilder(
       column: $table.notificationDays, builder: (column) => column);
+
+  GeneratedColumn<String> get notificationTime => $composableBuilder(
+      column: $table.notificationTime, builder: (column) => column);
 
   Expression<T> investmentValueHistoryRefs<T extends Object>(
       Expression<T> Function($$InvestmentValueHistoryTableAnnotationComposer a)
@@ -8080,6 +9179,7 @@ class $$InvestmentsTableTableManager extends RootTableManager<
             Value<double> initialAmount = const Value.absent(),
             Value<double> currentValue = const Value.absent(),
             Value<double> expectedReturnRate = const Value.absent(),
+            Value<String> returnRatePeriod = const Value.absent(),
             Value<DateTime> purchaseDate = const Value.absent(),
             Value<DateTime?> soldDate = const Value.absent(),
             Value<double?> soldAmount = const Value.absent(),
@@ -8090,6 +9190,7 @@ class $$InvestmentsTableTableManager extends RootTableManager<
             Value<String?> iconName = const Value.absent(),
             Value<String?> color = const Value.absent(),
             Value<String?> notificationDays = const Value.absent(),
+            Value<String?> notificationTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               InvestmentsCompanion(
@@ -8100,6 +9201,7 @@ class $$InvestmentsTableTableManager extends RootTableManager<
             initialAmount: initialAmount,
             currentValue: currentValue,
             expectedReturnRate: expectedReturnRate,
+            returnRatePeriod: returnRatePeriod,
             purchaseDate: purchaseDate,
             soldDate: soldDate,
             soldAmount: soldAmount,
@@ -8110,6 +9212,7 @@ class $$InvestmentsTableTableManager extends RootTableManager<
             iconName: iconName,
             color: color,
             notificationDays: notificationDays,
+            notificationTime: notificationTime,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -8120,6 +9223,7 @@ class $$InvestmentsTableTableManager extends RootTableManager<
             required double initialAmount,
             required double currentValue,
             required double expectedReturnRate,
+            Value<String> returnRatePeriod = const Value.absent(),
             required DateTime purchaseDate,
             Value<DateTime?> soldDate = const Value.absent(),
             Value<double?> soldAmount = const Value.absent(),
@@ -8130,6 +9234,7 @@ class $$InvestmentsTableTableManager extends RootTableManager<
             Value<String?> iconName = const Value.absent(),
             Value<String?> color = const Value.absent(),
             Value<String?> notificationDays = const Value.absent(),
+            Value<String?> notificationTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               InvestmentsCompanion.insert(
@@ -8140,6 +9245,7 @@ class $$InvestmentsTableTableManager extends RootTableManager<
             initialAmount: initialAmount,
             currentValue: currentValue,
             expectedReturnRate: expectedReturnRate,
+            returnRatePeriod: returnRatePeriod,
             purchaseDate: purchaseDate,
             soldDate: soldDate,
             soldAmount: soldAmount,
@@ -8150,6 +9256,7 @@ class $$InvestmentsTableTableManager extends RootTableManager<
             iconName: iconName,
             color: color,
             notificationDays: notificationDays,
+            notificationTime: notificationTime,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -8473,6 +9580,7 @@ typedef $$LoansTableCreateCompanionBuilder = LoansCompanion Function({
   required String type,
   required double principalAmount,
   required double interestRate,
+  Value<String> interestRatePeriod,
   required int totalInstallments,
   required double installmentAmount,
   required DateTime startDate,
@@ -8485,6 +9593,8 @@ typedef $$LoansTableCreateCompanionBuilder = LoansCompanion Function({
   Value<String?> iconName,
   Value<String?> color,
   Value<String?> notificationDays,
+  Value<int?> notificationDayOfMonth,
+  Value<String?> notificationTime,
   Value<int> rowid,
 });
 typedef $$LoansTableUpdateCompanionBuilder = LoansCompanion Function({
@@ -8494,6 +9604,7 @@ typedef $$LoansTableUpdateCompanionBuilder = LoansCompanion Function({
   Value<String> type,
   Value<double> principalAmount,
   Value<double> interestRate,
+  Value<String> interestRatePeriod,
   Value<int> totalInstallments,
   Value<double> installmentAmount,
   Value<DateTime> startDate,
@@ -8506,6 +9617,8 @@ typedef $$LoansTableUpdateCompanionBuilder = LoansCompanion Function({
   Value<String?> iconName,
   Value<String?> color,
   Value<String?> notificationDays,
+  Value<int?> notificationDayOfMonth,
+  Value<String?> notificationTime,
   Value<int> rowid,
 });
 
@@ -8556,6 +9669,10 @@ class $$LoansTableFilterComposer extends Composer<_$AppDatabase, $LoansTable> {
   ColumnFilters<double> get interestRate => $composableBuilder(
       column: $table.interestRate, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get interestRatePeriod => $composableBuilder(
+      column: $table.interestRatePeriod,
+      builder: (column) => ColumnFilters(column));
+
   ColumnFilters<int> get totalInstallments => $composableBuilder(
       column: $table.totalInstallments,
       builder: (column) => ColumnFilters(column));
@@ -8595,6 +9712,14 @@ class $$LoansTableFilterComposer extends Composer<_$AppDatabase, $LoansTable> {
 
   ColumnFilters<String> get notificationDays => $composableBuilder(
       column: $table.notificationDays,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get notificationDayOfMonth => $composableBuilder(
+      column: $table.notificationDayOfMonth,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get notificationTime => $composableBuilder(
+      column: $table.notificationTime,
       builder: (column) => ColumnFilters(column));
 
   Expression<bool> loanPaymentsRefs(
@@ -8649,6 +9774,10 @@ class $$LoansTableOrderingComposer
       column: $table.interestRate,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get interestRatePeriod => $composableBuilder(
+      column: $table.interestRatePeriod,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get totalInstallments => $composableBuilder(
       column: $table.totalInstallments,
       builder: (column) => ColumnOrderings(column));
@@ -8689,6 +9818,14 @@ class $$LoansTableOrderingComposer
   ColumnOrderings<String> get notificationDays => $composableBuilder(
       column: $table.notificationDays,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get notificationDayOfMonth => $composableBuilder(
+      column: $table.notificationDayOfMonth,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get notificationTime => $composableBuilder(
+      column: $table.notificationTime,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$LoansTableAnnotationComposer
@@ -8717,6 +9854,9 @@ class $$LoansTableAnnotationComposer
 
   GeneratedColumn<double> get interestRate => $composableBuilder(
       column: $table.interestRate, builder: (column) => column);
+
+  GeneratedColumn<String> get interestRatePeriod => $composableBuilder(
+      column: $table.interestRatePeriod, builder: (column) => column);
 
   GeneratedColumn<int> get totalInstallments => $composableBuilder(
       column: $table.totalInstallments, builder: (column) => column);
@@ -8753,6 +9893,12 @@ class $$LoansTableAnnotationComposer
 
   GeneratedColumn<String> get notificationDays => $composableBuilder(
       column: $table.notificationDays, builder: (column) => column);
+
+  GeneratedColumn<int> get notificationDayOfMonth => $composableBuilder(
+      column: $table.notificationDayOfMonth, builder: (column) => column);
+
+  GeneratedColumn<String> get notificationTime => $composableBuilder(
+      column: $table.notificationTime, builder: (column) => column);
 
   Expression<T> loanPaymentsRefs<T extends Object>(
       Expression<T> Function($$LoanPaymentsTableAnnotationComposer a) f) {
@@ -8805,6 +9951,7 @@ class $$LoansTableTableManager extends RootTableManager<
             Value<String> type = const Value.absent(),
             Value<double> principalAmount = const Value.absent(),
             Value<double> interestRate = const Value.absent(),
+            Value<String> interestRatePeriod = const Value.absent(),
             Value<int> totalInstallments = const Value.absent(),
             Value<double> installmentAmount = const Value.absent(),
             Value<DateTime> startDate = const Value.absent(),
@@ -8817,6 +9964,8 @@ class $$LoansTableTableManager extends RootTableManager<
             Value<String?> iconName = const Value.absent(),
             Value<String?> color = const Value.absent(),
             Value<String?> notificationDays = const Value.absent(),
+            Value<int?> notificationDayOfMonth = const Value.absent(),
+            Value<String?> notificationTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               LoansCompanion(
@@ -8826,6 +9975,7 @@ class $$LoansTableTableManager extends RootTableManager<
             type: type,
             principalAmount: principalAmount,
             interestRate: interestRate,
+            interestRatePeriod: interestRatePeriod,
             totalInstallments: totalInstallments,
             installmentAmount: installmentAmount,
             startDate: startDate,
@@ -8838,6 +9988,8 @@ class $$LoansTableTableManager extends RootTableManager<
             iconName: iconName,
             color: color,
             notificationDays: notificationDays,
+            notificationDayOfMonth: notificationDayOfMonth,
+            notificationTime: notificationTime,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -8847,6 +9999,7 @@ class $$LoansTableTableManager extends RootTableManager<
             required String type,
             required double principalAmount,
             required double interestRate,
+            Value<String> interestRatePeriod = const Value.absent(),
             required int totalInstallments,
             required double installmentAmount,
             required DateTime startDate,
@@ -8859,6 +10012,8 @@ class $$LoansTableTableManager extends RootTableManager<
             Value<String?> iconName = const Value.absent(),
             Value<String?> color = const Value.absent(),
             Value<String?> notificationDays = const Value.absent(),
+            Value<int?> notificationDayOfMonth = const Value.absent(),
+            Value<String?> notificationTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               LoansCompanion.insert(
@@ -8868,6 +10023,7 @@ class $$LoansTableTableManager extends RootTableManager<
             type: type,
             principalAmount: principalAmount,
             interestRate: interestRate,
+            interestRatePeriod: interestRatePeriod,
             totalInstallments: totalInstallments,
             installmentAmount: installmentAmount,
             startDate: startDate,
@@ -8880,6 +10036,8 @@ class $$LoansTableTableManager extends RootTableManager<
             iconName: iconName,
             color: color,
             notificationDays: notificationDays,
+            notificationDayOfMonth: notificationDayOfMonth,
+            notificationTime: notificationTime,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -9228,6 +10386,9 @@ typedef $$UserSettingsTableTableCreateCompanionBuilder
   Value<bool> loanRemindersEnabled,
   Value<bool> savingsRemindersEnabled,
   Value<bool> notificationPermissionAsked,
+  Value<String> balanceResetPeriod,
+  Value<int?> balanceResetDayOfMonth,
+  Value<int?> balanceResetDayOfWeek,
   Value<String?> theme,
   required DateTime createdAt,
   Value<DateTime?> updatedAt,
@@ -9246,6 +10407,9 @@ typedef $$UserSettingsTableTableUpdateCompanionBuilder
   Value<bool> loanRemindersEnabled,
   Value<bool> savingsRemindersEnabled,
   Value<bool> notificationPermissionAsked,
+  Value<String> balanceResetPeriod,
+  Value<int?> balanceResetDayOfMonth,
+  Value<int?> balanceResetDayOfWeek,
   Value<String?> theme,
   Value<DateTime> createdAt,
   Value<DateTime?> updatedAt,
@@ -9300,6 +10464,18 @@ class $$UserSettingsTableTableFilterComposer
 
   ColumnFilters<bool> get notificationPermissionAsked => $composableBuilder(
       column: $table.notificationPermissionAsked,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get balanceResetPeriod => $composableBuilder(
+      column: $table.balanceResetPeriod,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get balanceResetDayOfMonth => $composableBuilder(
+      column: $table.balanceResetDayOfMonth,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get balanceResetDayOfWeek => $composableBuilder(
+      column: $table.balanceResetDayOfWeek,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get theme => $composableBuilder(
@@ -9363,6 +10539,18 @@ class $$UserSettingsTableTableOrderingComposer
       column: $table.notificationPermissionAsked,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get balanceResetPeriod => $composableBuilder(
+      column: $table.balanceResetPeriod,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get balanceResetDayOfMonth => $composableBuilder(
+      column: $table.balanceResetDayOfMonth,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get balanceResetDayOfWeek => $composableBuilder(
+      column: $table.balanceResetDayOfWeek,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get theme => $composableBuilder(
       column: $table.theme, builder: (column) => ColumnOrderings(column));
 
@@ -9415,6 +10603,15 @@ class $$UserSettingsTableTableAnnotationComposer
   GeneratedColumn<bool> get notificationPermissionAsked => $composableBuilder(
       column: $table.notificationPermissionAsked, builder: (column) => column);
 
+  GeneratedColumn<String> get balanceResetPeriod => $composableBuilder(
+      column: $table.balanceResetPeriod, builder: (column) => column);
+
+  GeneratedColumn<int> get balanceResetDayOfMonth => $composableBuilder(
+      column: $table.balanceResetDayOfMonth, builder: (column) => column);
+
+  GeneratedColumn<int> get balanceResetDayOfWeek => $composableBuilder(
+      column: $table.balanceResetDayOfWeek, builder: (column) => column);
+
   GeneratedColumn<String> get theme =>
       $composableBuilder(column: $table.theme, builder: (column) => column);
 
@@ -9465,6 +10662,9 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             Value<bool> loanRemindersEnabled = const Value.absent(),
             Value<bool> savingsRemindersEnabled = const Value.absent(),
             Value<bool> notificationPermissionAsked = const Value.absent(),
+            Value<String> balanceResetPeriod = const Value.absent(),
+            Value<int?> balanceResetDayOfMonth = const Value.absent(),
+            Value<int?> balanceResetDayOfWeek = const Value.absent(),
             Value<String?> theme = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> updatedAt = const Value.absent(),
@@ -9482,6 +10682,9 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             loanRemindersEnabled: loanRemindersEnabled,
             savingsRemindersEnabled: savingsRemindersEnabled,
             notificationPermissionAsked: notificationPermissionAsked,
+            balanceResetPeriod: balanceResetPeriod,
+            balanceResetDayOfMonth: balanceResetDayOfMonth,
+            balanceResetDayOfWeek: balanceResetDayOfWeek,
             theme: theme,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -9499,6 +10702,9 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             Value<bool> loanRemindersEnabled = const Value.absent(),
             Value<bool> savingsRemindersEnabled = const Value.absent(),
             Value<bool> notificationPermissionAsked = const Value.absent(),
+            Value<String> balanceResetPeriod = const Value.absent(),
+            Value<int?> balanceResetDayOfMonth = const Value.absent(),
+            Value<int?> balanceResetDayOfWeek = const Value.absent(),
             Value<String?> theme = const Value.absent(),
             required DateTime createdAt,
             Value<DateTime?> updatedAt = const Value.absent(),
@@ -9516,6 +10722,9 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             loanRemindersEnabled: loanRemindersEnabled,
             savingsRemindersEnabled: savingsRemindersEnabled,
             notificationPermissionAsked: notificationPermissionAsked,
+            balanceResetPeriod: balanceResetPeriod,
+            balanceResetDayOfMonth: balanceResetDayOfMonth,
+            balanceResetDayOfWeek: balanceResetDayOfWeek,
             theme: theme,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -9875,6 +11084,13 @@ class $AppDatabaseManager {
       $$CustomCategoriesTableTableManager(_db, _db.customCategories);
   $$CustomIncomeSourcesTableTableManager get customIncomeSources =>
       $$CustomIncomeSourcesTableTableManager(_db, _db.customIncomeSources);
+  $$HiddenDefaultIncomeSourcesTableTableManager
+      get hiddenDefaultIncomeSources =>
+          $$HiddenDefaultIncomeSourcesTableTableManager(
+              _db, _db.hiddenDefaultIncomeSources);
+  $$HiddenDefaultCategoriesTableTableManager get hiddenDefaultCategories =>
+      $$HiddenDefaultCategoriesTableTableManager(
+          _db, _db.hiddenDefaultCategories);
   $$SavingsGoalsTableTableManager get savingsGoals =>
       $$SavingsGoalsTableTableManager(_db, _db.savingsGoals);
   $$SavingsContributionsTableTableManager get savingsContributions =>

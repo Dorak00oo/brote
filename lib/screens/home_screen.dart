@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../services/finance_service.dart';
 import '../models/transaction.dart';
 import '../models/loan.dart' as models;
+import '../models/user_settings.dart';
 import '../main.dart';
 import 'add_transaction_screen.dart';
 import 'investments_screen.dart';
@@ -154,7 +155,7 @@ class HomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'Este período',
+                  service.userSettings.balanceResetPeriod.displayNameShort,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,

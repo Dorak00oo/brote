@@ -16,6 +16,8 @@ class FinanceService extends ChangeNotifier {
   List<models.Transaction> _transactions = [];
   List<String> _customCategories = [];
   List<String> _customIncomeSources = [];
+  List<String> _hiddenDefaultCategories = [];
+  List<String> _hiddenDefaultIncomeSources = [];
   List<models.Budget> _budgets = [];
   List<models.Alert> _alerts = [];
   List<models.SavingsGoal> _savingsGoals = [];
@@ -44,8 +46,6 @@ class FinanceService extends ChangeNotifier {
       _loans.where((l) => l.status == models.LoanStatus.active).toList();
   models.UserSettings get userSettings =>
       _userSettings ?? models.UserSettings.defaults();
-  double get balance => _balance;
-
   // Día de inicio del mes configurado por el usuario
   int get monthStartDay => _userSettings?.monthStartDay ?? 1;
 
@@ -86,14 +86,18 @@ class FinanceService extends ChangeNotifier {
   ];
 
   List<String> get allExpenseCategories => [
-        ...defaultExpenseCategories,
+        ...defaultExpenseCategories.where((c) => !_hiddenDefaultCategories.contains(c)),
         ..._customCategories,
       ];
 
   List<String> get allIncomeSources => [
-        ...defaultIncomeSources,
+        ...defaultIncomeSources.where((s) => !_hiddenDefaultIncomeSources.contains(s)),
         ..._customIncomeSources,
       ];
+
+  // Getters para fuentes/categorías ocultas
+  List<String> get hiddenDefaultCategories => _hiddenDefaultCategories;
+  List<String> get hiddenDefaultIncomeSources => _hiddenDefaultIncomeSources;
 
   // ========== TOTALES ==========
   double get totalIncome {
@@ -245,6 +249,8 @@ class FinanceService extends ChangeNotifier {
       _loadTransactions(),
       _loadCategories(),
       _loadIncomeSources(),
+      _loadHiddenDefaultCategories(),
+      _loadHiddenDefaultIncomeSources(),
       _loadBudgets(),
       _loadAlerts(),
       _loadSavingsGoals(),
@@ -353,7 +359,12 @@ class FinanceService extends ChangeNotifier {
       ),
       iconName: db.iconName,
       color: db.color,
+      contributionFrequency: models.ContributionFrequency.values.firstWhere(
+        (f) => f.name == db.contributionFrequency,
+        orElse: () => models.ContributionFrequency.monthly,
+      ),
       notificationDays: db.notificationDays,
+      notificationTime: db.notificationTime,
     );
   }
 
@@ -369,7 +380,9 @@ class FinanceService extends ChangeNotifier {
       status: Value(goal.status.name),
       iconName: Value(goal.iconName),
       color: Value(goal.color),
+      contributionFrequency: Value(goal.contributionFrequency.name),
       notificationDays: Value(goal.notificationDays),
+      notificationTime: Value(goal.notificationTime),
     );
   }
 
@@ -386,6 +399,10 @@ class FinanceService extends ChangeNotifier {
       initialAmount: db.initialAmount,
       currentValue: db.currentValue,
       expectedReturnRate: db.expectedReturnRate,
+      returnRatePeriod: models.InterestRatePeriod.values.firstWhere(
+        (p) => p.name == db.returnRatePeriod,
+        orElse: () => models.InterestRatePeriod.yearly,
+      ),
       purchaseDate: db.purchaseDate,
       soldDate: db.soldDate,
       soldAmount: db.soldAmount,
@@ -399,6 +416,7 @@ class FinanceService extends ChangeNotifier {
       iconName: db.iconName,
       color: db.color,
       notificationDays: db.notificationDays,
+      notificationTime: db.notificationTime,
     );
   }
 
@@ -411,6 +429,7 @@ class FinanceService extends ChangeNotifier {
       initialAmount: investment.initialAmount,
       currentValue: investment.currentValue,
       expectedReturnRate: investment.expectedReturnRate,
+      returnRatePeriod: Value(investment.returnRatePeriod.name),
       purchaseDate: investment.purchaseDate,
       soldDate: Value(investment.soldDate),
       soldAmount: Value(investment.soldAmount),
@@ -421,6 +440,7 @@ class FinanceService extends ChangeNotifier {
       iconName: Value(investment.iconName),
       color: Value(investment.color),
       notificationDays: Value(investment.notificationDays),
+      notificationTime: Value(investment.notificationTime),
     );
   }
 
@@ -436,6 +456,10 @@ class FinanceService extends ChangeNotifier {
       ),
       principalAmount: db.principalAmount,
       interestRate: db.interestRate,
+      interestRatePeriod: models.InterestRatePeriod.values.firstWhere(
+        (p) => p.name == db.interestRatePeriod,
+        orElse: () => models.InterestRatePeriod.yearly,
+      ),
       totalInstallments: db.totalInstallments,
       installmentAmount: db.installmentAmount,
       startDate: db.startDate,
@@ -454,6 +478,8 @@ class FinanceService extends ChangeNotifier {
       iconName: db.iconName,
       color: db.color,
       notificationDays: db.notificationDays,
+      notificationDayOfMonth: db.notificationDayOfMonth,
+      notificationTime: db.notificationTime,
     );
   }
 
@@ -465,6 +491,7 @@ class FinanceService extends ChangeNotifier {
       type: loan.type.name,
       principalAmount: loan.principalAmount,
       interestRate: loan.interestRate,
+      interestRatePeriod: Value(loan.interestRatePeriod.name),
       totalInstallments: loan.totalInstallments,
       installmentAmount: loan.installmentAmount,
       startDate: loan.startDate,
@@ -477,11 +504,23 @@ class FinanceService extends ChangeNotifier {
       iconName: Value(loan.iconName),
       color: Value(loan.color),
       notificationDays: Value(loan.notificationDays),
+      notificationDayOfMonth: Value(loan.notificationDayOfMonth),
+      notificationTime: Value(loan.notificationTime),
     );
   }
 
   // ========== CONVERSIÓN DE MODELOS: CONFIGURACIÓN ==========
   models.UserSettings _fromDbUserSettings(UserSettingsTableData db) {
+    models.BalanceResetPeriod resetPeriod = models.BalanceResetPeriod.total;
+    try {
+      resetPeriod = models.BalanceResetPeriod.values.firstWhere(
+        (e) => e.name == db.balanceResetPeriod,
+        orElse: () => models.BalanceResetPeriod.total,
+      );
+    } catch (_) {
+      resetPeriod = models.BalanceResetPeriod.total;
+    }
+    
     return models.UserSettings(
       id: db.id,
       monthStartDay: db.monthStartDay,
@@ -494,6 +533,9 @@ class FinanceService extends ChangeNotifier {
       loanRemindersEnabled: db.loanRemindersEnabled,
       savingsRemindersEnabled: db.savingsRemindersEnabled,
       notificationPermissionAsked: db.notificationPermissionAsked,
+      balanceResetPeriod: resetPeriod,
+      balanceResetDayOfMonth: db.balanceResetDayOfMonth,
+      balanceResetDayOfWeek: db.balanceResetDayOfWeek,
       theme: db.theme,
       createdAt: db.createdAt,
       updatedAt: db.updatedAt,
@@ -515,6 +557,74 @@ class FinanceService extends ChangeNotifier {
   void _calculateBalance() {
     _balance = totalIncome - totalExpenses;
   }
+
+  /// Obtiene el balance según el período configurado
+  double get balance {
+    if (_userSettings == null) return _balance;
+    
+    final resetPeriod = _userSettings!.balanceResetPeriod;
+    if (resetPeriod == models.BalanceResetPeriod.total) {
+      return _balance;
+    }
+    
+    // Calcular el balance solo para el período configurado
+    final now = DateTime.now();
+    DateTime startDate;
+    
+    switch (resetPeriod) {
+      case models.BalanceResetPeriod.daily:
+        startDate = DateTime(now.year, now.month, now.day);
+        break;
+      case models.BalanceResetPeriod.weekly:
+        // Día de la semana configurado (por defecto lunes = 1)
+        final configuredDayOfWeek = _userSettings!.balanceResetDayOfWeek ?? 1;
+        final weekday = now.weekday;
+        // Calcular días desde el día configurado de esta semana
+        int daysFromConfiguredDay;
+        if (weekday >= configuredDayOfWeek) {
+          daysFromConfiguredDay = weekday - configuredDayOfWeek;
+        } else {
+          // Si el día actual es anterior al día configurado, ir a la semana pasada
+          daysFromConfiguredDay = weekday + (7 - configuredDayOfWeek);
+        }
+        startDate = now.subtract(Duration(days: daysFromConfiguredDay));
+        startDate = DateTime(startDate.year, startDate.month, startDate.day);
+        break;
+      case models.BalanceResetPeriod.monthly:
+        // Día del mes configurado (por defecto día 1)
+        final configuredDayOfMonth = _userSettings!.balanceResetDayOfMonth ?? 1;
+        if (now.day >= configuredDayOfMonth) {
+          // El período actual empezó este mes
+          startDate = DateTime(now.year, now.month, configuredDayOfMonth);
+        } else {
+          // El período actual empezó el mes pasado
+          final previousMonth = DateTime(now.year, now.month - 1, 1);
+          startDate = DateTime(previousMonth.year, previousMonth.month, configuredDayOfMonth);
+        }
+        break;
+      case models.BalanceResetPeriod.total:
+        return _balance;
+    }
+    
+    // Filtrar transacciones del período
+    final periodTransactions = _transactions.where((t) {
+      final tDate = DateTime(t.date.year, t.date.month, t.date.day);
+      return !tDate.isBefore(startDate);
+    }).toList();
+    
+    final periodIncome = periodTransactions
+        .where((t) => t.type == models.TransactionType.income)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    
+    final periodExpenses = periodTransactions
+        .where((t) => t.type == models.TransactionType.expense)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    
+    return periodIncome - periodExpenses;
+  }
+  
+  /// Obtiene el balance total acumulado (sin filtro de período)
+  double get totalBalance => _balance;
 
   Future<void> addTransaction(models.Transaction transaction) async {
     try {
@@ -738,6 +848,93 @@ class FinanceService extends ChangeNotifier {
       await _db.deleteCustomIncomeSource(source);
     } catch (e) {
       debugPrint('Error deleting income source: $e');
+      rethrow;
+    }
+  }
+
+  // ========== FUENTES/CATEGORÍAS PREDEFINIDAS OCULTAS ==========
+  Future<void> _loadHiddenDefaultCategories() async {
+    try {
+      final dbHidden = await _db.getAllHiddenDefaultCategories();
+      _hiddenDefaultCategories = dbHidden.map((h) => h.name).toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading hidden categories: $e');
+    }
+  }
+
+  Future<void> _loadHiddenDefaultIncomeSources() async {
+    try {
+      final dbHidden = await _db.getAllHiddenDefaultIncomeSources();
+      _hiddenDefaultIncomeSources = dbHidden.map((h) => h.name).toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading hidden income sources: $e');
+    }
+  }
+
+  Future<void> hideDefaultCategory(String category) async {
+    try {
+      await _db.hideDefaultCategory(category);
+      _hiddenDefaultCategories.add(category);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error hiding category: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> unhideDefaultCategory(String category) async {
+    try {
+      await _db.unhideDefaultCategory(category);
+      _hiddenDefaultCategories.remove(category);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error unhiding category: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> hideDefaultIncomeSource(String source) async {
+    try {
+      await _db.hideDefaultIncomeSource(source);
+      _hiddenDefaultIncomeSources.add(source);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error hiding income source: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> unhideDefaultIncomeSource(String source) async {
+    try {
+      await _db.unhideDefaultIncomeSource(source);
+      _hiddenDefaultIncomeSources.remove(source);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error unhiding income source: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> restoreAllDefaultIncomeSources() async {
+    try {
+      await _db.unhideAllDefaultIncomeSources();
+      _hiddenDefaultIncomeSources.clear();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error restoring income sources: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> restoreAllDefaultCategories() async {
+    try {
+      await _db.unhideAllDefaultCategories();
+      _hiddenDefaultCategories.clear();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error restoring categories: $e');
       rethrow;
     }
   }
@@ -1302,6 +1499,32 @@ class FinanceService extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error marking notification permission asked: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateBalanceResetPeriod(
+    models.BalanceResetPeriod period, {
+    int? dayOfMonth,
+    int? dayOfWeek,
+  }) async {
+    try {
+      await _db.updateUserSettings(UserSettingsTableCompanion(
+        balanceResetPeriod: Value(period.name),
+        balanceResetDayOfMonth: dayOfMonth != null ? Value(dayOfMonth) : const Value.absent(),
+        balanceResetDayOfWeek: dayOfWeek != null ? Value(dayOfWeek) : const Value.absent(),
+      ));
+      // Actualizar el estado interno
+      if (_userSettings != null) {
+        _userSettings = _userSettings!.copyWith(
+          balanceResetPeriod: period,
+          balanceResetDayOfMonth: dayOfMonth,
+          balanceResetDayOfWeek: dayOfWeek,
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error updating balance reset period: $e');
       rethrow;
     }
   }

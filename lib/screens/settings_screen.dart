@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/finance_service.dart';
+import '../models/user_settings.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -22,6 +23,16 @@ class SettingsScreen extends StatelessWidget {
                 'Período Financiero',
                 [
                   _buildMonthStartDaySetting(context, service),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Configuración del balance
+              _buildSection(
+                context,
+                'Balance Total',
+                [
+                  _buildBalanceResetPeriodSetting(context, service),
                 ],
               ),
               const SizedBox(height: 24),
@@ -298,6 +309,287 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                 ],
               ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildBalanceResetPeriodSetting(
+    BuildContext context,
+    FinanceService service,
+  ) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          Icons.refresh_rounded,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+      title: const Text('Período de reinicio del balance'),
+      subtitle: Text(
+        'El balance se reinicia: ${service.userSettings.balanceResetPeriod.displayName}',
+      ),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () => _showBalanceResetPeriodPicker(context, service),
+    );
+  }
+
+  void _showBalanceResetPeriodPicker(
+    BuildContext context,
+    FinanceService service,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        var selectedPeriod = service.userSettings.balanceResetPeriod;
+        var selectedDayOfMonth = service.userSettings.balanceResetDayOfMonth ?? 1;
+        var selectedDayOfWeek = service.userSettings.balanceResetDayOfWeek ?? 1;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            String getPeriodDescription(BalanceResetPeriod period) {
+              switch (period) {
+                case BalanceResetPeriod.total:
+                  return 'Muestra el balance acumulado desde el inicio';
+                case BalanceResetPeriod.daily:
+                  return 'Se reinicia cada día';
+                case BalanceResetPeriod.weekly:
+                  final weekDays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                  return 'Se reinicia cada ${weekDays[selectedDayOfWeek - 1]}';
+                case BalanceResetPeriod.monthly:
+                  return 'Se reinicia el día $selectedDayOfMonth de cada mes';
+              }
+            }
+
+            return DraggableScrollableSheet(
+              initialChildSize: 0.9,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                return SingleChildScrollView(
+                  controller: scrollController,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Período de reinicio del balance',
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Selecciona cada cuánto tiempo se reinicia el balance en el home. El balance total acumulado siempre estará disponible en Estadísticas.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                        ),
+                        const SizedBox(height: 24),
+                        ...BalanceResetPeriod.values.map((period) {
+                          final isSelected = period == selectedPeriod;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: InkWell(
+                              onTap: () => setState(() => selectedPeriod = period),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withOpacity(0.1)
+                                      : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      isSelected
+                                          ? Icons.radio_button_checked_rounded
+                                          : Icons.radio_button_unchecked_rounded,
+                                      color: isSelected
+                                          ? Theme.of(context).colorScheme.primary
+                                          : Colors.grey,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            period.displayName,
+                                            style: TextStyle(
+                                              fontWeight: isSelected
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            getPeriodDescription(period),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: Colors.grey[600],
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                        // Selector de día del mes para período mensual
+                        if (selectedPeriod == BalanceResetPeriod.monthly) ...[
+                          const SizedBox(height: 24),
+                          Text(
+                            'Día del mes',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 200,
+                            child: GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 7,
+                                childAspectRatio: 1,
+                                crossAxisSpacing: 8,
+                                mainAxisSpacing: 8,
+                              ),
+                              itemCount: 28,
+                              itemBuilder: (context, index) {
+                                final day = index + 1;
+                                final isSelected = day == selectedDayOfMonth;
+
+                                return GestureDetector(
+                                  onTap: () => setState(() => selectedDayOfMonth = day),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? Theme.of(context).colorScheme.primary
+                                          : Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '$day',
+                                        style: TextStyle(
+                                          color: isSelected ? Colors.white : Colors.black,
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                        // Selector de día de la semana para período semanal
+                        if (selectedPeriod == BalanceResetPeriod.weekly) ...[
+                          const SizedBox(height: 24),
+                          Text(
+                            'Día de la semana',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              'Lunes',
+                              'Martes',
+                              'Miércoles',
+                              'Jueves',
+                              'Viernes',
+                              'Sábado',
+                              'Domingo',
+                            ].asMap().entries.map((entry) {
+                              final index = entry.key + 1;
+                              final dayName = entry.value;
+                              final isSelected = index == selectedDayOfWeek;
+
+                              return ChoiceChip(
+                                label: Text(dayName),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    setState(() => selectedDayOfWeek = index);
+                                  }
+                                },
+                                selectedColor: Theme.of(context).colorScheme.primary,
+                                labelStyle: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.black,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              await service.updateBalanceResetPeriod(
+                                selectedPeriod,
+                                dayOfMonth: selectedPeriod == BalanceResetPeriod.monthly
+                                    ? selectedDayOfMonth
+                                    : null,
+                                dayOfWeek: selectedPeriod == BalanceResetPeriod.weekly
+                                    ? selectedDayOfWeek
+                                    : null,
+                              );
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'El balance ahora se reinicia: ${selectedPeriod.displayName}',
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text('Guardar'),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                );
+              },
             );
           },
         );
@@ -605,10 +897,8 @@ class SettingsScreen extends StatelessWidget {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            final allCategories = <String>{
-              ...FinanceService.defaultExpenseCategories,
-              ...service.customCategories,
-            }.toList();
+            // Usar allExpenseCategories que ya filtra las ocultas
+            final allCategories = service.allExpenseCategories;
 
             return Padding(
               padding: EdgeInsets.only(
@@ -676,8 +966,9 @@ class SettingsScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Center(
                         child: Text(
-                          'No hay categorías. Agrega una nueva.',
+                          'No hay categorías. Agrega una nueva o restaura las predefinidas.',
                           style: TextStyle(color: Colors.grey[500]),
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     )
@@ -695,7 +986,13 @@ class SettingsScreen extends StatelessWidget {
                               isDefault ? Colors.grey[100] : Colors.red[50],
                           deleteIcon: const Icon(Icons.close, size: 18),
                           onDeleted: () async {
-                            await service.deleteCustomCategory(cat);
+                            if (isDefault) {
+                              // Ocultar la categoría predefinida
+                              await service.hideDefaultCategory(cat);
+                            } else {
+                              // Eliminar la categoría personalizada
+                              await service.deleteCustomCategory(cat);
+                            }
                             setState(() {});
                           },
                         );
@@ -705,12 +1002,7 @@ class SettingsScreen extends StatelessWidget {
                   // Botón para restaurar predefinidas
                   TextButton.icon(
                     onPressed: () async {
-                      for (final cat
-                          in FinanceService.defaultExpenseCategories) {
-                        if (!service.customCategories.contains(cat)) {
-                          await service.addCustomCategory(cat);
-                        }
-                      }
+                      await service.restoreAllDefaultCategories();
                       setState(() {});
                     },
                     icon: const Icon(Icons.restore_rounded, size: 18),
@@ -738,10 +1030,8 @@ class SettingsScreen extends StatelessWidget {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            final allSources = <String>{
-              ...FinanceService.defaultIncomeSources,
-              ...service.customIncomeSources,
-            }.toList();
+            // Usar allIncomeSources que ya filtra las ocultas
+            final allSources = service.allIncomeSources;
 
             return Padding(
               padding: EdgeInsets.only(
@@ -810,8 +1100,9 @@ class SettingsScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Center(
                         child: Text(
-                          'No hay fuentes. Agrega una nueva.',
+                          'No hay fuentes. Agrega una nueva o restaura las predefinidas.',
                           style: TextStyle(color: Colors.grey[500]),
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     )
@@ -828,7 +1119,13 @@ class SettingsScreen extends StatelessWidget {
                               isDefault ? Colors.grey[100] : Colors.green[50],
                           deleteIcon: const Icon(Icons.close, size: 18),
                           onDeleted: () async {
-                            await service.deleteCustomIncomeSource(source);
+                            if (isDefault) {
+                              // Ocultar la fuente predefinida
+                              await service.hideDefaultIncomeSource(source);
+                            } else {
+                              // Eliminar la fuente personalizada
+                              await service.deleteCustomIncomeSource(source);
+                            }
                             setState(() {});
                           },
                         );
@@ -838,12 +1135,7 @@ class SettingsScreen extends StatelessWidget {
                   // Botón para restaurar predefinidas
                   TextButton.icon(
                     onPressed: () async {
-                      for (final source
-                          in FinanceService.defaultIncomeSources) {
-                        if (!service.customIncomeSources.contains(source)) {
-                          await service.addCustomIncomeSource(source);
-                        }
-                      }
+                      await service.restoreAllDefaultIncomeSources();
                       setState(() {});
                     },
                     icon: const Icon(Icons.restore_rounded, size: 18),

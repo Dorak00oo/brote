@@ -1,3 +1,39 @@
+/// Período de reinicio del balance
+enum BalanceResetPeriod {
+  daily, // Diario
+  weekly, // Semanal
+  monthly, // Mensual
+  total, // Total (sin reinicio)
+}
+
+extension BalanceResetPeriodExtension on BalanceResetPeriod {
+  String get displayName {
+    switch (this) {
+      case BalanceResetPeriod.daily:
+        return 'Diario';
+      case BalanceResetPeriod.weekly:
+        return 'Semanal';
+      case BalanceResetPeriod.monthly:
+        return 'Mensual';
+      case BalanceResetPeriod.total:
+        return 'Total';
+    }
+  }
+
+  String get displayNameShort {
+    switch (this) {
+      case BalanceResetPeriod.daily:
+        return 'Hoy';
+      case BalanceResetPeriod.weekly:
+        return 'Esta semana';
+      case BalanceResetPeriod.monthly:
+        return 'Este mes';
+      case BalanceResetPeriod.total:
+        return 'Total acumulado';
+    }
+  }
+}
+
 /// Configuración del usuario
 class UserSettings {
   final String id;
@@ -11,6 +47,9 @@ class UserSettings {
   final bool loanRemindersEnabled; // Recordatorios de préstamos
   final bool savingsRemindersEnabled; // Recordatorios de ahorro
   final bool notificationPermissionAsked; // Si ya se pidieron permisos de notificaciones
+  final BalanceResetPeriod balanceResetPeriod; // Período de reinicio del balance
+  final int? balanceResetDayOfMonth; // Día del mes para reinicio mensual (1-28)
+  final int? balanceResetDayOfWeek; // Día de la semana para reinicio semanal (1=lunes, 7=domingo)
   final String? theme; // Tema de la app
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -27,6 +66,9 @@ class UserSettings {
     this.loanRemindersEnabled = true,
     this.savingsRemindersEnabled = true,
     this.notificationPermissionAsked = false,
+    this.balanceResetPeriod = BalanceResetPeriod.total,
+    this.balanceResetDayOfMonth,
+    this.balanceResetDayOfWeek,
     this.theme,
     required this.createdAt,
     this.updatedAt,
@@ -46,6 +88,9 @@ class UserSettings {
       loanRemindersEnabled: true,
       savingsRemindersEnabled: true,
       notificationPermissionAsked: false,
+      balanceResetPeriod: BalanceResetPeriod.total,
+      balanceResetDayOfMonth: null,
+      balanceResetDayOfWeek: null,
       createdAt: DateTime.now(),
     );
   }
@@ -168,6 +213,9 @@ class UserSettings {
       'loanRemindersEnabled': loanRemindersEnabled,
       'savingsRemindersEnabled': savingsRemindersEnabled,
       'notificationPermissionAsked': notificationPermissionAsked,
+      'balanceResetPeriod': balanceResetPeriod.name,
+      'balanceResetDayOfMonth': balanceResetDayOfMonth,
+      'balanceResetDayOfWeek': balanceResetDayOfWeek,
       'theme': theme,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
@@ -175,6 +223,18 @@ class UserSettings {
   }
 
   factory UserSettings.fromJson(Map<String, dynamic> json) {
+    BalanceResetPeriod resetPeriod = BalanceResetPeriod.total;
+    if (json['balanceResetPeriod'] != null) {
+      try {
+        resetPeriod = BalanceResetPeriod.values.firstWhere(
+          (e) => e.name == json['balanceResetPeriod'],
+          orElse: () => BalanceResetPeriod.total,
+        );
+      } catch (_) {
+        resetPeriod = BalanceResetPeriod.total;
+      }
+    }
+    
     return UserSettings(
       id: json['id'],
       monthStartDay: json['monthStartDay'] as int? ?? 1,
@@ -187,6 +247,9 @@ class UserSettings {
       loanRemindersEnabled: json['loanRemindersEnabled'] as bool? ?? true,
       savingsRemindersEnabled: json['savingsRemindersEnabled'] as bool? ?? true,
       notificationPermissionAsked: json['notificationPermissionAsked'] as bool? ?? false,
+      balanceResetPeriod: resetPeriod,
+      balanceResetDayOfMonth: json['balanceResetDayOfMonth'] as int?,
+      balanceResetDayOfWeek: json['balanceResetDayOfWeek'] as int?,
       theme: json['theme'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
@@ -208,6 +271,9 @@ class UserSettings {
     bool? loanRemindersEnabled,
     bool? savingsRemindersEnabled,
     bool? notificationPermissionAsked,
+    BalanceResetPeriod? balanceResetPeriod,
+    int? balanceResetDayOfMonth,
+    int? balanceResetDayOfWeek,
     String? theme,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -225,6 +291,9 @@ class UserSettings {
       savingsRemindersEnabled:
           savingsRemindersEnabled ?? this.savingsRemindersEnabled,
       notificationPermissionAsked: notificationPermissionAsked ?? this.notificationPermissionAsked,
+      balanceResetPeriod: balanceResetPeriod ?? this.balanceResetPeriod,
+      balanceResetDayOfMonth: balanceResetDayOfMonth ?? this.balanceResetDayOfMonth,
+      balanceResetDayOfWeek: balanceResetDayOfWeek ?? this.balanceResetDayOfWeek,
       theme: theme ?? this.theme,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

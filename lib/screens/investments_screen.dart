@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../services/finance_service.dart';
 import '../models/investment.dart';
+import '../widgets/notification_config_dialog.dart';
 import '../main.dart';
 
 /// Formateador de números con separadores de miles
@@ -515,7 +516,9 @@ class InvestmentsScreen extends StatelessWidget {
         trailing: isActive
             ? PopupMenuButton<String>(
                 onSelected: (value) async {
-                  if (value == 'update') {
+                  if (value == 'edit') {
+                    _showEditInvestmentDialog(context, investment, service);
+                  } else if (value == 'update') {
                     _showUpdateValueDialog(context, investment, service);
                   } else if (value == 'sell') {
                     _showSellDialog(context, investment, service);
@@ -526,6 +529,16 @@ class InvestmentsScreen extends StatelessWidget {
                   }
                 },
                 itemBuilder: (_) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_rounded, size: 18),
+                        SizedBox(width: 8),
+                        Text('Editar'),
+                      ],
+                    ),
+                  ),
                   const PopupMenuItem(
                     value: 'update',
                     child: Text('Actualizar valor'),
@@ -594,8 +607,10 @@ class InvestmentsScreen extends StatelessWidget {
     final returnRateController = TextEditingController(text: '10');
     InvestmentType selectedType = InvestmentType.stocks;
     InvestmentIconOption selectedIcon = investmentIconOptions.first;
+    InterestRatePeriod ratePeriod = InterestRatePeriod.yearly; // Anual por defecto
     DateTime purchaseDate = DateTime.now();
     Set<int> notificationDays = {};
+    String? notificationTime;
 
     showModalBottomSheet(
       context: context,
@@ -712,33 +727,59 @@ class InvestmentsScreen extends StatelessWidget {
                       builder: (context, service, _) {
                         final settings = service.userSettings;
                         return TextFormField(
-                          controller: amountController,
-                          decoration: const InputDecoration(
-                            labelText: 'Monto invertido',
-                            prefixIcon: Icon(Icons.attach_money_rounded),
-                          ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          inputFormatters: [
+                      controller: amountController,
+                      decoration: const InputDecoration(
+                        labelText: 'Monto invertido',
+                        prefixIcon: Icon(Icons.attach_money_rounded),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
                             NumberFormatInputFormatter(
                               thousandsSeparator: settings.thousandsSeparator,
                               decimalSeparator: settings.decimalSeparator,
                             ),
-                          ],
-                          validator: (v) => v?.isEmpty ?? true ? 'Requerido' : null,
+                      ],
+                      validator: (v) => v?.isEmpty ?? true ? 'Requerido' : null,
                         );
                       },
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                    
+                    // Rentabilidad esperada con selector de periodicidad
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: TextFormField(
                       controller: returnRateController,
                       decoration: const InputDecoration(
-                        labelText: 'Rentabilidad esperada (% anual)',
+                              labelText: 'Rentabilidad (%)',
                         prefixIcon: Icon(Icons.percent_rounded),
                         suffixText: '%',
                       ),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                      ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 3,
+                          child: DropdownButtonFormField<InterestRatePeriod>(
+                            value: ratePeriod,
+                            decoration: const InputDecoration(
+                              labelText: 'Periodicidad',
+                            ),
+                            items: InterestRatePeriod.values.map((period) {
+                              return DropdownMenuItem(
+                                value: period,
+                                child: Text(period.displayName),
+                              );
+                            }).toList(),
+                            onChanged: (v) => setState(() => ratePeriod = v!),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -771,83 +812,30 @@ class InvestmentsScreen extends StatelessWidget {
                     // Campo de notificación
                     InkWell(
                       onTap: () async {
-                        final result = await showDialog<Set<int>>(
+                        final result = await NotificationConfigDialog.show(
                           context: context,
-                          builder: (dialogContext) {
-                            Set<int> tempDays = Set.from(notificationDays);
-                            return StatefulBuilder(
-                              builder: (context, setDialogState) {
-                                return AlertDialog(
-                                  title: const Text('Días de notificación'),
-                                  content: SizedBox(
-                                    width: double.maxFinite,
-                                    child: SingleChildScrollView(
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Text('Selecciona los días del mes para recibir recordatorios:'),
-                                          const SizedBox(height: 16),
-                                          Wrap(
-                                            spacing: 8,
-                                            runSpacing: 8,
-                                            children: List.generate(31, (index) {
-                                              final day = index + 1;
-                                              final isSelected = tempDays.contains(day);
-                                              return FilterChip(
-                                                label: Text('$day'),
-                                                selected: isSelected,
-                                                onSelected: (selected) {
-                                                  setDialogState(() {
-                                                    if (selected) {
-                                                      tempDays.add(day);
-                                                    } else {
-                                                      tempDays.remove(day);
-                                                    }
-                                                  });
-                                                },
-                                              );
-                                            }),
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
-                                            children: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  setDialogState(() => tempDays.clear());
-                                                },
-                                                child: const Text('Limpiar'),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              ElevatedButton(
-                                                onPressed: () => Navigator.pop(dialogContext, tempDays),
-                                                child: const Text('Aceptar'),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
+                          title: 'Configurar recordatorio',
+                          currentSelection: notificationDays,
+                          currentTime: notificationTime,
+                          helpText: 'Selecciona los días del mes para recibir recordatorios de inversión',
                         );
                         if (result != null) {
-                          setState(() => notificationDays = result);
+                          setState(() {
+                            notificationDays = result.selection;
+                            notificationTime = result.time;
+                          });
                         }
                       },
                       borderRadius: BorderRadius.circular(12),
                       child: InputDecorator(
                         decoration: InputDecoration(
-                          labelText: 'Días de notificación (opcional)',
+                          labelText: 'Recordatorio de inversión (opcional)',
                           prefixIcon: Icon(Icons.notifications_rounded, color: selectedIcon.color),
-                          helperText: 'Recibirás recordatorios los días seleccionados de cada mes',
+                          helperText: 'Selecciona días del mes y hora para recordatorio',
                         ),
                         child: Text(
                           notificationDays.isNotEmpty
-                              ? 'Días: ${(notificationDays.toList()..sort()).join(", ")}'
+                              ? NotificationConfigDialog.formatMonthDaysDisplay(notificationDays, notificationTime)
                               : 'Sin notificación',
                         ),
                       ),
@@ -874,12 +862,14 @@ class InvestmentsScreen extends StatelessWidget {
                               initialAmount: amount,
                               currentValue: amount,
                               expectedReturnRate: double.tryParse(returnRateController.text) ?? 10,
+                              returnRatePeriod: ratePeriod,
                               purchaseDate: purchaseDate,
                               iconName: selectedIcon.id,
                               color: '#${selectedIcon.color.value.toRadixString(16).substring(2)}',
                               notificationDays: notificationDays.isNotEmpty 
                                   ? (notificationDays.toList()..sort()).join(',')
                                   : null,
+                              notificationTime: notificationTime,
                             );
                             await service.addInvestment(investment);
                             Navigator.pop(context);
@@ -905,58 +895,447 @@ class InvestmentsScreen extends StatelessWidget {
     );
   }
 
+  void _showEditInvestmentDialog(
+    BuildContext context,
+    Investment investment,
+    FinanceService service,
+  ) {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController(text: investment.name);
+    final settings = service.userSettings;
+    final formattedAmount = settings.formatNumber(investment.initialAmount, decimals: 0);
+    final amountController = TextEditingController(text: formattedAmount);
+    final returnRateController = TextEditingController(text: investment.expectedReturnRate.toStringAsFixed(2));
+    InvestmentType selectedType = investment.type;
+    InvestmentIconOption selectedIcon = getInvestmentIconById(investment.iconName);
+    InterestRatePeriod ratePeriod = investment.returnRatePeriod;
+    DateTime purchaseDate = investment.purchaseDate;
+    Set<int> notificationDays = investment.notificationDaysList.toSet();
+    String? notificationTime = investment.notificationTime;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Editar inversión',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Selector de icono
+                    Text(
+                      'Elige un icono',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 80,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: investmentIconOptions.length,
+                        itemBuilder: (context, index) {
+                          final iconOption = investmentIconOptions[index];
+                          final isSelected = selectedIcon.id == iconOption.id;
+                          return GestureDetector(
+                            onTap: () => setState(() => selectedIcon = iconOption),
+                            child: Container(
+                              width: 70,
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? iconOption.color.withOpacity(0.15)
+                                    : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                                border: isSelected
+                                    ? Border.all(color: iconOption.color, width: 2)
+                                    : null,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    iconOption.icon,
+                                    color: isSelected ? iconOption.color : Colors.grey[600],
+                                    size: 28,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    iconOption.label,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      color: isSelected ? iconOption.color : Colors.grey[600],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    TextFormField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre',
+                        prefixIcon: Icon(Icons.edit_rounded),
+                      ),
+                      validator: (v) => v?.isEmpty ?? true ? 'Requerido' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<InvestmentType>(
+                      value: selectedType,
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo',
+                        prefixIcon: Icon(Icons.category_rounded),
+                      ),
+                      items: InvestmentType.values.map((type) {
+                        return DropdownMenuItem(
+                          value: type,
+                          child: Text(_getInvestmentTypeName(type)),
+                        );
+                      }).toList(),
+                      onChanged: (v) => setState(() => selectedType = v!),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: amountController,
+                      decoration: const InputDecoration(
+                        labelText: 'Monto invertido',
+                        prefixIcon: Icon(Icons.attach_money_rounded),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        NumberFormatInputFormatter(
+                          thousandsSeparator: settings.thousandsSeparator,
+                          decimalSeparator: settings.decimalSeparator,
+                        ),
+                      ],
+                      validator: (v) => v?.isEmpty ?? true ? 'Requerido' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Rentabilidad esperada con selector de periodicidad
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: TextFormField(
+                            controller: returnRateController,
+                            decoration: const InputDecoration(
+                              labelText: 'Rentabilidad (%)',
+                              prefixIcon: Icon(Icons.percent_rounded),
+                              suffixText: '%',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 3,
+                          child: DropdownButtonFormField<InterestRatePeriod>(
+                            value: ratePeriod,
+                            decoration: const InputDecoration(
+                              labelText: 'Periodicidad',
+                            ),
+                            items: InterestRatePeriod.values.map((period) {
+                              return DropdownMenuItem(
+                                value: period,
+                                child: Text(period.displayName),
+                              );
+                            }).toList(),
+                            onChanged: (v) => setState(() => ratePeriod = v!),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Fecha de compra/inversión
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+      context: context,
+                          initialDate: purchaseDate,
+                          firstDate: DateTime(2010),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setState(() => purchaseDate = picked);
+                        }
+                      },
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Fecha de compra/inversión',
+                          prefixIcon: Icon(Icons.calendar_today_rounded),
+                        ),
+                        child: Text(
+                          DateFormat('d MMMM yyyy', 'es').format(purchaseDate),
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Campo de notificación
+                    InkWell(
+                      onTap: () async {
+                        final result = await NotificationConfigDialog.show(
+                          context: context,
+                          title: 'Configurar recordatorio',
+                          currentSelection: notificationDays,
+                          currentTime: notificationTime,
+                          helpText: 'Selecciona los días del mes para recibir recordatorios de inversión',
+                        );
+                        if (result != null) {
+                          setState(() {
+                            notificationDays = result.selection;
+                            notificationTime = result.time;
+                          });
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Recordatorio de inversión (opcional)',
+                          prefixIcon: Icon(Icons.notifications_rounded, color: selectedIcon.color),
+                          helperText: 'Selecciona días del mes y hora para recordatorio',
+                        ),
+                        child: Text(
+                          notificationDays.isNotEmpty
+                              ? NotificationConfigDialog.formatMonthDaysDisplay(notificationDays, notificationTime)
+                              : 'Sin notificación',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            final cleanAmount = NumberFormatInputFormatter.removeFormatting(
+                              amountController.text,
+                              settings.thousandsSeparator,
+                              settings.decimalSeparator,
+                            );
+                            final amount = double.parse(cleanAmount);
+                            final updatedInvestment = investment.copyWith(
+                              name: nameController.text.trim(),
+                              type: selectedType,
+                              initialAmount: amount,
+                              expectedReturnRate: double.tryParse(returnRateController.text) ?? investment.expectedReturnRate,
+                              returnRatePeriod: ratePeriod,
+                              purchaseDate: purchaseDate,
+                              iconName: selectedIcon.id,
+                              color: '#${selectedIcon.color.value.toRadixString(16).substring(2)}',
+                              notificationDays: notificationDays.isNotEmpty 
+                                  ? (notificationDays.toList()..sort()).join(',')
+                                  : null,
+                              notificationTime: notificationTime,
+                            );
+                            await service.updateInvestment(updatedInvestment);
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Inversión actualizada')),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: selectedIcon.color,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Guardar cambios'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   void _showUpdateValueDialog(
     BuildContext context,
     Investment investment,
     FinanceService service,
   ) {
     final settings = service.userSettings;
-    final formattedValue = NumberFormat('#,###.##', 'es')
-        .format(investment.currentValue)
-        .replaceAll(',', settings.thousandsSeparator)
-        .replaceAll('.', settings.decimalSeparator);
+    final formattedValue = settings.formatNumber(investment.currentValue, decimals: 0);
     final controller = TextEditingController(text: formattedValue);
+    
+    // Obtener icono y color de la inversión
+    final iconOption = getInvestmentIconById(investment.iconName);
+    final investmentColor = investment.color != null
+        ? Color(int.parse(investment.color!.substring(1), radix: 16) + 0xFF000000)
+        : iconOption.color;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Actualizar valor'),
-        content: TextFormField(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: investmentColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(iconOption.icon, color: investmentColor, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Actualizar valor',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      Text(
+                        investment.name,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(
+              decoration: InputDecoration(
             labelText: 'Valor actual',
-            prefixIcon: Icon(Icons.attach_money_rounded),
+                prefixIcon: Icon(Icons.attach_money_rounded, color: investmentColor),
           ),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            NumberFormatInputFormatter(
-              thousandsSeparator: settings.thousandsSeparator,
-              decimalSeparator: settings.decimalSeparator,
+              inputFormatters: [
+                NumberFormatInputFormatter(
+                  thousandsSeparator: settings.thousandsSeparator,
+                  decimalSeparator: settings.decimalSeparator,
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
+            const SizedBox(height: 16),
+            // Botones rápidos
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ...([5000, 10000, 20000, 50000, 100000].map((amount) {
+                  // Formatear el monto con separadores
+                  final formattedAmount = settings.formatNumber(amount.toDouble(), decimals: 0);
+                  return ActionChip(
+                    label: Text('${settings.currencySymbol}$formattedAmount'),
+                    backgroundColor: investmentColor.withOpacity(0.1),
+                    onPressed: () {
+                      controller.text = formattedAmount;
+                    },
+                  );
+                }).toList()),
+                ActionChip(
+                  label: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.edit_rounded, size: 16),
+                      SizedBox(width: 4),
+                      Text('Personalizado'),
+                    ],
+                  ),
+                  backgroundColor: investmentColor.withOpacity(0.1),
+                  onPressed: () {
+                    // El campo ya está disponible para escribir
+                    controller.selection = TextSelection(
+                      baseOffset: 0,
+                      extentOffset: controller.text.length,
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: investmentColor,
+                ),
             onPressed: () async {
-              final cleanValue = NumberFormatInputFormatter.removeFormatting(
-                controller.text,
-                settings.thousandsSeparator,
-                settings.decimalSeparator,
-              );
-              final value = double.tryParse(cleanValue);
+                  final cleanValue = NumberFormatInputFormatter.removeFormatting(
+                    controller.text,
+                    settings.thousandsSeparator,
+                    settings.decimalSeparator,
+                  );
+                  final value = double.tryParse(cleanValue);
               if (value != null) {
                 await service.updateInvestmentValue(investment.id, value);
                 Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Valor actualizado')),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Ingresa un valor válido'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
               }
             },
             child: const Text('Actualizar'),
+              ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -967,27 +1346,81 @@ class InvestmentsScreen extends StatelessWidget {
     FinanceService service,
   ) {
     final settings = service.userSettings;
-    final formattedValue = NumberFormat('#,###.##', 'es')
-        .format(investment.currentValue)
-        .replaceAll(',', settings.thousandsSeparator)
-        .replaceAll('.', settings.decimalSeparator);
+    final currencyFormat = NumberFormat.currency(
+      locale: 'es_MX',
+      symbol: settings.currencySymbol,
+      decimalDigits: 2,
+    );
+    final formattedValue = settings.formatNumber(investment.currentValue, decimals: 0);
     final controller = TextEditingController(text: formattedValue);
+    
+    // Obtener icono y color de la inversión
+    final iconOption = getInvestmentIconById(investment.iconName);
+    final investmentColor = investment.color != null
+        ? Color(int.parse(investment.color!.substring(1), radix: 16) + 0xFF000000)
+        : iconOption.color;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Vender inversión'),
-        content: Column(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('¿A qué precio vendiste?'),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: investmentColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(iconOption.icon, color: investmentColor, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Vender inversión',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      Text(
+                        investment.name,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Valor actual: ${currencyFormat.format(investment.currentValue)}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[700],
+              ),
+            ),
             const SizedBox(height: 16),
             TextFormField(
               controller: controller,
               autofocus: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Monto de venta',
-                prefixIcon: Icon(Icons.attach_money_rounded),
+                prefixIcon: Icon(Icons.attach_money_rounded, color: investmentColor),
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
@@ -997,32 +1430,78 @@ class InvestmentsScreen extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            // Botones rápidos
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ...([5000, 10000, 20000, 50000, 100000].map((amount) {
+                  // Formatear el monto con separadores
+                  final formattedAmount = settings.formatNumber(amount.toDouble(), decimals: 0);
+                  return ActionChip(
+                    label: Text('${settings.currencySymbol}$formattedAmount'),
+                    backgroundColor: investmentColor.withOpacity(0.1),
+                    onPressed: () {
+                      controller.text = formattedAmount;
+                    },
+                  );
+                }).toList()),
+                ActionChip(
+                  label: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.edit_rounded, size: 16),
+                      SizedBox(width: 4),
+                      Text('Personalizado'),
+                    ],
+                  ),
+                  backgroundColor: investmentColor.withOpacity(0.1),
+                  onPressed: () {
+                    // El campo ya está disponible para escribir
+                    controller.selection = TextSelection(
+                      baseOffset: 0,
+                      extentOffset: controller.text.length,
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: investmentColor,
+                ),
+                onPressed: () async {
+                  final cleanValue = NumberFormatInputFormatter.removeFormatting(
+                    controller.text,
+                    settings.thousandsSeparator,
+                    settings.decimalSeparator,
+                  );
+                  final value = double.tryParse(cleanValue);
+                  if (value != null && value > 0) {
+                    await service.sellInvestment(investment.id, value);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Inversión vendida')),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Ingresa un monto válido'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Vender'),
+              ),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final cleanValue = NumberFormatInputFormatter.removeFormatting(
-                controller.text,
-                settings.thousandsSeparator,
-                settings.decimalSeparator,
-              );
-              final value = double.tryParse(cleanValue);
-              if (value != null) {
-                await service.sellInvestment(investment.id, value);
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Inversión vendida')),
-                );
-              }
-            },
-            child: const Text('Vender'),
-          ),
-        ],
       ),
     );
   }
@@ -1033,6 +1512,7 @@ class InvestmentsScreen extends StatelessWidget {
     FinanceService service,
   ) {
     Set<int> currentNotificationDays = investment.notificationDaysList.toSet();
+    String? currentNotificationTime = investment.notificationTime;
     bool isNotificationEnabled = currentNotificationDays.isNotEmpty;
 
     showDialog(
@@ -1052,89 +1532,40 @@ class InvestmentsScreen extends StatelessWidget {
                     Switch(
                       value: isNotificationEnabled,
                       onChanged: (value) async {
-                        Set<int> newDays = {};
                         if (value) {
-                          // Si se activa, pedir los días
-                          final result = await showDialog<Set<int>>(
+                          // Si se activa, mostrar el diálogo de configuración
+                          final result = await NotificationConfigDialog.show(
                             context: context,
-                            builder: (dialogContext) {
-                              Set<int> tempDays = Set.from(currentNotificationDays);
-                              return StatefulBuilder(
-                                builder: (context, setDialogState) {
-                                  return AlertDialog(
-                                    title: const Text('Días de notificación'),
-                                    content: SizedBox(
-                                      width: double.maxFinite,
-                                      child: SingleChildScrollView(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Text('Selecciona los días del mes para recibir recordatorios:'),
-                                            const SizedBox(height: 16),
-                                            Wrap(
-                                              spacing: 8,
-                                              runSpacing: 8,
-                                              children: List.generate(31, (index) {
-                                                final day = index + 1;
-                                                final isSelected = tempDays.contains(day);
-                                                return FilterChip(
-                                                  label: Text('$day'),
-                                                  selected: isSelected,
-                                                  onSelected: (selected) {
-                                                    setDialogState(() {
-                                                      if (selected) {
-                                                        tempDays.add(day);
-                                                      } else {
-                                                        tempDays.remove(day);
-                                                      }
-                                                    });
-                                                  },
-                                                );
-                                              }),
-                                            ),
-                                            const SizedBox(height: 16),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.end,
-                                              children: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(dialogContext, null),
-                                                  child: const Text('Cancelar'),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                ElevatedButton(
-                                                  onPressed: () => Navigator.pop(dialogContext, tempDays),
-                                                  child: const Text('Aceptar'),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            },
+                            title: 'Configurar recordatorio',
+                            currentSelection: currentNotificationDays,
+                            currentTime: currentNotificationTime,
+                            helpText: 'Selecciona los días del mes para recibir recordatorios de inversión',
                           );
                           if (result != null && result.isNotEmpty) {
-                            newDays = result;
-                          } else {
-                            return; // Si canceló o no seleccionó nada, no activar
+                            final updatedInvestment = investment.copyWith(
+                              notificationDays: (result.selection.toList()..sort()).join(','),
+                              notificationTime: result.time,
+                            );
+                            await service.updateInvestment(updatedInvestment);
+                            setState(() {
+                              currentNotificationDays = result.selection;
+                              currentNotificationTime = result.time;
+                              isNotificationEnabled = true;
+                            });
                           }
+                        } else {
+                          // Si se desactiva, limpiar notificaciones
+                          final updatedInvestment = investment.copyWith(
+                            notificationDays: null,
+                            notificationTime: null,
+                          );
+                          await service.updateInvestment(updatedInvestment);
+                          setState(() {
+                            currentNotificationDays = {};
+                            currentNotificationTime = null;
+                            isNotificationEnabled = false;
+                          });
                         }
-                        
-                        // Actualizar la inversión
-                        final updatedInvestment = investment.copyWith(
-                          notificationDays: newDays.isNotEmpty 
-                              ? (newDays.toList()..sort()).join(',')
-                              : null,
-                        );
-                        await service.updateInvestment(updatedInvestment);
-                        
-                        setState(() {
-                          currentNotificationDays = newDays;
-                          isNotificationEnabled = newDays.isNotEmpty;
-                        });
                       },
                     ),
                   ],
@@ -1143,78 +1574,24 @@ class InvestmentsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   InkWell(
                     onTap: () async {
-                      final result = await showDialog<Set<int>>(
+                      final result = await NotificationConfigDialog.show(
                         context: context,
-                        builder: (dialogContext) {
-                          Set<int> tempDays = Set.from(currentNotificationDays);
-                          return StatefulBuilder(
-                            builder: (context, setDialogState) {
-                              return AlertDialog(
-                                title: const Text('Cambiar días de notificación'),
-                                content: SizedBox(
-                                  width: double.maxFinite,
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Text('Selecciona los días del mes para recibir recordatorios:'),
-                                        const SizedBox(height: 16),
-                                        Wrap(
-                                          spacing: 8,
-                                          runSpacing: 8,
-                                          children: List.generate(31, (index) {
-                                            final day = index + 1;
-                                            final isSelected = tempDays.contains(day);
-                                            return FilterChip(
-                                              label: Text('$day'),
-                                              selected: isSelected,
-                                              onSelected: (selected) {
-                                                setDialogState(() {
-                                                  if (selected) {
-                                                    tempDays.add(day);
-                                                  } else {
-                                                    tempDays.remove(day);
-                                                  }
-                                                });
-                                              },
-                                            );
-                                          }),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
-                                          children: [
-                                            TextButton(
-                                              onPressed: () {
-                                                setDialogState(() => tempDays.clear());
-                                              },
-                                              child: const Text('Limpiar'),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            ElevatedButton(
-                                              onPressed: () => Navigator.pop(dialogContext, tempDays),
-                                              child: const Text('Aceptar'),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
+                        title: 'Editar recordatorio',
+                        currentSelection: currentNotificationDays,
+                        currentTime: currentNotificationTime,
+                        helpText: 'Selecciona los días del mes para recibir recordatorios de inversión',
                       );
                       if (result != null) {
                         final updatedInvestment = investment.copyWith(
                           notificationDays: result.isNotEmpty 
-                              ? (result.toList()..sort()).join(',')
+                              ? (result.selection.toList()..sort()).join(',')
                               : null,
+                          notificationTime: result.time,
                         );
                         await service.updateInvestment(updatedInvestment);
                         setState(() {
-                          currentNotificationDays = result;
+                          currentNotificationDays = result.selection;
+                          currentNotificationTime = result.time;
                           isNotificationEnabled = result.isNotEmpty;
                         });
                       }
@@ -1231,7 +1608,10 @@ class InvestmentsScreen extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              'Días: ${(currentNotificationDays.toList()..sort()).join(", ")}',
+                              NotificationConfigDialog.formatMonthDaysDisplay(
+                                currentNotificationDays,
+                                currentNotificationTime,
+                              ),
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ),
@@ -1254,7 +1634,7 @@ class InvestmentsScreen extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cerrar'),
+                child: const Text('Cancelar'),
               ),
             ],
           );

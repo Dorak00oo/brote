@@ -5,6 +5,33 @@ enum SavingsGoalStatus {
   cancelled,  // Cancelada
 }
 
+/// Frecuencia de aportes para metas de ahorro
+enum ContributionFrequency {
+  daily,      // Diario
+  weekly,     // Semanal
+  biweekly,   // Quincenal
+  monthly,    // Mensual
+  custom,     // Personalizado
+}
+
+/// Extensión para nombres de frecuencia
+extension ContributionFrequencyExtension on ContributionFrequency {
+  String get displayName {
+    switch (this) {
+      case ContributionFrequency.daily:
+        return 'Diario';
+      case ContributionFrequency.weekly:
+        return 'Semanal';
+      case ContributionFrequency.biweekly:
+        return 'Quincenal';
+      case ContributionFrequency.monthly:
+        return 'Mensual';
+      case ContributionFrequency.custom:
+        return 'Personalizado';
+    }
+  }
+}
+
 /// Modelo para metas de ahorro
 class SavingsGoal {
   final String id;
@@ -17,7 +44,9 @@ class SavingsGoal {
   final SavingsGoalStatus status;
   final String? iconName;        // Icono para la meta
   final String? color;           // Color de la meta
-  final String? notificationDays;    // Días del mes para notificación (ej: "1,15,28")
+  final ContributionFrequency contributionFrequency; // Frecuencia de aportes
+  final String? notificationDays;    // Días para notificación según frecuencia
+  final String? notificationTime;    // Hora de notificación (HH:mm)
 
   SavingsGoal({
     required this.id,
@@ -30,7 +59,9 @@ class SavingsGoal {
     this.status = SavingsGoalStatus.active,
     this.iconName,
     this.color,
+    this.contributionFrequency = ContributionFrequency.monthly,
     this.notificationDays,
+    this.notificationTime,
   });
 
   /// Porcentaje de progreso (0-100)
@@ -82,7 +113,9 @@ class SavingsGoal {
       'status': status.name,
       'iconName': iconName,
       'color': color,
+      'contributionFrequency': contributionFrequency.name,
       'notificationDays': notificationDays,
+      'notificationTime': notificationTime,
     };
   }
 
@@ -103,7 +136,12 @@ class SavingsGoal {
       ),
       iconName: json['iconName'],
       color: json['color'],
+      contributionFrequency: ContributionFrequency.values.firstWhere(
+        (f) => f.name == json['contributionFrequency'],
+        orElse: () => ContributionFrequency.monthly,
+      ),
       notificationDays: json['notificationDays'] as String?,
+      notificationTime: json['notificationTime'] as String?,
     );
   }
 
@@ -118,7 +156,9 @@ class SavingsGoal {
     SavingsGoalStatus? status,
     String? iconName,
     String? color,
+    ContributionFrequency? contributionFrequency,
     Object? notificationDays = _sentinel,
+    Object? notificationTime = _sentinel,
   }) {
     return SavingsGoal(
       id: id ?? this.id,
@@ -131,9 +171,13 @@ class SavingsGoal {
       status: status ?? this.status,
       iconName: iconName ?? this.iconName,
       color: color ?? this.color,
+      contributionFrequency: contributionFrequency ?? this.contributionFrequency,
       notificationDays: notificationDays == _sentinel 
           ? this.notificationDays 
           : notificationDays as String?,
+      notificationTime: notificationTime == _sentinel
+          ? this.notificationTime
+          : notificationTime as String?,
     );
   }
 }

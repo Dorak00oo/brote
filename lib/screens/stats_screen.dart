@@ -116,6 +116,43 @@ class _StatsScreenState extends State<StatsScreen> {
     return {'start': start, 'end': end};
   }
 
+  /// Filtra transacciones por rango de fechas (comparando solo fechas, sin hora)
+  List<Transaction> _filterTransactionsByDateRange(
+    List<Transaction> transactions,
+    DateTime? startDate,
+    DateTime? endDate,
+  ) {
+    return transactions.where((t) {
+      final tYear = t.date.year;
+      final tMonth = t.date.month;
+      final tDay = t.date.day;
+      
+      if (startDate != null) {
+        final startYear = startDate.year;
+        final startMonth = startDate.month;
+        final startDay = startDate.day;
+        
+        // Excluir si la fecha de la transacción es anterior al inicio
+        if (tYear < startYear) return false;
+        if (tYear == startYear && tMonth < startMonth) return false;
+        if (tYear == startYear && tMonth == startMonth && tDay < startDay) return false;
+      }
+      
+      if (endDate != null) {
+        final endYear = endDate.year;
+        final endMonth = endDate.month;
+        final endDay = endDate.day;
+        
+        // Excluir si la fecha de la transacción es posterior al fin
+        if (tYear > endYear) return false;
+        if (tYear == endYear && tMonth > endMonth) return false;
+        if (tYear == endYear && tMonth == endMonth && tDay > endDay) return false;
+      }
+      
+      return true;
+    }).toList();
+  }
+
   Widget _buildPeriodSelector() {
     return Column(
       children: [
@@ -340,11 +377,11 @@ class _StatsScreenState extends State<StatsScreen> {
       expenses = service.totalExpenses;
     } else {
       // Filtrar por rango de fechas
-      final filteredTransactions = service.transactions.where((t) {
-        if (startDate != null && t.date.isBefore(startDate)) return false;
-        if (endDate != null && t.date.isAfter(endDate)) return false;
-        return true;
-      }).toList();
+      final filteredTransactions = _filterTransactionsByDateRange(
+        service.transactions,
+        startDate,
+        endDate,
+      );
 
       income = filteredTransactions
           .where((t) => t.type == TransactionType.income)
@@ -502,32 +539,68 @@ class _StatsScreenState extends State<StatsScreen> {
     }
 
     // Generar datos mensuales
-    for (int i = monthsToShow - 1; i >= 0; i--) {
-      final date = DateTime(now.year, now.month - i, 1);
-      final monthStart = DateTime(date.year, date.month, 1);
-      final monthEnd = DateTime(date.year, date.month + 1, 0, 23, 59, 59);
+    // Si hay un rango de fechas específico, generar solo los meses dentro de ese rango
+    if (startDate != null) {
+      DateTime currentMonth = DateTime(startDate.year, startDate.month, 1);
+      final endMonth = DateTime(endDate.year, endDate.month, 1);
+      
+      while (currentMonth.isBefore(endMonth) || currentMonth.isAtSameMomentAs(endMonth)) {
+        final monthIncome = service.transactions
+            .where((t) =>
+                t.type == TransactionType.income &&
+                t.date.year == currentMonth.year &&
+                t.date.month == currentMonth.month)
+            .fold(0.0, (sum, t) => sum + t.amount);
 
-      final monthIncome = service.transactions
-          .where((t) =>
-              t.type == TransactionType.income &&
-              t.date.isAfter(monthStart.subtract(const Duration(days: 1))) &&
-              t.date.isBefore(monthEnd.add(const Duration(days: 1))))
-          .fold(0.0, (sum, t) => sum + t.amount);
+        final monthExpenses = service.transactions
+            .where((t) =>
+                t.type == TransactionType.expense &&
+                t.date.year == currentMonth.year &&
+                t.date.month == currentMonth.month)
+            .fold(0.0, (sum, t) => sum + t.amount);
 
-      final monthExpenses = service.transactions
-          .where((t) =>
-              t.type == TransactionType.expense &&
-              t.date.isAfter(monthStart.subtract(const Duration(days: 1))) &&
-              t.date.isBefore(monthEnd.add(const Duration(days: 1))))
-          .fold(0.0, (sum, t) => sum + t.amount);
+        trendData.add({
+          'label': _getMonthName(currentMonth.month),
+          'month': currentMonth.month,
+          'year': currentMonth.year,
+          'income': monthIncome,
+          'expenses': monthExpenses,
+        });
+        
+        // Avanzar al siguiente mes
+        if (currentMonth.month == 12) {
+          currentMonth = DateTime(currentMonth.year + 1, 1, 1);
+        } else {
+          currentMonth = DateTime(currentMonth.year, currentMonth.month + 1, 1);
+        }
+      }
+    } else {
+      // Si no hay rango específico, usar los últimos N meses desde ahora
+      for (int i = monthsToShow - 1; i >= 0; i--) {
+        final date = DateTime(now.year, now.month - i, 1);
+        
+        final monthIncome = service.transactions
+            .where((t) =>
+                t.type == TransactionType.income &&
+                t.date.year == date.year &&
+                t.date.month == date.month)
+            .fold(0.0, (sum, t) => sum + t.amount);
 
-      trendData.add({
-        'label': _getMonthName(date.month),
-        'month': date.month,
-        'year': date.year,
-        'income': monthIncome,
-        'expenses': monthExpenses,
-      });
+        final monthExpenses = service.transactions
+            .where((t) =>
+                t.type == TransactionType.expense &&
+                t.date.year == date.year &&
+                t.date.month == date.month)
+            .fold(0.0, (sum, t) => sum + t.amount);
+
+        trendData.add({
+          'label': _getMonthName(date.month),
+          'month': date.month,
+          'year': date.year,
+          'income': monthIncome,
+          'expenses': monthExpenses,
+        });
+      }
     }
 
     return trendData;
@@ -536,25 +609,33 @@ class _StatsScreenState extends State<StatsScreen> {
   List<Map<String, dynamic>> _getWeeklyTrendData(
       FinanceService service, DateTime start, DateTime end) {
     final List<Map<String, dynamic>> data = [];
-    DateTime current = start;
+    DateTime current = DateTime(start.year, start.month, start.day);
+    final endDateOnly = DateTime(end.year, end.month, end.day);
     int weekNum = 1;
 
-    while (current.isBefore(end)) {
+    while (current.isBefore(endDateOnly) || current.isAtSameMomentAs(endDateOnly)) {
       final weekEnd = current.add(const Duration(days: 6));
-      final actualEnd = weekEnd.isAfter(end) ? end : weekEnd;
+      final actualEnd = weekEnd.isAfter(endDateOnly) ? endDateOnly : weekEnd;
+      final actualEndDate = DateTime(actualEnd.year, actualEnd.month, actualEnd.day);
 
       final weekIncome = service.transactions
-          .where((t) =>
-              t.type == TransactionType.income &&
-              !t.date.isBefore(current) &&
-              !t.date.isAfter(actualEnd))
+          .where((t) {
+            final tDateOnly = DateTime(t.date.year, t.date.month, t.date.day);
+            final currentDateOnly = DateTime(current.year, current.month, current.day);
+            return t.type == TransactionType.income &&
+                (tDateOnly.isAtSameMomentAs(currentDateOnly) || tDateOnly.isAfter(currentDateOnly)) &&
+                (tDateOnly.isAtSameMomentAs(actualEndDate) || tDateOnly.isBefore(actualEndDate));
+          })
           .fold(0.0, (sum, t) => sum + t.amount);
 
       final weekExpenses = service.transactions
-          .where((t) =>
-              t.type == TransactionType.expense &&
-              !t.date.isBefore(current) &&
-              !t.date.isAfter(actualEnd))
+          .where((t) {
+            final tDateOnly = DateTime(t.date.year, t.date.month, t.date.day);
+            final currentDateOnly = DateTime(current.year, current.month, current.day);
+            return t.type == TransactionType.expense &&
+                (tDateOnly.isAtSameMomentAs(currentDateOnly) || tDateOnly.isAfter(currentDateOnly)) &&
+                (tDateOnly.isAtSameMomentAs(actualEndDate) || tDateOnly.isBefore(actualEndDate));
+          })
           .fold(0.0, (sum, t) => sum + t.amount);
 
       data.add({
@@ -779,11 +860,11 @@ class _StatsScreenState extends State<StatsScreen> {
     final endDate = dateRange['end'];
     
     // Filtrar transacciones por período
-    final filteredTransactions = service.transactions.where((t) {
-      if (startDate != null && t.date.isBefore(startDate)) return false;
-      if (endDate != null && t.date.isAfter(endDate)) return false;
-      return true;
-    }).toList();
+    final filteredTransactions = _filterTransactionsByDateRange(
+      service.transactions,
+      startDate,
+      endDate,
+    );
     
     // Calcular ingresos por fuente
     final Map<String, double> incomeBySource = {};
@@ -1099,11 +1180,11 @@ class _StatsScreenState extends State<StatsScreen> {
     final endDate = dateRange['end'];
     
     // Filtrar transacciones por período
-    var filteredTransactions = service.transactions.where((t) {
-      if (startDate != null && t.date.isBefore(startDate)) return false;
-      if (endDate != null && t.date.isAfter(endDate)) return false;
-      return true;
-    }).toList();
+    var filteredTransactions = _filterTransactionsByDateRange(
+      service.transactions,
+      startDate,
+      endDate,
+    );
     
     // Calcular gastos por categoría
     final Map<String, double> expenses = {};
@@ -1291,11 +1372,11 @@ class _StatsScreenState extends State<StatsScreen> {
     final endDate = dateRange['end'];
     
     // Filtrar transacciones por período
-    var filteredTransactions = service.transactions.where((t) {
-      if (startDate != null && t.date.isBefore(startDate)) return false;
-      if (endDate != null && t.date.isAfter(endDate)) return false;
-      return true;
-    }).toList();
+    var filteredTransactions = _filterTransactionsByDateRange(
+      service.transactions,
+      startDate,
+      endDate,
+    );
     
     // Calcular ingresos por fuente
     final Map<String, double> income = {};
@@ -1607,11 +1688,11 @@ class _StatsScreenState extends State<StatsScreen> {
                       final startDate = dateRange['start'];
                       final endDate = dateRange['end'];
                       
-                      final filteredTransactions = service.transactions.where((t) {
-                        if (startDate != null && t.date.isBefore(startDate)) return false;
-                        if (endDate != null && t.date.isAfter(endDate)) return false;
-                        return true;
-                      }).toList();
+                      final filteredTransactions = _filterTransactionsByDateRange(
+                        service.transactions,
+                        startDate,
+                        endDate,
+                      );
                       
                       final totalTransactions = filteredTransactions.length;
                       final excelLimit = 5000;
@@ -1815,11 +1896,11 @@ class _StatsScreenState extends State<StatsScreen> {
                   final startDate = dateRange['start'];
                   final endDate = dateRange['end'];
                   
-                  final filteredTransactions = service.transactions.where((t) {
-                    if (startDate != null && t.date.isBefore(startDate)) return false;
-                    if (endDate != null && t.date.isAfter(endDate)) return false;
-                    return true;
-                  }).toList();
+                  final filteredTransactions = _filterTransactionsByDateRange(
+                    service.transactions,
+                    startDate,
+                    endDate,
+                  );
                   
                   final totalTransactions = filteredTransactions.length;
                   
@@ -2053,11 +2134,11 @@ class _StatsScreenState extends State<StatsScreen> {
     final endDate = dateRange['end'];
 
     // Filtrar transacciones
-    final filteredTransactions = service.transactions.where((t) {
-      if (startDate != null && t.date.isBefore(startDate)) return false;
-      if (endDate != null && t.date.isAfter(endDate)) return false;
-      return true;
-    }).toList();
+    final filteredTransactions = _filterTransactionsByDateRange(
+      service.transactions,
+      startDate,
+      endDate,
+    );
 
     if (filteredTransactions.isEmpty) {
       if (context.mounted) {

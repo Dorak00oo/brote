@@ -1,4 +1,8 @@
 import 'dart:math' as math;
+// Reusar el enum de periodicidad de loan.dart
+import 'loan.dart' show InterestRatePeriod, InterestRatePeriodExtension;
+// Re-exportarlo para que esté disponible cuando se importe investment.dart
+export 'loan.dart' show InterestRatePeriod, InterestRatePeriodExtension;
 
 /// Tipo de inversión
 enum InvestmentType {
@@ -29,7 +33,8 @@ class Investment {
   final InvestmentType type;
   final double initialAmount;           // Monto inicial invertido
   final double currentValue;            // Valor actual
-  final double expectedReturnRate;      // Tasa de rentabilidad esperada (% anual)
+  final double expectedReturnRate;      // Tasa de rentabilidad esperada
+  final InterestRatePeriod returnRatePeriod; // Periodicidad de la tasa
   final DateTime purchaseDate;          // Fecha de compra/inversión
   final DateTime? soldDate;             // Fecha de venta (si aplica)
   final double? soldAmount;             // Monto de venta (si aplica)
@@ -40,6 +45,7 @@ class Investment {
   final String? iconName;               // Icono de la inversión
   final String? color;                  // Color de la inversión (hex)
   final String? notificationDays;       // Días del mes para notificación (ej: "1,15,28")
+  final String? notificationTime;       // Hora de notificación (HH:mm)
 
   Investment({
     required this.id,
@@ -49,6 +55,7 @@ class Investment {
     required this.initialAmount,
     required this.currentValue,
     required this.expectedReturnRate,
+    this.returnRatePeriod = InterestRatePeriod.yearly,
     required this.purchaseDate,
     this.soldDate,
     this.soldAmount,
@@ -59,7 +66,13 @@ class Investment {
     this.iconName,
     this.color,
     this.notificationDays,
+    this.notificationTime,
   });
+
+  /// Obtener la tasa de rentabilidad convertida a anual
+  double get annualReturnRate {
+    return expectedReturnRate * returnRatePeriod.periodsPerYear;
+  }
 
   /// Ganancia/Pérdida absoluta
   double get absoluteReturn => currentValue - initialAmount;
@@ -90,7 +103,8 @@ class Investment {
   /// Valor futuro proyectado basado en tasa de retorno esperada
   double projectedValue(int months) {
     if (status != InvestmentStatus.active) return currentValue;
-    final rate = expectedReturnRate / 100;
+    // Usar la tasa anualizada para los cálculos
+    final rate = annualReturnRate / 100;
     final n = compoundingFrequency ?? 12;
     final t = months / 12;
     // Fórmula de interés compuesto: A = P(1 + r/n)^(nt)
@@ -112,6 +126,7 @@ class Investment {
       'initialAmount': initialAmount,
       'currentValue': currentValue,
       'expectedReturnRate': expectedReturnRate,
+      'returnRatePeriod': returnRatePeriod.name,
       'purchaseDate': purchaseDate.toIso8601String(),
       'soldDate': soldDate?.toIso8601String(),
       'soldAmount': soldAmount,
@@ -122,6 +137,7 @@ class Investment {
       'iconName': iconName,
       'color': color,
       'notificationDays': notificationDays,
+      'notificationTime': notificationTime,
     };
   }
 
@@ -137,6 +153,10 @@ class Investment {
       initialAmount: (json['initialAmount'] as num).toDouble(),
       currentValue: (json['currentValue'] as num).toDouble(),
       expectedReturnRate: (json['expectedReturnRate'] as num).toDouble(),
+      returnRatePeriod: InterestRatePeriod.values.firstWhere(
+        (p) => p.name == json['returnRatePeriod'],
+        orElse: () => InterestRatePeriod.yearly,
+      ),
       purchaseDate: DateTime.parse(json['purchaseDate']),
       soldDate: json['soldDate'] != null 
           ? DateTime.parse(json['soldDate']) 
@@ -154,6 +174,7 @@ class Investment {
       iconName: json['iconName'],
       color: json['color'],
       notificationDays: json['notificationDays'] as String?,
+      notificationTime: json['notificationTime'] as String?,
     );
   }
 
@@ -165,6 +186,7 @@ class Investment {
     double? initialAmount,
     double? currentValue,
     double? expectedReturnRate,
+    InterestRatePeriod? returnRatePeriod,
     DateTime? purchaseDate,
     DateTime? soldDate,
     double? soldAmount,
@@ -175,6 +197,7 @@ class Investment {
     String? iconName,
     String? color,
     Object? notificationDays = _investmentSentinel,
+    Object? notificationTime = _investmentSentinel,
   }) {
     return Investment(
       id: id ?? this.id,
@@ -184,6 +207,7 @@ class Investment {
       initialAmount: initialAmount ?? this.initialAmount,
       currentValue: currentValue ?? this.currentValue,
       expectedReturnRate: expectedReturnRate ?? this.expectedReturnRate,
+      returnRatePeriod: returnRatePeriod ?? this.returnRatePeriod,
       purchaseDate: purchaseDate ?? this.purchaseDate,
       soldDate: soldDate ?? this.soldDate,
       soldAmount: soldAmount ?? this.soldAmount,
@@ -196,6 +220,9 @@ class Investment {
       notificationDays: notificationDays == _investmentSentinel 
           ? this.notificationDays 
           : notificationDays as String?,
+      notificationTime: notificationTime == _investmentSentinel
+          ? this.notificationTime
+          : notificationTime as String?,
     );
   }
 }

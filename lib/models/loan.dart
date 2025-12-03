@@ -24,6 +24,57 @@ enum PaymentFrequency {
   custom,     // Personalizado
 }
 
+/// Periodicidad de la tasa de interés
+enum InterestRatePeriod {
+  daily,      // Diaria
+  weekly,     // Semanal
+  monthly,    // Mensual
+  yearly,     // Anual
+}
+
+/// Extensión para mostrar nombres legibles
+extension InterestRatePeriodExtension on InterestRatePeriod {
+  String get displayName {
+    switch (this) {
+      case InterestRatePeriod.daily:
+        return 'Diaria';
+      case InterestRatePeriod.weekly:
+        return 'Semanal';
+      case InterestRatePeriod.monthly:
+        return 'Mensual';
+      case InterestRatePeriod.yearly:
+        return 'Anual';
+    }
+  }
+
+  String get shortName {
+    switch (this) {
+      case InterestRatePeriod.daily:
+        return 'diario';
+      case InterestRatePeriod.weekly:
+        return 'semanal';
+      case InterestRatePeriod.monthly:
+        return 'mensual';
+      case InterestRatePeriod.yearly:
+        return 'anual';
+    }
+  }
+
+  /// Períodos por año para conversiones
+  int get periodsPerYear {
+    switch (this) {
+      case InterestRatePeriod.daily:
+        return 365;
+      case InterestRatePeriod.weekly:
+        return 52;
+      case InterestRatePeriod.monthly:
+        return 12;
+      case InterestRatePeriod.yearly:
+        return 1;
+    }
+  }
+}
+
 /// Modelo para préstamos
 class Loan {
   final String id;
@@ -31,7 +82,8 @@ class Loan {
   final String? borrowerOrLender;       // Nombre del prestatario o prestamista
   final LoanType type;
   final double principalAmount;         // Monto principal
-  final double interestRate;            // Tasa de interés (% anual)
+  final double interestRate;            // Tasa de interés (en la periodicidad indicada)
+  final InterestRatePeriod interestRatePeriod; // Periodicidad de la tasa
   final int totalInstallments;          // Número total de cuotas
   final double installmentAmount;       // Monto por cuota
   final DateTime startDate;             // Fecha de inicio
@@ -43,7 +95,9 @@ class Loan {
   final int paidInstallments;           // Cuotas pagadas
   final String? iconName;               // Icono del préstamo
   final String? color;                  // Color del préstamo (hex)
-  final String? notificationDays;       // Días del mes para notificación (ej: "1,15,28")
+  final String? notificationDays;       // Selección principal (días semana/mes o meses)
+  final int? notificationDayOfMonth;    // Para trimestral/anual: día del mes
+  final String? notificationTime;       // Hora de notificación (HH:mm)
 
   Loan({
     required this.id,
@@ -52,6 +106,7 @@ class Loan {
     required this.type,
     required this.principalAmount,
     required this.interestRate,
+    this.interestRatePeriod = InterestRatePeriod.yearly,
     required this.totalInstallments,
     required this.installmentAmount,
     required this.startDate,
@@ -64,7 +119,14 @@ class Loan {
     this.iconName,
     this.color,
     this.notificationDays,
+    this.notificationDayOfMonth,
+    this.notificationTime,
   });
+
+  /// Obtener la tasa de interés convertida a anual
+  double get annualInterestRate {
+    return interestRate * interestRatePeriod.periodsPerYear;
+  }
 
   /// Monto total a pagar (principal + intereses)
   double get totalAmount => installmentAmount * totalInstallments;
@@ -118,20 +180,24 @@ class Loan {
     return notificationDays!.split(',').map((s) => int.tryParse(s.trim()) ?? 0).where((d) => d > 0).toList();
   }
 
-  /// Calcular cuota mensual usando fórmula de amortización
+  /// Calcular cuota usando fórmula de amortización
   static double calculateInstallment({
     required double principal,
-    required double annualInterestRate,
+    required double interestRate,
+    required InterestRatePeriod ratePeriod,
     required int totalInstallments,
     PaymentFrequency frequency = PaymentFrequency.monthly,
   }) {
-    if (annualInterestRate == 0) {
+    // Convertir la tasa ingresada a tasa anual
+    final annualRate = interestRate * ratePeriod.periodsPerYear;
+    
+    if (annualRate == 0) {
       return principal / totalInstallments;
     }
 
-    // Convertir tasa anual a tasa del período
+    // Convertir tasa anual a tasa del período de pago
     final periodsPerYear = _getPeriodsPerYear(frequency);
-    final periodRate = annualInterestRate / 100 / periodsPerYear;
+    final periodRate = annualRate / 100 / periodsPerYear;
 
     // Fórmula de cuota: M = P * [r(1+r)^n] / [(1+r)^n - 1]
     final numerator = periodRate * math.pow(1 + periodRate, totalInstallments);
@@ -162,7 +228,8 @@ class Loan {
     final entries = <AmortizationEntry>[];
     double balance = principalAmount;
     final periodsPerYear = _getPeriodsPerYear(paymentFrequency);
-    final periodRate = interestRate / 100 / periodsPerYear;
+    // Usar la tasa anual para los cálculos
+    final periodRate = annualInterestRate / 100 / periodsPerYear;
     final daysBetween = _getDaysBetweenPayments();
 
     for (int i = 1; i <= totalInstallments; i++) {
@@ -192,6 +259,7 @@ class Loan {
       'type': type.name,
       'principalAmount': principalAmount,
       'interestRate': interestRate,
+      'interestRatePeriod': interestRatePeriod.name,
       'totalInstallments': totalInstallments,
       'installmentAmount': installmentAmount,
       'startDate': startDate.toIso8601String(),
@@ -204,6 +272,8 @@ class Loan {
       'iconName': iconName,
       'color': color,
       'notificationDays': notificationDays,
+      'notificationDayOfMonth': notificationDayOfMonth,
+      'notificationTime': notificationTime,
     };
   }
 
@@ -218,6 +288,10 @@ class Loan {
       ),
       principalAmount: (json['principalAmount'] as num).toDouble(),
       interestRate: (json['interestRate'] as num).toDouble(),
+      interestRatePeriod: InterestRatePeriod.values.firstWhere(
+        (p) => p.name == json['interestRatePeriod'],
+        orElse: () => InterestRatePeriod.yearly,
+      ),
       totalInstallments: json['totalInstallments'] as int,
       installmentAmount: (json['installmentAmount'] as num).toDouble(),
       startDate: DateTime.parse(json['startDate']),
@@ -238,6 +312,8 @@ class Loan {
       iconName: json['iconName'],
       color: json['color'],
       notificationDays: json['notificationDays'] as String?,
+      notificationDayOfMonth: json['notificationDayOfMonth'] as int?,
+      notificationTime: json['notificationTime'] as String?,
     );
   }
 
@@ -248,6 +324,7 @@ class Loan {
     LoanType? type,
     double? principalAmount,
     double? interestRate,
+    InterestRatePeriod? interestRatePeriod,
     int? totalInstallments,
     double? installmentAmount,
     DateTime? startDate,
@@ -260,6 +337,8 @@ class Loan {
     String? iconName,
     String? color,
     Object? notificationDays = _loanSentinel,
+    Object? notificationDayOfMonth = _loanSentinel,
+    Object? notificationTime = _loanSentinel,
   }) {
     return Loan(
       id: id ?? this.id,
@@ -268,6 +347,7 @@ class Loan {
       type: type ?? this.type,
       principalAmount: principalAmount ?? this.principalAmount,
       interestRate: interestRate ?? this.interestRate,
+      interestRatePeriod: interestRatePeriod ?? this.interestRatePeriod,
       totalInstallments: totalInstallments ?? this.totalInstallments,
       installmentAmount: installmentAmount ?? this.installmentAmount,
       startDate: startDate ?? this.startDate,
@@ -282,6 +362,12 @@ class Loan {
       notificationDays: notificationDays == _loanSentinel 
           ? this.notificationDays 
           : notificationDays as String?,
+      notificationDayOfMonth: notificationDayOfMonth == _loanSentinel
+          ? this.notificationDayOfMonth
+          : notificationDayOfMonth as int?,
+      notificationTime: notificationTime == _loanSentinel
+          ? this.notificationTime
+          : notificationTime as String?,
     );
   }
 }

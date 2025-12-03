@@ -67,6 +67,22 @@ class CustomIncomeSources extends Table {
   Set<Column> get primaryKey => {name};
 }
 
+// ========== TABLA DE FUENTES PREDEFINIDAS OCULTAS ==========
+class HiddenDefaultIncomeSources extends Table {
+  TextColumn get name => text()();
+
+  @override
+  Set<Column> get primaryKey => {name};
+}
+
+// ========== TABLA DE CATEGORÍAS PREDEFINIDAS OCULTAS ==========
+class HiddenDefaultCategories extends Table {
+  TextColumn get name => text()();
+
+  @override
+  Set<Column> get primaryKey => {name};
+}
+
 // ========== TABLA DE METAS DE AHORRO ==========
 class SavingsGoals extends Table {
   TextColumn get id => text()();
@@ -80,8 +96,12 @@ class SavingsGoals extends Table {
       .withDefault(const Constant('active'))(); // active, completed, cancelled
   TextColumn get iconName => text().nullable()();
   TextColumn get color => text().nullable()();
+  TextColumn get contributionFrequency => text()
+      .withDefault(const Constant('monthly'))(); // daily, weekly, biweekly, monthly, custom
   TextColumn get notificationDays =>
-      text().nullable()(); // Días del mes para notificación (ej: "1,15,28")
+      text().nullable()(); // Días para notificación según frecuencia
+  TextColumn get notificationTime =>
+      text().nullable()(); // Hora de notificación (HH:mm)
 
   @override
   Set<Column> get primaryKey => {id};
@@ -107,7 +127,9 @@ class Investments extends Table {
   TextColumn get type => text()(); // stocks, bonds, crypto, realEstate, etc.
   RealColumn get initialAmount => real()();
   RealColumn get currentValue => real()();
-  RealColumn get expectedReturnRate => real()(); // % anual
+  RealColumn get expectedReturnRate => real()(); // Tasa de rentabilidad
+  TextColumn get returnRatePeriod => text().withDefault(
+      const Constant('yearly'))(); // daily, weekly, monthly, yearly
   DateTimeColumn get purchaseDate => dateTime()();
   DateTimeColumn get soldDate => dateTime().nullable()();
   RealColumn get soldAmount => real().nullable()();
@@ -121,6 +143,8 @@ class Investments extends Table {
   TextColumn get color => text().nullable()(); // Color personalizado (hex)
   TextColumn get notificationDays =>
       text().nullable()(); // Días del mes para notificación (ej: "1,15,28")
+  TextColumn get notificationTime =>
+      text().nullable()(); // Hora de notificación (HH:mm)
 
   @override
   Set<Column> get primaryKey => {id};
@@ -146,7 +170,9 @@ class Loans extends Table {
   TextColumn get type =>
       text()(); // 'given' (yo presté) o 'received' (me prestaron)
   RealColumn get principalAmount => real()();
-  RealColumn get interestRate => real()(); // % anual
+  RealColumn get interestRate => real()(); // Tasa de interés
+  TextColumn get interestRatePeriod => text().withDefault(
+      const Constant('yearly'))(); // daily, weekly, monthly, yearly
   IntColumn get totalInstallments => integer()();
   RealColumn get installmentAmount => real()();
   DateTimeColumn get startDate => dateTime()();
@@ -161,7 +187,11 @@ class Loans extends Table {
   TextColumn get iconName => text().nullable()(); // Icono personalizado
   TextColumn get color => text().nullable()(); // Color personalizado (hex)
   TextColumn get notificationDays =>
-      text().nullable()(); // Días del mes para notificación (ej: "1,15,28")
+      text().nullable()(); // Selección principal de notificación
+  IntColumn get notificationDayOfMonth =>
+      integer().nullable()(); // Día del mes para notificaciones trimestrales/anuales
+  TextColumn get notificationTime =>
+      text().nullable()(); // Hora de notificación (HH:mm)
 
   @override
   Set<Column> get primaryKey => {id};
@@ -200,6 +230,12 @@ class UserSettingsTable extends Table {
       boolean().withDefault(const Constant(true))();
   BoolColumn get notificationPermissionAsked => boolean()
       .withDefault(const Constant(false))(); // Si ya se pidieron permisos
+  TextColumn get balanceResetPeriod =>
+      text().withDefault(const Constant('total'))(); // Período de reinicio del balance
+  IntColumn get balanceResetDayOfMonth =>
+      integer().nullable()(); // Día del mes para reinicio mensual (1-28)
+  IntColumn get balanceResetDayOfWeek =>
+      integer().nullable()(); // Día de la semana para reinicio semanal (1=lunes, 7=domingo)
   TextColumn get theme => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime().nullable()();
@@ -241,6 +277,8 @@ class RecurringTransactions extends Table {
   Alerts,
   CustomCategories,
   CustomIncomeSources,
+  HiddenDefaultIncomeSources,
+  HiddenDefaultCategories,
   SavingsGoals,
   SavingsContributions,
   Investments,
@@ -254,7 +292,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration {
@@ -364,6 +402,70 @@ class AppDatabase extends _$AppDatabase {
           );
           await customStatement(
             'UPDATE loans SET notification_days = CAST(notification_day AS TEXT) WHERE notification_day IS NOT NULL',
+          );
+        }
+        if (from < 8) {
+          // Migración de versión 7 a 8
+          // Crear tablas para ocultar fuentes de ingreso y categorías predefinidas
+          await m.createTable(hiddenDefaultIncomeSources);
+          await m.createTable(hiddenDefaultCategories);
+        }
+        if (from < 9) {
+          // Migración de versión 8 a 9
+          // Agregar periodicidad de tasa de interés a préstamos
+          await customStatement(
+            "ALTER TABLE loans ADD COLUMN interest_rate_period TEXT NOT NULL DEFAULT 'yearly'",
+          );
+        }
+        if (from < 10) {
+          // Migración de versión 9 a 10
+          // Agregar periodicidad de tasa de rentabilidad a inversiones
+          await customStatement(
+            "ALTER TABLE investments ADD COLUMN return_rate_period TEXT NOT NULL DEFAULT 'yearly'",
+          );
+        }
+        if (from < 11) {
+          // Migración de versión 10 a 11
+          // Agregar campos adicionales de notificación a préstamos
+          await customStatement(
+            'ALTER TABLE loans ADD COLUMN notification_day_of_month INTEGER',
+          );
+          await customStatement(
+            'ALTER TABLE loans ADD COLUMN notification_time TEXT',
+          );
+        }
+        if (from < 12) {
+          // Migración de versión 11 a 12
+          // Agregar hora de notificación a ahorros e inversiones
+          await customStatement(
+            'ALTER TABLE savings_goals ADD COLUMN notification_time TEXT',
+          );
+          await customStatement(
+            'ALTER TABLE investments ADD COLUMN notification_time TEXT',
+          );
+        }
+        if (from < 13) {
+          // Migración de versión 12 a 13
+          // Agregar frecuencia de aportes a ahorros
+          await customStatement(
+            "ALTER TABLE savings_goals ADD COLUMN contribution_frequency TEXT DEFAULT 'monthly'",
+          );
+        }
+        if (from < 14) {
+          // Migración de versión 13 a 14
+          // Agregar período de reinicio del balance
+          await customStatement(
+            "ALTER TABLE user_settings ADD COLUMN balance_reset_period TEXT NOT NULL DEFAULT 'total'",
+          );
+        }
+        if (from < 15) {
+          // Migración de versión 14 a 15
+          // Agregar día del mes y día de la semana para reinicio personalizado
+          await customStatement(
+            'ALTER TABLE user_settings ADD COLUMN balance_reset_day_of_month INTEGER',
+          );
+          await customStatement(
+            'ALTER TABLE user_settings ADD COLUMN balance_reset_day_of_week INTEGER',
           );
         }
       },
@@ -518,6 +620,47 @@ class AppDatabase extends _$AppDatabase {
   Future<int> deleteCustomIncomeSource(String name) {
     return (delete(customIncomeSources)..where((c) => c.name.equals(name)))
         .go();
+  }
+
+  // ========== FUENTES DE INGRESO PREDEFINIDAS OCULTAS ==========
+  Future<List<HiddenDefaultIncomeSource>> getAllHiddenDefaultIncomeSources() =>
+      select(hiddenDefaultIncomeSources).get();
+
+  Future<int> hideDefaultIncomeSource(String name) {
+    return into(hiddenDefaultIncomeSources).insert(
+      HiddenDefaultIncomeSourcesCompanion.insert(name: name),
+      mode: InsertMode.insertOrIgnore,
+    );
+  }
+
+  Future<int> unhideDefaultIncomeSource(String name) {
+    return (delete(hiddenDefaultIncomeSources)
+          ..where((c) => c.name.equals(name)))
+        .go();
+  }
+
+  Future<void> unhideAllDefaultIncomeSources() {
+    return delete(hiddenDefaultIncomeSources).go();
+  }
+
+  // ========== CATEGORÍAS PREDEFINIDAS OCULTAS ==========
+  Future<List<HiddenDefaultCategory>> getAllHiddenDefaultCategories() =>
+      select(hiddenDefaultCategories).get();
+
+  Future<int> hideDefaultCategory(String name) {
+    return into(hiddenDefaultCategories).insert(
+      HiddenDefaultCategoriesCompanion.insert(name: name),
+      mode: InsertMode.insertOrIgnore,
+    );
+  }
+
+  Future<int> unhideDefaultCategory(String name) {
+    return (delete(hiddenDefaultCategories)..where((c) => c.name.equals(name)))
+        .go();
+  }
+
+  Future<void> unhideAllDefaultCategories() {
+    return delete(hiddenDefaultCategories).go();
   }
 
   // ========== METAS DE AHORRO ==========

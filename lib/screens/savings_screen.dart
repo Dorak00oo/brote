@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../services/finance_service.dart';
 import '../models/savings_goal.dart';
+import '../widgets/notification_config_dialog.dart';
 import '../main.dart';
 
 /// Formatter personalizado para formatear números con separadores mientras se escribe
@@ -518,7 +519,9 @@ class SavingsScreen extends StatelessWidget {
     final targetController = TextEditingController();
     DateTime? targetDate;
     SavingsIconOption selectedIcon = savingsIconOptions.first;
+    ContributionFrequency frequency = ContributionFrequency.monthly;
     Set<int> notificationDays = {};
+    String? notificationTime;
 
     showModalBottomSheet(
       context: context,
@@ -686,92 +689,78 @@ class SavingsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Campo de notificación
-                    Row(
-                      children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: () async {
-                              final result = await showDialog<Set<int>>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Días de notificación'),
-                                  content: SizedBox(
-                                    width: double.maxFinite,
-                                    child: StatefulBuilder(
-                                      builder: (context, setDialogState) {
-                                        return SingleChildScrollView(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Text('Selecciona los días del mes para recibir recordatorios:'),
-                                              const SizedBox(height: 16),
-                                              Wrap(
-                                                spacing: 8,
-                                                runSpacing: 8,
-                                                children: List.generate(31, (index) {
-                                                  final day = index + 1;
-                                                  final isSelected = notificationDays.contains(day);
-                                                  return FilterChip(
-                                                    label: Text('$day'),
-                                                    selected: isSelected,
-                                                    onSelected: (selected) {
-                                                      setDialogState(() {
-                                                        if (selected) {
-                                                          notificationDays.add(day);
-                                                        } else {
-                                                          notificationDays.remove(day);
-                                                        }
-                                                      });
-                                                    },
-                                                  );
-                                                }),
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.end,
-                                                children: [
-                                                  TextButton(
-                                                    onPressed: () {
-                                                      setDialogState(() => notificationDays.clear());
-                                                    },
-                                                    child: const Text('Limpiar'),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  ElevatedButton(
-                                                    onPressed: () => Navigator.pop(context, notificationDays),
-                                                    child: const Text('Aceptar'),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              );
-                              if (result != null) {
-                                setState(() {});
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(12),
-                            child: InputDecorator(
-                              decoration: InputDecoration(
-                                labelText: 'Días de notificación (opcional)',
-                                prefixIcon: Icon(Icons.notifications_rounded, color: selectedIcon.color),
-                                helperText: 'Recibirás recordatorios los días seleccionados de cada mes',
-                              ),
-                              child: Text(
-                                notificationDays.isNotEmpty
-                                    ? 'Días: ${(notificationDays.toList()..sort()).join(", ")}'
-                                    : 'Sin notificación',
-                              ),
-                            ),
-                          ),
+                    // Frecuencia de aportes
+                    DropdownButtonFormField<ContributionFrequency>(
+                      value: frequency,
+                      decoration: InputDecoration(
+                        labelText: 'Frecuencia de aportes',
+                        prefixIcon: Icon(Icons.repeat_rounded, color: selectedIcon.color),
+                      ),
+                      items: ContributionFrequency.values.map((f) {
+                        return DropdownMenuItem(
+                          value: f,
+                          child: Text(f.displayName),
+                        );
+                      }).toList(),
+                      onChanged: (v) {
+                        setState(() {
+                          frequency = v!;
+                          // Limpiar notificaciones cuando cambia la frecuencia
+                          notificationDays = {};
+                          notificationTime = null;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    // Campo de notificación - dinámico según frecuencia
+                    InkWell(
+                      onTap: () async {
+                        NotificationConfig? result;
+                        if (frequency == ContributionFrequency.weekly) {
+                          result = await NotificationConfigDialog.showWeekly(
+                            context: context,
+                            title: 'Configurar recordatorio',
+                            currentSelection: notificationDays,
+                            currentTime: notificationTime,
+                            helpText: 'Selecciona los días de la semana para recibir recordatorios',
+                          );
+                        } else {
+                          String helpText;
+                          if (frequency == ContributionFrequency.daily) {
+                            helpText = 'Selecciona los días del mes para recordatorio diario';
+                          } else if (frequency == ContributionFrequency.biweekly) {
+                            helpText = 'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
+                          } else {
+                            helpText = 'Selecciona los días del mes para recibir recordatorios';
+                          }
+                          result = await NotificationConfigDialog.show(
+                            context: context,
+                            title: 'Configurar recordatorio',
+                            currentSelection: notificationDays,
+                            currentTime: notificationTime,
+                            helpText: helpText,
+                          );
+                        }
+                        if (result != null) {
+                          setState(() {
+                            notificationDays = result!.selection;
+                            notificationTime = result.time;
+                          });
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Recordatorio de ahorro (opcional)',
+                          prefixIcon: Icon(Icons.notifications_rounded, color: selectedIcon.color),
+                          helperText: _getNotificationHelperText(frequency),
                         ),
-                      ],
+                        child: Text(
+                          notificationDays.isNotEmpty
+                              ? _formatNotificationDisplay(notificationDays, frequency, notificationTime)
+                              : 'Sin notificación',
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
@@ -799,9 +788,11 @@ class SavingsScreen extends StatelessWidget {
                               targetDate: targetDate,
                               iconName: selectedIcon.id,
                               color: colorToHex(selectedIcon.color),
+                              contributionFrequency: frequency,
                               notificationDays: notificationDays.isNotEmpty 
                                   ? (notificationDays.toList()..sort()).join(',')
                                   : null,
+                              notificationTime: notificationTime,
                             );
                             await service.addSavingsGoal(goal);
                             Navigator.pop(context);
@@ -811,6 +802,300 @@ class SavingsScreen extends StatelessWidget {
                           }
                         },
                         child: const Text('Crear meta'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showEditGoalDialog(
+    BuildContext context,
+    SavingsGoal goal,
+    FinanceService service,
+  ) {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController(text: goal.name);
+    final settings = service.userSettings;
+    final formattedTarget = settings.formatNumber(goal.targetAmount, decimals: 0);
+    final targetController = TextEditingController(text: formattedTarget);
+    DateTime? targetDate = goal.targetDate;
+    SavingsIconOption selectedIcon = getSavingsIconById(goal.iconName);
+    ContributionFrequency frequency = goal.contributionFrequency;
+    Set<int> notificationDays = goal.notificationDaysList.toSet();
+    String? notificationTime = goal.notificationTime;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Editar meta de ahorro',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Selector de icono
+                    Text(
+                      'Elige un icono',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 80,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: savingsIconOptions.length,
+                        itemBuilder: (context, index) {
+                          final option = savingsIconOptions[index];
+                          final isSelected = selectedIcon.id == option.id;
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() => selectedIcon = option);
+                            },
+                            child: Container(
+                              width: 70,
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                color: isSelected 
+                                    ? option.color.withOpacity(0.15)
+                                    : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected 
+                                      ? option.color 
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    option.icon,
+                                    color: isSelected 
+                                        ? option.color 
+                                        : Colors.grey[600],
+                                    size: 28,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    option.label,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: isSelected 
+                                          ? option.color 
+                                          : Colors.grey[600],
+                                      fontWeight: isSelected 
+                                          ? FontWeight.bold 
+                                          : FontWeight.normal,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    TextFormField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Nombre de la meta',
+                        prefixIcon: Icon(Icons.flag_rounded, color: selectedIcon.color),
+                      ),
+                      textCapitalization: TextCapitalization.sentences,
+                      validator: (v) => v?.isEmpty ?? true ? 'Ingresa un nombre' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: targetController,
+                      decoration: InputDecoration(
+                        labelText: 'Monto objetivo',
+                        prefixIcon: Icon(Icons.attach_money_rounded, color: selectedIcon.color),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        NumberFormatInputFormatter(
+                          thousandsSeparator: settings.thousandsSeparator,
+                          decimalSeparator: settings.decimalSeparator,
+                        ),
+                      ],
+                      validator: (v) {
+                        if (v?.isEmpty ?? true) return 'Ingresa el monto';
+                        final cleanValue = NumberFormatInputFormatter.removeFormatting(
+                          v!,
+                          settings.thousandsSeparator,
+                          settings.decimalSeparator,
+                        );
+                        final parsed = double.tryParse(cleanValue);
+                        if (parsed == null || parsed <= 0) return 'Monto inválido';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: targetDate ?? DateTime.now().add(const Duration(days: 30)),
+                          firstDate: DateTime(2010),
+                          lastDate: DateTime(2100),
+                        );
+                        if (date != null) {
+                          setState(() => targetDate = date);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Fecha límite (opcional)',
+                          prefixIcon: Icon(Icons.calendar_today_rounded, color: selectedIcon.color),
+                        ),
+                        child: Text(
+                          targetDate != null
+                              ? DateFormat('d MMMM yyyy', 'es').format(targetDate!)
+                              : 'Sin fecha límite',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Frecuencia de aportes
+                    DropdownButtonFormField<ContributionFrequency>(
+                      value: frequency,
+                      decoration: InputDecoration(
+                        labelText: 'Frecuencia de aportes',
+                        prefixIcon: Icon(Icons.repeat_rounded, color: selectedIcon.color),
+                      ),
+                      items: ContributionFrequency.values.map((f) {
+                        return DropdownMenuItem(
+                          value: f,
+                          child: Text(f.displayName),
+                        );
+                      }).toList(),
+                      onChanged: (v) {
+                        setState(() {
+                          frequency = v!;
+                          // Limpiar notificaciones cuando cambia la frecuencia
+                          notificationDays = {};
+                          notificationTime = null;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    // Campo de notificación - dinámico según frecuencia
+                    InkWell(
+                      onTap: () async {
+                        NotificationConfig? result;
+                        if (frequency == ContributionFrequency.weekly) {
+                          result = await NotificationConfigDialog.showWeekly(
+                            context: context,
+                            title: 'Configurar recordatorio',
+                            currentSelection: notificationDays,
+                            currentTime: notificationTime,
+                            helpText: 'Selecciona los días de la semana para recibir recordatorios',
+                          );
+                        } else {
+                          String helpText;
+                          if (frequency == ContributionFrequency.daily) {
+                            helpText = 'Selecciona los días del mes para recordatorio diario';
+                          } else if (frequency == ContributionFrequency.biweekly) {
+                            helpText = 'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
+                          } else {
+                            helpText = 'Selecciona los días del mes para recibir recordatorios';
+                          }
+                          result = await NotificationConfigDialog.show(
+                            context: context,
+                            title: 'Configurar recordatorio',
+                            currentSelection: notificationDays,
+                            currentTime: notificationTime,
+                            helpText: helpText,
+                          );
+                        }
+                        if (result != null) {
+                          setState(() {
+                            notificationDays = result!.selection;
+                            notificationTime = result.time;
+                          });
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Recordatorio de ahorro (opcional)',
+                          prefixIcon: Icon(Icons.notifications_rounded, color: selectedIcon.color),
+                          helperText: _getNotificationHelperText(frequency),
+                        ),
+                        child: Text(
+                          notificationDays.isNotEmpty
+                              ? _formatNotificationDisplay(notificationDays, frequency, notificationTime)
+                              : 'Sin notificación',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: selectedIcon.color,
+                        ),
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            final cleanValue = NumberFormatInputFormatter.removeFormatting(
+                              targetController.text,
+                              settings.thousandsSeparator,
+                              settings.decimalSeparator,
+                            );
+                            final updatedGoal = goal.copyWith(
+                              name: nameController.text.trim(),
+                              targetAmount: double.parse(cleanValue),
+                              targetDate: targetDate,
+                              iconName: selectedIcon.id,
+                              color: colorToHex(selectedIcon.color),
+                              contributionFrequency: frequency,
+                              notificationDays: notificationDays.isNotEmpty 
+                                  ? (notificationDays.toList()..sort()).join(',')
+                                  : null,
+                              notificationTime: notificationTime,
+                            );
+                            await service.updateSavingsGoal(updatedGoal);
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Meta actualizada')),
+                            );
+                          }
+                        },
+                        child: const Text('Guardar cambios'),
                       ),
                     ),
                   ],
@@ -909,17 +1194,38 @@ class SavingsScreen extends StatelessWidget {
             // Botones rápidos
             Wrap(
               spacing: 8,
-              children: [100, 500, 1000, 5000].map((amount) {
-                // Formatear el monto con separadores
-                final formattedAmount = settings.formatNumber(amount.toDouble(), decimals: 0);
-                return ActionChip(
-                  label: Text('${settings.currencySymbol}$formattedAmount'),
+              runSpacing: 8,
+              children: [
+                ...([5000, 10000, 20000, 50000, 100000].map((amount) {
+                  // Formatear el monto con separadores
+                  final formattedAmount = settings.formatNumber(amount.toDouble(), decimals: 0);
+                  return ActionChip(
+                    label: Text('${settings.currencySymbol}$formattedAmount'),
+                    backgroundColor: goalColor.withOpacity(0.1),
+                    onPressed: () {
+                      amountController.text = formattedAmount;
+                    },
+                  );
+                }).toList()),
+                ActionChip(
+                  label: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.edit_rounded, size: 16),
+                      SizedBox(width: 4),
+                      Text('Personalizado'),
+                    ],
+                  ),
                   backgroundColor: goalColor.withOpacity(0.1),
                   onPressed: () {
-                    amountController.text = formattedAmount;
+                    // El campo ya está disponible para escribir
+                    amountController.selection = TextSelection(
+                      baseOffset: 0,
+                      extentOffset: amountController.text.length,
+                    );
                   },
-                );
-              }).toList(),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -983,7 +1289,9 @@ class SavingsScreen extends StatelessWidget {
         );
 
         // Variables de estado declaradas fuera del builder para persistir
+        ContributionFrequency currentFrequency = goal.contributionFrequency;
         Set<int> currentNotificationDays = goal.notificationDaysList.toSet();
+        String? currentNotificationTime = goal.notificationTime;
         bool isNotificationEnabled = currentNotificationDays.isNotEmpty;
 
         return StatefulBuilder(
@@ -1020,13 +1328,25 @@ class SavingsScreen extends StatelessWidget {
                           PopupMenuButton<String>(
                             onSelected: (value) async {
                               Navigator.pop(context);
-                              if (value == 'complete') {
+                              if (value == 'edit') {
+                                _showEditGoalDialog(context, goal, service);
+                              } else if (value == 'complete') {
                                 await service.completeSavingsGoal(goal.id);
                               } else if (value == 'delete') {
                                 await service.deleteSavingsGoal(goal.id);
                               }
                             },
                             itemBuilder: (_) => [
+                              const PopupMenuItem(
+                                value: 'edit',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.edit_rounded, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('Editar'),
+                                  ],
+                                ),
+                              ),
                               if (goal.status == SavingsGoalStatus.active)
                                 const PopupMenuItem(
                                   value: 'complete',
@@ -1074,6 +1394,11 @@ class SavingsScreen extends StatelessWidget {
                             currencyFormat.format(goal.dailySavingsRequired!),
                           ),
                       ],
+                      _buildDetailRow(
+                        context,
+                        'Frecuencia de aportes',
+                        currentFrequency.displayName,
+                      ),
                       const SizedBox(height: 20),
                       
                       // Sección de notificación
@@ -1100,7 +1425,7 @@ class SavingsScreen extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'Notificación de ahorro',
+                                      'Recordatorio',
                                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -1110,89 +1435,59 @@ class SavingsScreen extends StatelessWidget {
                                 Switch(
                                   value: isNotificationEnabled,
                                   onChanged: (value) async {
-                                    Set<int> newDays = {};
                                     if (value) {
-                                      // Si se activa, pedir los días
-                                      final result = await showDialog<Set<int>>(
-                                        context: context,
-                                        builder: (dialogContext) {
-                                          Set<int> tempDays = Set.from(currentNotificationDays);
-                                          return StatefulBuilder(
-                                            builder: (context, setDialogState) {
-                                              return AlertDialog(
-                                                title: const Text('Días de notificación'),
-                                                content: SizedBox(
-                                                  width: double.maxFinite,
-                                                  child: SingleChildScrollView(
-                                                    child: Column(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        const Text('Selecciona los días del mes para recibir recordatorios:'),
-                                                        const SizedBox(height: 16),
-                                                        Wrap(
-                                                          spacing: 8,
-                                                          runSpacing: 8,
-                                                          children: List.generate(31, (index) {
-                                                            final day = index + 1;
-                                                            final isSelected = tempDays.contains(day);
-                                                            return FilterChip(
-                                                              label: Text('$day'),
-                                                              selected: isSelected,
-                                                              onSelected: (selected) {
-                                                                setDialogState(() {
-                                                                  if (selected) {
-                                                                    tempDays.add(day);
-                                                                  } else {
-                                                                    tempDays.remove(day);
-                                                                  }
-                                                                });
-                                                              },
-                                                            );
-                                                          }),
-                                                        ),
-                                                        const SizedBox(height: 16),
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.end,
-                                                          children: [
-                                                            TextButton(
-                                                              onPressed: () => Navigator.pop(dialogContext, null),
-                                                              child: const Text('Cancelar'),
-                                                            ),
-                                                            const SizedBox(width: 8),
-                                                            ElevatedButton(
-                                                              onPressed: () => Navigator.pop(dialogContext, tempDays),
-                                                              child: const Text('Aceptar'),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        },
-                                      );
-                                      if (result != null && result.isNotEmpty) {
-                                        newDays = result;
+                                      // Mostrar diálogo según frecuencia
+                                      NotificationConfig? result;
+                                      if (currentFrequency == ContributionFrequency.weekly) {
+                                        result = await NotificationConfigDialog.showWeekly(
+                                          context: context,
+                                          title: 'Configurar recordatorio',
+                                          currentSelection: currentNotificationDays,
+                                          currentTime: currentNotificationTime,
+                                          helpText: 'Selecciona los días de la semana para recordatorio',
+                                        );
                                       } else {
-                                        return; // Si canceló o no seleccionó nada, no activar
+                                        String helpText;
+                                        if (currentFrequency == ContributionFrequency.daily) {
+                                          helpText = 'Selecciona los días del mes para recordatorio diario';
+                                        } else if (currentFrequency == ContributionFrequency.biweekly) {
+                                          helpText = 'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
+                                        } else {
+                                          helpText = 'Selecciona los días del mes para recordatorio';
+                                        }
+                                        result = await NotificationConfigDialog.show(
+                                          context: context,
+                                          title: 'Configurar recordatorio',
+                                          currentSelection: currentNotificationDays,
+                                          currentTime: currentNotificationTime,
+                                          helpText: helpText,
+                                        );
                                       }
+                                      if (result != null && result.isNotEmpty) {
+                                        final updatedGoal = goal.copyWith(
+                                          notificationDays: (result.selection.toList()..sort()).join(','),
+                                          notificationTime: result.time,
+                                        );
+                                        await service.updateSavingsGoal(updatedGoal);
+                                        setState(() {
+                                          currentNotificationDays = result!.selection;
+                                          currentNotificationTime = result.time;
+                                          isNotificationEnabled = true;
+                                        });
+                                      }
+                                    } else {
+                                      // Si se desactiva, limpiar notificaciones
+                                      final updatedGoal = goal.copyWith(
+                                        notificationDays: null,
+                                        notificationTime: null,
+                                      );
+                                      await service.updateSavingsGoal(updatedGoal);
+                                      setState(() {
+                                        currentNotificationDays = {};
+                                        currentNotificationTime = null;
+                                        isNotificationEnabled = false;
+                                      });
                                     }
-                                    
-                                    // Actualizar la meta
-                                    final updatedGoal = goal.copyWith(
-                                      notificationDays: newDays.isNotEmpty 
-                                          ? (newDays.toList()..sort()).join(',')
-                                          : null,
-                                    );
-                                    await service.updateSavingsGoal(updatedGoal);
-                                    
-                                    setState(() {
-                                      currentNotificationDays = newDays;
-                                      isNotificationEnabled = newDays.isNotEmpty;
-                                    });
                                   },
                                 ),
                               ],
@@ -1201,78 +1496,43 @@ class SavingsScreen extends StatelessWidget {
                               const SizedBox(height: 12),
                               InkWell(
                                 onTap: () async {
-                                  final result = await showDialog<Set<int>>(
-                                    context: context,
-                                    builder: (dialogContext) {
-                                      Set<int> tempDays = Set.from(currentNotificationDays);
-                                      return StatefulBuilder(
-                                        builder: (context, setDialogState) {
-                                          return AlertDialog(
-                                            title: const Text('Cambiar días de notificación'),
-                                            content: SizedBox(
-                                              width: double.maxFinite,
-                                              child: SingleChildScrollView(
-                                                child: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    const Text('Selecciona los días del mes para recibir recordatorios:'),
-                                                    const SizedBox(height: 16),
-                                                    Wrap(
-                                                      spacing: 8,
-                                                      runSpacing: 8,
-                                                      children: List.generate(31, (index) {
-                                                        final day = index + 1;
-                                                        final isSelected = tempDays.contains(day);
-                                                        return FilterChip(
-                                                          label: Text('$day'),
-                                                          selected: isSelected,
-                                                          onSelected: (selected) {
-                                                            setDialogState(() {
-                                                              if (selected) {
-                                                                tempDays.add(day);
-                                                              } else {
-                                                                tempDays.remove(day);
-                                                              }
-                                                            });
-                                                          },
-                                                        );
-                                                      }),
-                                                    ),
-                                                    const SizedBox(height: 16),
-                                                    Row(
-                                                      mainAxisAlignment: MainAxisAlignment.end,
-                                                      children: [
-                                                        TextButton(
-                                                          onPressed: () {
-                                                            setDialogState(() => tempDays.clear());
-                                                          },
-                                                          child: const Text('Limpiar'),
-                                                        ),
-                                                        const SizedBox(width: 8),
-                                                        ElevatedButton(
-                                                          onPressed: () => Navigator.pop(dialogContext, tempDays),
-                                                          child: const Text('Aceptar'),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  );
+                                  NotificationConfig? result;
+                                  if (currentFrequency == ContributionFrequency.weekly) {
+                                    result = await NotificationConfigDialog.showWeekly(
+                                      context: context,
+                                      title: 'Editar recordatorio',
+                                      currentSelection: currentNotificationDays,
+                                      currentTime: currentNotificationTime,
+                                      helpText: 'Selecciona los días de la semana para recordatorio',
+                                    );
+                                  } else {
+                                    String helpText;
+                                    if (currentFrequency == ContributionFrequency.daily) {
+                                      helpText = 'Selecciona los días del mes para recordatorio diario';
+                                    } else if (currentFrequency == ContributionFrequency.biweekly) {
+                                      helpText = 'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
+                                    } else {
+                                      helpText = 'Selecciona los días del mes para recordatorio';
+                                    }
+                                    result = await NotificationConfigDialog.show(
+                                      context: context,
+                                      title: 'Editar recordatorio',
+                                      currentSelection: currentNotificationDays,
+                                      currentTime: currentNotificationTime,
+                                      helpText: helpText,
+                                    );
+                                  }
                                   if (result != null) {
                                     final updatedGoal = goal.copyWith(
                                       notificationDays: result.isNotEmpty 
-                                          ? (result.toList()..sort()).join(',')
+                                          ? (result.selection.toList()..sort()).join(',')
                                           : null,
+                                      notificationTime: result.time,
                                     );
                                     await service.updateSavingsGoal(updatedGoal);
                                     setState(() {
-                                      currentNotificationDays = result;
+                                      currentNotificationDays = result!.selection;
+                                      currentNotificationTime = result.time;
                                       isNotificationEnabled = result.isNotEmpty;
                                     });
                                   }
@@ -1289,7 +1549,11 @@ class SavingsScreen extends StatelessWidget {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          'Días: ${(currentNotificationDays.toList()..sort()).join(", ")}',
+                                          _formatNotificationDisplay(
+                                            currentNotificationDays,
+                                            currentFrequency,
+                                            currentNotificationTime,
+                                          ),
                                           style: Theme.of(context).textTheme.bodyMedium,
                                         ),
                                       ),
@@ -1385,6 +1649,37 @@ class SavingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Obtiene el texto de ayuda según la frecuencia
+  String _getNotificationHelperText(ContributionFrequency frequency) {
+    switch (frequency) {
+      case ContributionFrequency.daily:
+        return 'Selecciona días del mes para recordatorio';
+      case ContributionFrequency.weekly:
+        return 'Selecciona días de la semana y hora';
+      case ContributionFrequency.biweekly:
+        return 'Selecciona días del mes para recordatorios quincenales (ej: día 1 y 15)';
+      case ContributionFrequency.monthly:
+        return 'Selecciona días del mes y hora';
+      case ContributionFrequency.custom:
+        return 'Configura recordatorios personalizados';
+    }
+  }
+
+  /// Formatea la visualización de las notificaciones según la frecuencia
+  String _formatNotificationDisplay(Set<int> selection, ContributionFrequency frequency, String? time) {
+    if (selection.isEmpty) return 'Sin notificación';
+    
+    switch (frequency) {
+      case ContributionFrequency.weekly:
+        return NotificationConfigDialog.formatWeekDaysDisplay(selection, time);
+      case ContributionFrequency.biweekly:
+      case ContributionFrequency.daily:
+      case ContributionFrequency.monthly:
+      case ContributionFrequency.custom:
+        return NotificationConfigDialog.formatMonthDaysDisplay(selection, time);
+    }
   }
 }
 

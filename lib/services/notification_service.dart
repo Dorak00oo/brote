@@ -6,7 +6,8 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   /// Inicializar el servicio de notificaciones
@@ -14,9 +15,11 @@ class NotificationService {
     if (_initialized) return;
 
     try {
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
       const iosSettings = DarwinInitializationSettings(
-        requestAlertPermission: true, // Solicitar permisos automáticamente en iOS
+        requestAlertPermission:
+            true, // Solicitar permisos automáticamente en iOS
         requestBadgePermission: true,
         requestSoundPermission: true,
       );
@@ -45,11 +48,12 @@ class NotificationService {
   /// Solicitar permisos de notificaciones
   Future<bool> requestPermissions() async {
     await initialize();
-    
+
     try {
       if (defaultTargetPlatform == TargetPlatform.android) {
-        final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+        final androidPlugin =
+            _notifications.resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>();
         final granted = await androidPlugin?.requestNotificationsPermission();
         return granted ?? false;
       } else if (defaultTargetPlatform == TargetPlatform.iOS) {
@@ -68,11 +72,12 @@ class NotificationService {
   /// Verificar si se tienen permisos de notificaciones
   Future<bool> checkPermissions() async {
     await initialize();
-    
+
     try {
       if (defaultTargetPlatform == TargetPlatform.android) {
-        final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+        final androidPlugin =
+            _notifications.resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>();
         final granted = await androidPlugin?.areNotificationsEnabled();
         return granted ?? false;
       } else if (defaultTargetPlatform == TargetPlatform.iOS) {
@@ -99,7 +104,8 @@ class NotificationService {
   }) async {
     await initialize();
 
-    final id = notificationId ?? DateTime.now().millisecondsSinceEpoch % 2147483647;
+    final id =
+        notificationId ?? DateTime.now().millisecondsSinceEpoch % 2147483647;
     final title = isPayment ? 'Recordatorio de pago' : 'Recordatorio de cobro';
     final body = isPayment
         ? 'No olvides realizar el pago de: $loanName'
@@ -125,7 +131,8 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _notifications.show(id, title, body, details, payload: 'loan_$loanName');
+    await _notifications.show(id, title, body, details,
+        payload: 'loan_$loanName');
   }
 
   /// Enviar notificación de ahorro
@@ -135,7 +142,8 @@ class NotificationService {
   }) async {
     await initialize();
 
-    final id = notificationId ?? DateTime.now().millisecondsSinceEpoch % 2147483647;
+    final id =
+        notificationId ?? DateTime.now().millisecondsSinceEpoch % 2147483647;
     const title = 'Recordatorio de ahorro';
     final body = 'Es un buen día para aportar a: $savingsName';
 
@@ -159,7 +167,8 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _notifications.show(id, title, body, details, payload: 'savings_$savingsName');
+    await _notifications.show(id, title, body, details,
+        payload: 'savings_$savingsName');
   }
 
   /// Enviar notificación de inversión
@@ -169,7 +178,8 @@ class NotificationService {
   }) async {
     await initialize();
 
-    final id = notificationId ?? DateTime.now().millisecondsSinceEpoch % 2147483647;
+    final id =
+        notificationId ?? DateTime.now().millisecondsSinceEpoch % 2147483647;
     const title = 'Recordatorio de inversión';
     final body = 'Revisa el estado de: $investmentName';
 
@@ -193,7 +203,8 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _notifications.show(id, title, body, details, payload: 'investment_$investmentName');
+    await _notifications.show(id, title, body, details,
+        payload: 'investment_$investmentName');
   }
 
   /// Cancelar todas las notificaciones
@@ -206,4 +217,3 @@ class NotificationService {
     await _notifications.cancel(id);
   }
 }
-
