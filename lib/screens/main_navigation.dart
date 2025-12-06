@@ -35,18 +35,20 @@ class _MainNavigationState extends State<MainNavigation> {
 
   Future<void> _checkAndRequestPermissions() async {
     if (_hasCheckedPermissions) return;
-    
+
     // Esperar a que el widget esté montado y el contexto esté disponible
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     if (!mounted) return;
 
     final service = Provider.of<FinanceService>(context, listen: false);
     final settings = service.userSettings;
-    
+
     // Si ya se pidieron permisos, no hacer nada
     if (settings.notificationPermissionAsked) {
-      setState(() => _hasCheckedPermissions = true);
+      if (mounted) {
+        setState(() => _hasCheckedPermissions = true);
+      }
       return;
     }
 
@@ -54,11 +56,13 @@ class _MainNavigationState extends State<MainNavigation> {
     final notificationService = NotificationService();
     await notificationService.initialize();
     final alreadyGranted = await notificationService.checkPermissions();
-    
+
     // Si ya están concedidos, marcar como preguntado y no mostrar diálogo
     if (alreadyGranted) {
       await service.markNotificationPermissionAsked();
-      setState(() => _hasCheckedPermissions = true);
+      if (mounted) {
+        setState(() => _hasCheckedPermissions = true);
+      }
       return;
     }
 
@@ -71,7 +75,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
     if (shouldRequest == true) {
       final permissionGranted = await notificationService.requestPermissions();
-      
+
       if (permissionGranted) {
         await service.markNotificationPermissionAsked();
         if (mounted) {
@@ -87,7 +91,8 @@ class _MainNavigationState extends State<MainNavigation> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Permisos de notificaciones denegados. Puedes activarlos desde Configuración'),
+              content: Text(
+                  'Permisos de notificaciones denegados. Puedes activarlos desde Configuración'),
               backgroundColor: Colors.orange,
               duration: Duration(seconds: 3),
             ),
@@ -95,7 +100,7 @@ class _MainNavigationState extends State<MainNavigation> {
         }
       }
     }
-    
+
     // Marcar como preguntado siempre, independientemente de la respuesta
     await service.markNotificationPermissionAsked();
 
@@ -189,7 +194,7 @@ class _MainNavigationState extends State<MainNavigation> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -205,10 +210,16 @@ class _MainNavigationState extends State<MainNavigation> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Expanded(child: _buildNavItem(0, Icons.home_rounded, 'Inicio')),
-                Expanded(child: _buildNavItem(1, Icons.swap_horiz_rounded, 'Movim.')),
-                Expanded(child: _buildNavItem(2, Icons.account_balance_wallet_rounded, 'Finanzas')),
-                Expanded(child: _buildNavItem(3, Icons.pie_chart_rounded, 'Stats')),
-                Expanded(child: _buildNavItem(4, Icons.settings_rounded, 'Ajustes')),
+                Expanded(
+                    child:
+                        _buildNavItem(1, Icons.swap_horiz_rounded, 'Movim.')),
+                Expanded(
+                    child: _buildNavItem(
+                        2, Icons.account_balance_wallet_rounded, 'Finanzas')),
+                Expanded(
+                    child: _buildNavItem(3, Icons.pie_chart_rounded, 'Stats')),
+                Expanded(
+                    child: _buildNavItem(4, Icons.settings_rounded, 'Ajustes')),
               ],
             ),
           ),
@@ -219,9 +230,10 @@ class _MainNavigationState extends State<MainNavigation> {
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _currentIndex == index;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final color = isSelected
         ? Theme.of(context).colorScheme.primary
-        : const Color(0xFF9E9E9E);
+        : (isDarkMode ? Colors.grey[400] : const Color(0xFF9E9E9E));
 
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
@@ -283,4 +295,3 @@ class _PermissionItem extends StatelessWidget {
     );
   }
 }
-

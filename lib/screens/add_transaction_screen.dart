@@ -135,7 +135,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             SizedBox(
               height: 56,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : () => _saveTransaction(context, service),
+                onPressed: _isLoading
+                    ? null
+                    : () => _saveTransaction(context, service),
                 child: _isLoading
                     ? const SizedBox(
                         width: 24,
@@ -155,10 +157,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Widget _buildTypeSelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -173,7 +176,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: _isIncome ? Colors.white : Colors.transparent,
+                  color: _isIncome
+                      ? (isDark
+                          ? Theme.of(context).colorScheme.surface
+                          : Colors.white)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: _isIncome
                       ? [
@@ -192,7 +199,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       Icons.arrow_downward_rounded,
                       color: _isIncome
                           ? Theme.of(context).colorScheme.income
-                          : Colors.grey,
+                          : (isDark ? Colors.grey[400] : Colors.grey),
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -201,7 +208,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       style: TextStyle(
                         color: _isIncome
                             ? Theme.of(context).colorScheme.income
-                            : Colors.grey,
+                            : (isDark ? Colors.grey[400] : Colors.grey),
                         fontWeight:
                             _isIncome ? FontWeight.bold : FontWeight.normal,
                       ),
@@ -221,7 +228,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: !_isIncome ? Colors.white : Colors.transparent,
+                  color: !_isIncome
+                      ? (isDark
+                          ? Theme.of(context).colorScheme.surface
+                          : Colors.white)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: !_isIncome
                       ? [
@@ -240,7 +251,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       Icons.arrow_upward_rounded,
                       color: !_isIncome
                           ? Theme.of(context).colorScheme.expense
-                          : Colors.grey,
+                          : (isDark ? Colors.grey[400] : Colors.grey),
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -249,7 +260,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       style: TextStyle(
                         color: !_isIncome
                             ? Theme.of(context).colorScheme.expense
-                            : Colors.grey,
+                            : (isDark ? Colors.grey[400] : Colors.grey),
                         fontWeight:
                             !_isIncome ? FontWeight.bold : FontWeight.normal,
                       ),
@@ -285,7 +296,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             decimals: 0,
           );
           if (decimalPart.isNotEmpty || rawText.endsWith('.')) {
-            formattedAmount += service.userSettings.decimalSeparator + decimalPart;
+            formattedAmount +=
+                service.userSettings.decimalSeparator + decimalPart;
           }
         }
       }
@@ -322,7 +334,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     if (length > 10) fontSize = 36;
                     if (length > 13) fontSize = 28;
                     if (length > 16) fontSize = 22;
-                    
+
                     return SizedBox(
                       width: constraints.maxWidth,
                       child: FittedBox(
@@ -345,14 +357,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                               style: TextStyle(
                                 fontSize: fontSize,
                                 fontWeight: FontWeight.bold,
-                                color: _amountController.text.isEmpty 
-                                    ? color.withOpacity(0.3) 
+                                color: _amountController.text.isEmpty
+                                    ? color.withOpacity(0.3)
                                     : color,
                               ),
                             ),
                             // Cursor parpadeante (solo cuando hay foco)
                             if (_amountFocusNode.hasFocus)
-                              _BlinkingCursor(color: color, height: fontSize * 0.8),
+                              _BlinkingCursor(
+                                  color: color, height: fontSize * 0.8),
                           ],
                         ),
                       ),
@@ -369,9 +382,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 child: TextFormField(
                   controller: _amountController,
                   focusNode: _amountFocusNode,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}')),
                   ],
                   onChanged: (_) => setState(() {}),
                   validator: (value) {
@@ -560,7 +575,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 class _BlinkingCursor extends StatefulWidget {
   final Color color;
   final double height;
-  
+
   const _BlinkingCursor({required this.color, this.height = 48});
 
   @override

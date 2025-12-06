@@ -54,11 +54,14 @@ class FinanceHubScreen extends StatelessWidget {
                 icon: Icons.trending_up_rounded,
                 color: Theme.of(context).colorScheme.investment,
                 amount: service.totalInvestmentsValue,
-                subtitle: '${service.activeInvestments.length} inversiones activas',
+                subtitle:
+                    '${service.activeInvestments.length} inversiones activas',
                 currencyFormat: currencyFormat,
-                onTap: () => _navigateToScreen(context, const InvestmentsScreen()),
+                onTap: () =>
+                    _navigateToScreen(context, const InvestmentsScreen()),
                 onAdd: () => _showAddOptions(context, 'investments'),
-                items: _buildInvestmentsPreview(context, service, currencyFormat),
+                items:
+                    _buildInvestmentsPreview(context, service, currencyFormat),
                 returnAmount: service.totalInvestmentReturn,
               ),
               const SizedBox(height: 16),
@@ -96,9 +99,9 @@ class FinanceHubScreen extends StatelessWidget {
     FinanceService service,
     NumberFormat currencyFormat,
   ) {
-    final totalAssets = service.totalSavings + 
-                        service.totalInvestmentsValue + 
-                        service.totalReceivables;
+    final totalAssets = service.totalSavings +
+        service.totalInvestmentsValue +
+        service.totalReceivables;
     final totalLiabilities = service.totalDebt;
     final netWorth = totalAssets - totalLiabilities;
 
@@ -241,11 +244,14 @@ class FinanceHubScreen extends StatelessWidget {
     double? returnAmount,
     bool showNetIndicator = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -279,15 +285,16 @@ class FinanceHubScreen extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           subtitle,
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
                             fontSize: 12,
                           ),
                         ),
@@ -301,8 +308,8 @@ class FinanceHubScreen extends StatelessWidget {
                         children: [
                           if (showNetIndicator && amount != 0)
                             Icon(
-                              amount >= 0 
-                                  ? Icons.arrow_upward_rounded 
+                              amount >= 0
+                                  ? Icons.arrow_upward_rounded
                                   : Icons.arrow_downward_rounded,
                               color: amount >= 0 ? Colors.green : Colors.red,
                               size: 16,
@@ -310,7 +317,7 @@ class FinanceHubScreen extends StatelessWidget {
                           Text(
                             currencyFormat.format(amount.abs()),
                             style: TextStyle(
-                              color: showNetIndicator 
+                              color: showNetIndicator
                                   ? (amount >= 0 ? Colors.green : Colors.red)
                                   : color,
                               fontWeight: FontWeight.bold,
@@ -323,7 +330,8 @@ class FinanceHubScreen extends StatelessWidget {
                         Text(
                           '${returnAmount >= 0 ? '+' : ''}${currencyFormat.format(returnAmount)}',
                           style: TextStyle(
-                            color: returnAmount >= 0 ? Colors.green : Colors.red,
+                            color:
+                                returnAmount >= 0 ? Colors.green : Colors.red,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -331,24 +339,34 @@ class FinanceHubScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(width: 8),
-                  Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: isDark ? Colors.grey[500] : Colors.grey[400],
+                  ),
                 ],
               ),
             ),
           ),
           // Items preview
           if (items.isNotEmpty) ...[
-            Divider(height: 1, color: Colors.grey.shade200),
+            Divider(
+              height: 1,
+              color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Column(children: items),
             ),
           ],
           // Add button
-          Divider(height: 1, color: Colors.grey.shade200),
+          Divider(
+            height: 1,
+            color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+          ),
           InkWell(
             onTap: onAdd,
-            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+            borderRadius:
+                const BorderRadius.vertical(bottom: Radius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
@@ -384,7 +402,12 @@ class FinanceHubScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
             'No hay metas de ahorro activas',
-            style: TextStyle(color: Colors.grey[500], fontSize: 13),
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[400]
+                  : Colors.grey[500],
+              fontSize: 13,
+            ),
           ),
         ),
       ];
@@ -392,10 +415,9 @@ class FinanceHubScreen extends StatelessWidget {
 
     return goals.map((goal) {
       final iconOption = getSavingsIconById(goal.iconName);
-      final goalColor = goal.color != null 
-          ? getColorFromHex(goal.color) 
-          : iconOption.color;
-      
+      final goalColor =
+          goal.color != null ? getColorFromHex(goal.color) : iconOption.color;
+
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
@@ -415,7 +437,8 @@ class FinanceHubScreen extends StatelessWidget {
                 children: [
                   Text(
                     goal.name,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w500),
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
@@ -424,7 +447,10 @@ class FinanceHubScreen extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: goal.progressPercentage / 100,
                       minHeight: 3,
-                      backgroundColor: Colors.grey.shade200,
+                      backgroundColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade200,
                       valueColor: AlwaysStoppedAnimation(goalColor),
                     ),
                   ),
@@ -458,7 +484,12 @@ class FinanceHubScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
             'No hay inversiones activas',
-            style: TextStyle(color: Colors.grey[500], fontSize: 13),
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[400]
+                  : Colors.grey[500],
+              fontSize: 13,
+            ),
           ),
         ),
       ];
@@ -466,16 +497,15 @@ class FinanceHubScreen extends StatelessWidget {
 
     return investments.map((inv) {
       final returnValue = inv.currentValue - inv.initialAmount;
-      final returnPercent = inv.initialAmount > 0 
-          ? (returnValue / inv.initialAmount) * 100 
-          : 0.0;
-      
+      final returnPercent =
+          inv.initialAmount > 0 ? (returnValue / inv.initialAmount) * 100 : 0.0;
+
       // Obtener icono y color personalizado
       final iconOption = getInvestmentIconById(inv.iconName);
       final invColor = inv.color != null
           ? Color(int.parse(inv.color!.substring(1), radix: 16) + 0xFF000000)
           : iconOption.color;
-      
+
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
@@ -487,8 +517,8 @@ class FinanceHubScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Icon(
-                iconOption.icon, 
-                color: invColor, 
+                iconOption.icon,
+                color: invColor,
                 size: 16,
               ),
             ),
@@ -496,7 +526,8 @@ class FinanceHubScreen extends StatelessWidget {
             Expanded(
               child: Text(
                 inv.name,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -527,31 +558,37 @@ class FinanceHubScreen extends StatelessWidget {
         .toList();
     // Por pagar (yo recibí dinero) - máximo 2
     final debts = service.loans
-        .where((l) => l.type == LoanType.received && l.status == LoanStatus.active)
+        .where(
+            (l) => l.type == LoanType.received && l.status == LoanStatus.active)
         .take(2)
         .toList();
-    
+
     if (receivables.isEmpty && debts.isEmpty) {
       return [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
             'No hay préstamos activos',
-            style: TextStyle(color: Colors.grey[500], fontSize: 13),
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[400]
+                  : Colors.grey[500],
+              fontSize: 13,
+            ),
           ),
         ),
       ];
     }
 
     final items = <Widget>[];
-    
+
     for (final loan in receivables) {
       // Obtener icono y color personalizado
       final iconOption = getLoanIconById(loan.iconName);
       final loanColor = loan.color != null
           ? Color(int.parse(loan.color!.substring(1), radix: 16) + 0xFF000000)
           : iconOption.color;
-      
+
       items.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
@@ -572,7 +609,8 @@ class FinanceHubScreen extends StatelessWidget {
                   children: [
                     Text(
                       loan.borrowerOrLender ?? loan.name,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w500),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
@@ -595,14 +633,14 @@ class FinanceHubScreen extends StatelessWidget {
         ),
       );
     }
-    
+
     for (final loan in debts) {
       // Obtener icono y color personalizado
       final iconOption = getLoanIconById(loan.iconName);
       final loanColor = loan.color != null
           ? Color(int.parse(loan.color!.substring(1), radix: 16) + 0xFF000000)
           : iconOption.color;
-      
+
       items.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
@@ -623,7 +661,8 @@ class FinanceHubScreen extends StatelessWidget {
                   children: [
                     Text(
                       loan.borrowerOrLender ?? loan.name,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w500),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
@@ -655,13 +694,14 @@ class FinanceHubScreen extends StatelessWidget {
         .where((l) => l.type == LoanType.given && l.status == LoanStatus.active)
         .length;
     final debtsCount = service.loans
-        .where((l) => l.type == LoanType.received && l.status == LoanStatus.active)
+        .where(
+            (l) => l.type == LoanType.received && l.status == LoanStatus.active)
         .length;
-    
+
     if (receivablesCount == 0 && debtsCount == 0) {
       return 'Sin préstamos activos';
     }
-    
+
     final parts = <String>[];
     if (receivablesCount > 0) parts.add('$receivablesCount por cobrar');
     if (debtsCount > 0) parts.add('$debtsCount por pagar');
@@ -727,7 +767,8 @@ class FinanceHubScreen extends StatelessWidget {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SavingsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const SavingsScreen()),
                 );
               },
             ),
@@ -742,7 +783,8 @@ class FinanceHubScreen extends StatelessWidget {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const InvestmentsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const InvestmentsScreen()),
                 );
               },
             ),
@@ -827,4 +869,3 @@ class FinanceHubScreen extends StatelessWidget {
     );
   }
 }
-

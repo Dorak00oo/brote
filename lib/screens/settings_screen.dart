@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../services/finance_service.dart';
 import '../models/user_settings.dart';
 
@@ -117,24 +118,7 @@ class SettingsScreen extends StatelessWidget {
                 context,
                 'Información',
                 [
-                  ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.info_outline_rounded,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    title: const Text('Versión'),
-                    subtitle: const Text('1.0.0'),
-                  ),
+                  _buildVersionTile(context),
                 ],
               ),
               const SizedBox(height: 100),
@@ -142,6 +126,44 @@ class SettingsScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildVersionTile(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      key: const ValueKey('version_tile'),
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const ListTile(
+            leading: CircularProgressIndicator(),
+            title: Text('Versión'),
+            subtitle: Text('Cargando...'),
+          );
+        }
+        if (snapshot.hasError) {
+          return const ListTile(
+            title: Text('Versión'),
+            subtitle: Text('Error al cargar'),
+          );
+        }
+        final version = snapshot.data?.version ?? 'Desconocida';
+        return ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.info_outline_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          title: const Text('Versión'),
+          subtitle: Text(version),
+        );
+      },
     );
   }
 
@@ -165,9 +187,13 @@ class SettingsScreen extends StatelessWidget {
         ),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade700
+                  : Colors.grey.shade200,
+            ),
           ),
           child: Column(
             children: children,
@@ -241,7 +267,9 @@ class SettingsScreen extends StatelessWidget {
                   Text(
                     'Selecciona qué día del mes consideras como inicio de tu período financiero',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[400]
+                              : Colors.grey[600],
                         ),
                   ),
                   const SizedBox(height: 24),
@@ -267,15 +295,19 @@ class SettingsScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? Theme.of(context).colorScheme.primary
-                                  : Colors.grey.shade100,
+                                  : (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey.shade800
+                                      : Colors.grey.shade100),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Center(
                               child: Text(
                                 '$day',
                                 style: TextStyle(
-                                  color:
-                                      isSelected ? Colors.white : Colors.black,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Theme.of(context).colorScheme.onSurface,
                                   fontWeight: isSelected
                                       ? FontWeight.bold
                                       : FontWeight.normal,
@@ -353,7 +385,8 @@ class SettingsScreen extends StatelessWidget {
       ),
       builder: (context) {
         var selectedPeriod = service.userSettings.balanceResetPeriod;
-        var selectedDayOfMonth = service.userSettings.balanceResetDayOfMonth ?? 1;
+        var selectedDayOfMonth =
+            service.userSettings.balanceResetDayOfMonth ?? 1;
         var selectedDayOfWeek = service.userSettings.balanceResetDayOfWeek ?? 1;
 
         return StatefulBuilder(
@@ -365,7 +398,15 @@ class SettingsScreen extends StatelessWidget {
                 case BalanceResetPeriod.daily:
                   return 'Se reinicia cada día';
                 case BalanceResetPeriod.weekly:
-                  final weekDays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                  final weekDays = [
+                    'Lunes',
+                    'Martes',
+                    'Miércoles',
+                    'Jueves',
+                    'Viernes',
+                    'Sábado',
+                    'Domingo'
+                  ];
                   return 'Se reinicia cada ${weekDays[selectedDayOfWeek - 1]}';
                 case BalanceResetPeriod.monthly:
                   return 'Se reinicia el día $selectedDayOfMonth de cada mes';
@@ -392,9 +433,13 @@ class SettingsScreen extends StatelessWidget {
                         const SizedBox(height: 8),
                         Text(
                           'Selecciona cada cuánto tiempo se reinicia el balance en el home. El balance total acumulado siempre estará disponible en Estadísticas.',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
+                                  ),
                         ),
                         const SizedBox(height: 24),
                         ...BalanceResetPeriod.values.map((period) {
@@ -402,7 +447,8 @@ class SettingsScreen extends StatelessWidget {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: InkWell(
-                              onTap: () => setState(() => selectedPeriod = period),
+                              onTap: () =>
+                                  setState(() => selectedPeriod = period),
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
                                 padding: const EdgeInsets.all(16),
@@ -412,7 +458,10 @@ class SettingsScreen extends StatelessWidget {
                                           .colorScheme
                                           .primary
                                           .withOpacity(0.1)
-                                      : Colors.grey.shade100,
+                                      : (Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.grey.shade800
+                                          : Colors.grey.shade100),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
@@ -426,15 +475,19 @@ class SettingsScreen extends StatelessWidget {
                                     Icon(
                                       isSelected
                                           ? Icons.radio_button_checked_rounded
-                                          : Icons.radio_button_unchecked_rounded,
+                                          : Icons
+                                              .radio_button_unchecked_rounded,
                                       color: isSelected
-                                          ? Theme.of(context).colorScheme.primary
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
                                           : Colors.grey,
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             period.displayName,
@@ -452,7 +505,11 @@ class SettingsScreen extends StatelessWidget {
                                                 .textTheme
                                                 .bodySmall
                                                 ?.copyWith(
-                                                  color: Colors.grey[600],
+                                                  color: Theme.of(context)
+                                                              .brightness ==
+                                                          Brightness.dark
+                                                      ? Colors.grey[400]
+                                                      : Colors.grey[600],
                                                 ),
                                           ),
                                         ],
@@ -490,20 +547,30 @@ class SettingsScreen extends StatelessWidget {
                                 final isSelected = day == selectedDayOfMonth;
 
                                 return GestureDetector(
-                                  onTap: () => setState(() => selectedDayOfMonth = day),
+                                  onTap: () =>
+                                      setState(() => selectedDayOfMonth = day),
                                   child: AnimatedContainer(
                                     duration: const Duration(milliseconds: 200),
                                     decoration: BoxDecoration(
                                       color: isSelected
-                                          ? Theme.of(context).colorScheme.primary
-                                          : Colors.grey.shade100,
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                          : (Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.grey.shade800
+                                              : Colors.grey.shade100),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Center(
                                       child: Text(
                                         '$day',
                                         style: TextStyle(
-                                          color: isSelected ? Colors.white : Colors.black,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
                                           fontWeight: isSelected
                                               ? FontWeight.bold
                                               : FontWeight.normal,
@@ -548,10 +615,15 @@ class SettingsScreen extends StatelessWidget {
                                     setState(() => selectedDayOfWeek = index);
                                   }
                                 },
-                                selectedColor: Theme.of(context).colorScheme.primary,
+                                selectedColor:
+                                    Theme.of(context).colorScheme.primary,
                                 labelStyle: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.black,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               );
                             }).toList(),
@@ -565,12 +637,14 @@ class SettingsScreen extends StatelessWidget {
                             onPressed: () async {
                               await service.updateBalanceResetPeriod(
                                 selectedPeriod,
-                                dayOfMonth: selectedPeriod == BalanceResetPeriod.monthly
-                                    ? selectedDayOfMonth
-                                    : null,
-                                dayOfWeek: selectedPeriod == BalanceResetPeriod.weekly
-                                    ? selectedDayOfWeek
-                                    : null,
+                                dayOfMonth:
+                                    selectedPeriod == BalanceResetPeriod.monthly
+                                        ? selectedDayOfMonth
+                                        : null,
+                                dayOfWeek:
+                                    selectedPeriod == BalanceResetPeriod.weekly
+                                        ? selectedDayOfWeek
+                                        : null,
                               );
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -772,7 +846,9 @@ class SettingsScreen extends StatelessWidget {
               Text(
                 'Elige cómo mostrar los números grandes',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[400]
+                          : Colors.grey[600],
                     ),
               ),
               const SizedBox(height: 16),
@@ -787,12 +863,18 @@ class SettingsScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Theme.of(context).colorScheme.primary
-                          : Colors.grey.shade200,
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade200),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Icon(
                       Icons.numbers_rounded,
-                      color: isSelected ? Colors.white : Colors.grey[600],
+                      color: isSelected
+                          ? Colors.white
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[400]
+                              : Colors.grey[600]),
                       size: 20,
                     ),
                   ),
@@ -957,7 +1039,9 @@ class SettingsScreen extends StatelessWidget {
                   Text(
                     'Toca ✕ para eliminar una categoría',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[400]
+                              : Colors.grey[600],
                         ),
                   ),
                   const SizedBox(height: 12),
@@ -1091,7 +1175,9 @@ class SettingsScreen extends StatelessWidget {
                   Text(
                     'Toca ✕ para eliminar una fuente',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[400]
+                              : Colors.grey[600],
                         ),
                   ),
                   const SizedBox(height: 12),

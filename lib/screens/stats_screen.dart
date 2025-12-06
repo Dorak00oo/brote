@@ -95,7 +95,8 @@ class _StatsScreenState extends State<StatsScreen> {
         break;
       case PeriodType.sixMonths:
         final sixMonthsAgo = DateTime(now.year, now.month - 6, now.day);
-        start = DateTime(sixMonthsAgo.year, sixMonthsAgo.month, sixMonthsAgo.day);
+        start =
+            DateTime(sixMonthsAgo.year, sixMonthsAgo.month, sixMonthsAgo.day);
         end = DateTime(now.year, now.month, now.day, 23, 59, 59);
         break;
       case PeriodType.month:
@@ -105,7 +106,8 @@ class _StatsScreenState extends State<StatsScreen> {
       case PeriodType.week:
         final weekStart = now.subtract(Duration(days: now.weekday - 1));
         start = DateTime(weekStart.year, weekStart.month, weekStart.day);
-        end = start.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+        end = start
+            .add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
         break;
       case PeriodType.custom:
         start = _customStartDate;
@@ -126,40 +128,43 @@ class _StatsScreenState extends State<StatsScreen> {
       final tYear = t.date.year;
       final tMonth = t.date.month;
       final tDay = t.date.day;
-      
+
       if (startDate != null) {
         final startYear = startDate.year;
         final startMonth = startDate.month;
         final startDay = startDate.day;
-        
+
         // Excluir si la fecha de la transacción es anterior al inicio
         if (tYear < startYear) return false;
         if (tYear == startYear && tMonth < startMonth) return false;
-        if (tYear == startYear && tMonth == startMonth && tDay < startDay) return false;
+        if (tYear == startYear && tMonth == startMonth && tDay < startDay)
+          return false;
       }
-      
+
       if (endDate != null) {
         final endYear = endDate.year;
         final endMonth = endDate.month;
         final endDay = endDate.day;
-        
+
         // Excluir si la fecha de la transacción es posterior al fin
         if (tYear > endYear) return false;
         if (tYear == endYear && tMonth > endMonth) return false;
-        if (tYear == endYear && tMonth == endMonth && tDay > endDay) return false;
+        if (tYear == endYear && tMonth == endMonth && tDay > endDay)
+          return false;
       }
-      
+
       return true;
     }).toList();
   }
 
   Widget _buildPeriodSelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.grey.shade200,
+            color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
             borderRadius: BorderRadius.circular(12),
           ),
           child: SingleChildScrollView(
@@ -176,7 +181,8 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
           ),
         ),
-        if (_selectedPeriod == PeriodType.custom && (_customStartDate != null || _customEndDate != null))
+        if (_selectedPeriod == PeriodType.custom &&
+            (_customStartDate != null || _customEndDate != null))
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
@@ -206,6 +212,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildPeriodTab(PeriodType period, String label) {
     final isSelected = _selectedPeriod == period;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () async {
@@ -224,7 +231,9 @@ class _StatsScreenState extends State<StatsScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 2),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
+          color: isSelected
+              ? (isDark ? Theme.of(context).colorScheme.surface : Colors.white)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           boxShadow: isSelected
               ? [
@@ -242,7 +251,7 @@ class _StatsScreenState extends State<StatsScreen> {
             fontSize: 12,
             color: isSelected
                 ? Theme.of(context).colorScheme.primary
-                : Colors.grey[600],
+                : (isDark ? Colors.grey[400] : Colors.grey[600]),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -327,7 +336,8 @@ class _StatsScreenState extends State<StatsScreen> {
               onPressed: () {
                 if (startDate != null && endDate != null) {
                   // Permitir mismo día o rango válido
-                  if (startDate!.isBefore(endDate!) || startDate!.isAtSameMomentAs(endDate!)) {
+                  if (startDate!.isBefore(endDate!) ||
+                      startDate!.isAtSameMomentAs(endDate!)) {
                     setState(() {
                       _customStartDate = startDate;
                       _customEndDate = endDate;
@@ -337,7 +347,8 @@ class _StatsScreenState extends State<StatsScreen> {
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('La fecha de inicio debe ser anterior o igual a la fecha de fin.'),
+                        content: Text(
+                            'La fecha de inicio debe ser anterior o igual a la fecha de fin.'),
                       ),
                     );
                   }
@@ -454,12 +465,15 @@ class _StatsScreenState extends State<StatsScreen> {
     IconData icon,
     Color color,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -478,7 +492,7 @@ class _StatsScreenState extends State<StatsScreen> {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),
               ),
             ],
@@ -500,13 +514,13 @@ class _StatsScreenState extends State<StatsScreen> {
     final dateRange = _getDateRange();
     final startDate = dateRange['start'];
     final endDate = dateRange['end'] ?? DateTime.now();
-    
+
     final List<Map<String, dynamic>> trendData = [];
     final now = DateTime.now();
 
     // Determinar el número de meses a mostrar según el período
     int monthsToShow;
-    
+
     switch (_selectedPeriod) {
       case PeriodType.all:
         // Mostrar los últimos 12 meses
@@ -543,8 +557,9 @@ class _StatsScreenState extends State<StatsScreen> {
     if (startDate != null) {
       DateTime currentMonth = DateTime(startDate.year, startDate.month, 1);
       final endMonth = DateTime(endDate.year, endDate.month, 1);
-      
-      while (currentMonth.isBefore(endMonth) || currentMonth.isAtSameMomentAs(endMonth)) {
+
+      while (currentMonth.isBefore(endMonth) ||
+          currentMonth.isAtSameMomentAs(endMonth)) {
         final monthIncome = service.transactions
             .where((t) =>
                 t.type == TransactionType.income &&
@@ -566,7 +581,7 @@ class _StatsScreenState extends State<StatsScreen> {
           'income': monthIncome,
           'expenses': monthExpenses,
         });
-        
+
         // Avanzar al siguiente mes
         if (currentMonth.month == 12) {
           currentMonth = DateTime(currentMonth.year + 1, 1, 1);
@@ -578,7 +593,7 @@ class _StatsScreenState extends State<StatsScreen> {
       // Si no hay rango específico, usar los últimos N meses desde ahora
       for (int i = monthsToShow - 1; i >= 0; i--) {
         final date = DateTime(now.year, now.month - i, 1);
-        
+
         final monthIncome = service.transactions
             .where((t) =>
                 t.type == TransactionType.income &&
@@ -613,30 +628,34 @@ class _StatsScreenState extends State<StatsScreen> {
     final endDateOnly = DateTime(end.year, end.month, end.day);
     int weekNum = 1;
 
-    while (current.isBefore(endDateOnly) || current.isAtSameMomentAs(endDateOnly)) {
+    while (current.isBefore(endDateOnly) ||
+        current.isAtSameMomentAs(endDateOnly)) {
       final weekEnd = current.add(const Duration(days: 6));
       final actualEnd = weekEnd.isAfter(endDateOnly) ? endDateOnly : weekEnd;
-      final actualEndDate = DateTime(actualEnd.year, actualEnd.month, actualEnd.day);
+      final actualEndDate =
+          DateTime(actualEnd.year, actualEnd.month, actualEnd.day);
 
-      final weekIncome = service.transactions
-          .where((t) {
-            final tDateOnly = DateTime(t.date.year, t.date.month, t.date.day);
-            final currentDateOnly = DateTime(current.year, current.month, current.day);
-            return t.type == TransactionType.income &&
-                (tDateOnly.isAtSameMomentAs(currentDateOnly) || tDateOnly.isAfter(currentDateOnly)) &&
-                (tDateOnly.isAtSameMomentAs(actualEndDate) || tDateOnly.isBefore(actualEndDate));
-          })
-          .fold(0.0, (sum, t) => sum + t.amount);
+      final weekIncome = service.transactions.where((t) {
+        final tDateOnly = DateTime(t.date.year, t.date.month, t.date.day);
+        final currentDateOnly =
+            DateTime(current.year, current.month, current.day);
+        return t.type == TransactionType.income &&
+            (tDateOnly.isAtSameMomentAs(currentDateOnly) ||
+                tDateOnly.isAfter(currentDateOnly)) &&
+            (tDateOnly.isAtSameMomentAs(actualEndDate) ||
+                tDateOnly.isBefore(actualEndDate));
+      }).fold(0.0, (sum, t) => sum + t.amount);
 
-      final weekExpenses = service.transactions
-          .where((t) {
-            final tDateOnly = DateTime(t.date.year, t.date.month, t.date.day);
-            final currentDateOnly = DateTime(current.year, current.month, current.day);
-            return t.type == TransactionType.expense &&
-                (tDateOnly.isAtSameMomentAs(currentDateOnly) || tDateOnly.isAfter(currentDateOnly)) &&
-                (tDateOnly.isAtSameMomentAs(actualEndDate) || tDateOnly.isBefore(actualEndDate));
-          })
-          .fold(0.0, (sum, t) => sum + t.amount);
+      final weekExpenses = service.transactions.where((t) {
+        final tDateOnly = DateTime(t.date.year, t.date.month, t.date.day);
+        final currentDateOnly =
+            DateTime(current.year, current.month, current.day);
+        return t.type == TransactionType.expense &&
+            (tDateOnly.isAtSameMomentAs(currentDateOnly) ||
+                tDateOnly.isAfter(currentDateOnly)) &&
+            (tDateOnly.isAtSameMomentAs(actualEndDate) ||
+                tDateOnly.isBefore(actualEndDate));
+      }).fold(0.0, (sum, t) => sum + t.amount);
 
       data.add({
         'label': 'Sem $weekNum',
@@ -707,13 +726,16 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget _buildTrendChart(BuildContext context, FinanceService service) {
     final trendData = _getTrendDataForPeriod(service);
     if (trendData.isEmpty) return const SizedBox.shrink();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -753,7 +775,8 @@ class _StatsScreenState extends State<StatsScreen> {
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
                         if (value >= 0 && value < trendData.length) {
-                          final label = trendData[value.toInt()]['label'] as String;
+                          final label =
+                              trendData[value.toInt()]['label'] as String;
                           return Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
@@ -858,33 +881,36 @@ class _StatsScreenState extends State<StatsScreen> {
     final dateRange = _getDateRange();
     final startDate = dateRange['start'];
     final endDate = dateRange['end'];
-    
+
     // Filtrar transacciones por período
     final filteredTransactions = _filterTransactionsByDateRange(
       service.transactions,
       startDate,
       endDate,
     );
-    
+
     // Calcular ingresos por fuente
     final Map<String, double> incomeBySource = {};
-    for (var t in filteredTransactions.where((t) => t.type == TransactionType.income)) {
+    for (var t in filteredTransactions
+        .where((t) => t.type == TransactionType.income)) {
       final source = t.source ?? 'Otros';
       incomeBySource[source] = (incomeBySource[source] ?? 0.0) + t.amount;
     }
-    
+
     // Calcular gastos por categoría
     final Map<String, double> expensesByCategory = {};
-    for (var t in filteredTransactions.where((t) => t.type == TransactionType.expense)) {
-      expensesByCategory[t.category] = (expensesByCategory[t.category] ?? 0.0) + t.amount;
+    for (var t in filteredTransactions
+        .where((t) => t.type == TransactionType.expense)) {
+      expensesByCategory[t.category] =
+          (expensesByCategory[t.category] ?? 0.0) + t.amount;
     }
-    
+
     final currencyFormat = NumberFormat.currency(
       locale: 'es_MX',
       symbol: service.userSettings.currencySymbol,
       decimalDigits: 0,
     );
-    
+
     final totalIncome = incomeBySource.values.fold(0.0, (a, b) => a + b);
     final totalExpenses = expensesByCategory.values.fold(0.0, (a, b) => a + b);
 
@@ -919,28 +945,28 @@ class _StatsScreenState extends State<StatsScreen> {
 
   // Colores específicos por fuente de ingreso
   static const Map<String, Color> _incomeSourceColors = {
-    'Salario': Color(0xFF2E7D32),       // Verde esmeralda
-    'Freelance': Color(0xFF1976D2),     // Azul
-    'Inversiones': Color(0xFF7B1FA2),   // Púrpura
-    'Bonos': Color(0xFFFF6F00),         // Naranja
-    'Intereses': Color(0xFF00838F),     // Teal
-    'Alquiler': Color(0xFFAD1457),      // Rosa fuerte
-    'Otros': Color(0xFF5D4037),         // Marrón
+    'Salario': Color(0xFF2E7D32), // Verde esmeralda
+    'Freelance': Color(0xFF1976D2), // Azul
+    'Inversiones': Color(0xFF7B1FA2), // Púrpura
+    'Bonos': Color(0xFFFF6F00), // Naranja
+    'Intereses': Color(0xFF00838F), // Teal
+    'Alquiler': Color(0xFFAD1457), // Rosa fuerte
+    'Otros': Color(0xFF5D4037), // Marrón
   };
 
   // Colores específicos por categoría de gasto
   static const Map<String, Color> _expenseCategoryColors = {
-    'Alimentación': Color(0xFFE53935),    // Rojo
-    'Vivienda': Color(0xFFFF6F00),        // Naranja
-    'Compras': Color(0xFFAD1457),         // Rosa fuerte
-    'Transporte': Color(0xFF1976D2),      // Azul
-    'Educación': Color(0xFF7B1FA2),       // Púrpura
+    'Alimentación': Color(0xFFE53935), // Rojo
+    'Vivienda': Color(0xFFFF6F00), // Naranja
+    'Compras': Color(0xFFAD1457), // Rosa fuerte
+    'Transporte': Color(0xFF1976D2), // Azul
+    'Educación': Color(0xFF7B1FA2), // Púrpura
     'Entretenimiento': Color(0xFFFFB300), // Amarillo/Dorado
-    'Servicios': Color(0xFF00838F),       // Teal
-    'Regalos': Color(0xFFEC407A),         // Rosa
-    'Mascotas': Color(0xFF8D6E63),        // Marrón claro
-    'Salud': Color(0xFF43A047),           // Verde
-    'Otros': Color(0xFF607D8B),           // Gris azulado
+    'Servicios': Color(0xFF00838F), // Teal
+    'Regalos': Color(0xFFEC407A), // Rosa
+    'Mascotas': Color(0xFF8D6E63), // Marrón claro
+    'Salud': Color(0xFF43A047), // Verde
+    'Otros': Color(0xFF607D8B), // Gris azulado
   };
 
   // Obtener color para fuente de ingreso
@@ -955,43 +981,43 @@ class _StatsScreenState extends State<StatsScreen> {
 
   // Lista de colores de respaldo para categorías personalizadas (ingresos)
   List<Color> get _incomeColors => [
-    const Color(0xFF2E7D32), // Verde esmeralda
-    const Color(0xFF1976D2), // Azul
-    const Color(0xFF7B1FA2), // Púrpura
-    const Color(0xFFFF6F00), // Naranja
-    const Color(0xFF00838F), // Teal
-    const Color(0xFFAD1457), // Rosa fuerte
-    const Color(0xFF5D4037), // Marrón
-    const Color(0xFF43A047), // Verde claro
-    const Color(0xFF3949AB), // Índigo
-    const Color(0xFFE65100), // Naranja oscuro
-    const Color(0xFF00695C), // Verde azulado
-    const Color(0xFF6A1B9A), // Púrpura oscuro
-    const Color(0xFFC62828), // Rojo oscuro
-    const Color(0xFF283593), // Azul oscuro
-    const Color(0xFF558B2F), // Verde oliva
-    Colors.grey.shade400,
-  ];
+        const Color(0xFF2E7D32), // Verde esmeralda
+        const Color(0xFF1976D2), // Azul
+        const Color(0xFF7B1FA2), // Púrpura
+        const Color(0xFFFF6F00), // Naranja
+        const Color(0xFF00838F), // Teal
+        const Color(0xFFAD1457), // Rosa fuerte
+        const Color(0xFF5D4037), // Marrón
+        const Color(0xFF43A047), // Verde claro
+        const Color(0xFF3949AB), // Índigo
+        const Color(0xFFE65100), // Naranja oscuro
+        const Color(0xFF00695C), // Verde azulado
+        const Color(0xFF6A1B9A), // Púrpura oscuro
+        const Color(0xFFC62828), // Rojo oscuro
+        const Color(0xFF283593), // Azul oscuro
+        const Color(0xFF558B2F), // Verde oliva
+        Colors.grey.shade400,
+      ];
 
   // Lista de colores de respaldo para categorías personalizadas (gastos)
   List<Color> get _expenseColors => [
-    const Color(0xFFE53935), // Rojo
-    const Color(0xFFFF6F00), // Naranja
-    const Color(0xFFAD1457), // Rosa fuerte
-    const Color(0xFF1976D2), // Azul
-    const Color(0xFF7B1FA2), // Púrpura
-    const Color(0xFFFFB300), // Amarillo/Dorado
-    const Color(0xFF00838F), // Teal
-    const Color(0xFFEC407A), // Rosa
-    const Color(0xFF8D6E63), // Marrón claro
-    const Color(0xFF43A047), // Verde
-    const Color(0xFF607D8B), // Gris azulado
-    const Color(0xFF5E35B1), // Violeta
-    const Color(0xFF039BE5), // Azul claro
-    const Color(0xFFD81B60), // Magenta
-    const Color(0xFF00897B), // Verde mar
-    Colors.grey.shade400,
-  ];
+        const Color(0xFFE53935), // Rojo
+        const Color(0xFFFF6F00), // Naranja
+        const Color(0xFFAD1457), // Rosa fuerte
+        const Color(0xFF1976D2), // Azul
+        const Color(0xFF7B1FA2), // Púrpura
+        const Color(0xFFFFB300), // Amarillo/Dorado
+        const Color(0xFF00838F), // Teal
+        const Color(0xFFEC407A), // Rosa
+        const Color(0xFF8D6E63), // Marrón claro
+        const Color(0xFF43A047), // Verde
+        const Color(0xFF607D8B), // Gris azulado
+        const Color(0xFF5E35B1), // Violeta
+        const Color(0xFF039BE5), // Azul claro
+        const Color(0xFFD81B60), // Magenta
+        const Color(0xFF00897B), // Verde mar
+        Colors.grey.shade400,
+      ];
 
   Widget _buildSinglePieChart(
     BuildContext context,
@@ -1003,13 +1029,16 @@ class _StatsScreenState extends State<StatsScreen> {
     List<Color> fallbackColors,
     Color Function(String) getColorForCategory,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (data.isEmpty || total == 0) {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(
+            color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+          ),
         ),
         child: Row(
           children: [
@@ -1059,9 +1088,11 @@ class _StatsScreenState extends State<StatsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1178,14 +1209,14 @@ class _StatsScreenState extends State<StatsScreen> {
     final dateRange = _getDateRange();
     final startDate = dateRange['start'];
     final endDate = dateRange['end'];
-    
+
     // Filtrar transacciones por período
     var filteredTransactions = _filterTransactionsByDateRange(
       service.transactions,
       startDate,
       endDate,
     );
-    
+
     // Calcular gastos por categoría
     final Map<String, double> expenses = {};
     for (var transaction in filteredTransactions
@@ -1234,12 +1265,15 @@ class _StatsScreenState extends State<StatsScreen> {
       return fallbackColors[index % fallbackColors.length];
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1345,7 +1379,9 @@ class _StatsScreenState extends State<StatsScreen> {
                       child: LinearProgressIndicator(
                         value: percentage / 100,
                         minHeight: 8,
-                        backgroundColor: Colors.grey.shade200,
+                        backgroundColor: isDark
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade200,
                         valueColor: AlwaysStoppedAnimation(
                           Theme.of(context).colorScheme.expense,
                         ),
@@ -1370,14 +1406,14 @@ class _StatsScreenState extends State<StatsScreen> {
     final dateRange = _getDateRange();
     final startDate = dateRange['start'];
     final endDate = dateRange['end'];
-    
+
     // Filtrar transacciones por período
     var filteredTransactions = _filterTransactionsByDateRange(
       service.transactions,
       startDate,
       endDate,
     );
-    
+
     // Calcular ingresos por fuente
     final Map<String, double> income = {};
     for (var transaction in filteredTransactions
@@ -1397,12 +1433,15 @@ class _StatsScreenState extends State<StatsScreen> {
       decimalDigits: 0,
     );
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1428,7 +1467,9 @@ class _StatsScreenState extends State<StatsScreen> {
                       child: LinearProgressIndicator(
                         value: percentage / 100,
                         minHeight: 8,
-                        backgroundColor: Colors.grey.shade200,
+                        backgroundColor: isDark
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade200,
                         valueColor: AlwaysStoppedAnimation(
                           Theme.of(context).colorScheme.income,
                         ),
@@ -1538,12 +1579,15 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Widget _buildExportButtons(BuildContext context, FinanceService service) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1567,7 +1611,7 @@ class _StatsScreenState extends State<StatsScreen> {
           Text(
             'Descarga un reporte de tus transacciones',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
                 ),
           ),
           const SizedBox(height: 16),
@@ -1684,29 +1728,36 @@ class _StatsScreenState extends State<StatsScreen> {
                   Builder(
                     builder: (context) {
                       // Calcular transacciones del período seleccionado
-                      final dateRange = _getExportDateRange(selectedPeriod, customStartDate, customEndDate);
+                      final dateRange = _getExportDateRange(
+                          selectedPeriod, customStartDate, customEndDate);
                       final startDate = dateRange['start'];
                       final endDate = dateRange['end'];
-                      
-                      final filteredTransactions = _filterTransactionsByDateRange(
+
+                      final filteredTransactions =
+                          _filterTransactionsByDateRange(
                         service.transactions,
                         startDate,
                         endDate,
                       );
-                      
+
                       final totalTransactions = filteredTransactions.length;
                       final excelLimit = 5000;
                       final pdfLimit = 2500;
-                      final currentLimit = exportType == 'excel' ? excelLimit : pdfLimit;
+                      final currentLimit =
+                          exportType == 'excel' ? excelLimit : pdfLimit;
                       final exceedsLimit = totalTransactions > currentLimit;
-                      
+
                       return Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: exceedsLimit ? Colors.orange.shade50 : Colors.blue.shade50,
+                          color: exceedsLimit
+                              ? Colors.orange.shade50
+                              : Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: exceedsLimit ? Colors.orange.shade200 : Colors.blue.shade200,
+                            color: exceedsLimit
+                                ? Colors.orange.shade200
+                                : Colors.blue.shade200,
                           ),
                         ),
                         child: Column(
@@ -1716,8 +1767,12 @@ class _StatsScreenState extends State<StatsScreen> {
                             Row(
                               children: [
                                 Icon(
-                                  exceedsLimit ? Icons.warning_amber_rounded : Icons.info_outline,
-                                  color: exceedsLimit ? Colors.orange.shade700 : Colors.blue.shade700,
+                                  exceedsLimit
+                                      ? Icons.warning_amber_rounded
+                                      : Icons.info_outline,
+                                  color: exceedsLimit
+                                      ? Colors.orange.shade700
+                                      : Colors.blue.shade700,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -1726,7 +1781,9 @@ class _StatsScreenState extends State<StatsScreen> {
                                     'Información de exportación',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: exceedsLimit ? Colors.orange.shade900 : Colors.blue.shade900,
+                                      color: exceedsLimit
+                                          ? Colors.orange.shade900
+                                          : Colors.blue.shade900,
                                       fontSize: 14,
                                     ),
                                   ),
@@ -1745,8 +1802,8 @@ class _StatsScreenState extends State<StatsScreen> {
                               children: [
                                 Flexible(
                                   child: Text(
-                                    exportType == 'excel' 
-                                        ? 'Límite Excel:' 
+                                    exportType == 'excel'
+                                        ? 'Límite Excel:'
                                         : 'Límite PDF:',
                                     style: TextStyle(
                                       fontSize: 13,
@@ -1757,8 +1814,8 @@ class _StatsScreenState extends State<StatsScreen> {
                                 const SizedBox(width: 8),
                                 Flexible(
                                   child: Text(
-                                    exportType == 'excel' 
-                                        ? '$excelLimit transacciones' 
+                                    exportType == 'excel'
+                                        ? '$excelLimit transacciones'
                                         : '$pdfLimit transacciones\n(100 páginas)',
                                     style: TextStyle(
                                       fontSize: 13,
@@ -1830,7 +1887,9 @@ class _StatsScreenState extends State<StatsScreen> {
                             onTap: () async {
                               final date = await showDatePicker(
                                 context: context,
-                                initialDate: customEndDate ?? customStartDate ?? DateTime.now(),
+                                initialDate: customEndDate ??
+                                    customStartDate ??
+                                    DateTime.now(),
                                 firstDate: customStartDate ?? DateTime(2000),
                                 lastDate: DateTime.now(),
                               );
@@ -1884,30 +1943,32 @@ class _StatsScreenState extends State<StatsScreen> {
                     if (customStartDate!.isAfter(customEndDate!)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('La fecha de inicio debe ser anterior a la de fin'),
+                          content: Text(
+                              'La fecha de inicio debe ser anterior a la de fin'),
                         ),
                       );
                       return;
                     }
                   }
-                  
+
                   // Calcular cuántas transacciones hay en el período seleccionado
-                  final dateRange = _getExportDateRange(selectedPeriod, customStartDate, customEndDate);
+                  final dateRange = _getExportDateRange(
+                      selectedPeriod, customStartDate, customEndDate);
                   final startDate = dateRange['start'];
                   final endDate = dateRange['end'];
-                  
+
                   final filteredTransactions = _filterTransactionsByDateRange(
                     service.transactions,
                     startDate,
                     endDate,
                   );
-                  
+
                   final totalTransactions = filteredTransactions.length;
-                  
+
                   // Límites de cada formato
                   final excelLimit = 5000;
                   final pdfLimit = 2500; // 100 páginas * 25 filas por página
-                  
+
                   // Mostrar diálogo de confirmación con la información
                   final shouldExport = await showDialog<bool>(
                     context: context,
@@ -1943,8 +2004,9 @@ class _StatsScreenState extends State<StatsScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.info_outline, 
-                                      color: Colors.blue.shade700, 
+                                    Icon(
+                                      Icons.info_outline,
+                                      color: Colors.blue.shade700,
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
@@ -1966,22 +2028,24 @@ class _StatsScreenState extends State<StatsScreen> {
                                 ),
                                 const SizedBox(height: 8),
                                 _buildInfoRow(
-                                  exportType == 'excel' 
-                                      ? 'Límite Excel:' 
+                                  exportType == 'excel'
+                                      ? 'Límite Excel:'
                                       : 'Límite PDF:',
-                                  exportType == 'excel' 
-                                      ? '$excelLimit transacciones' 
+                                  exportType == 'excel'
+                                      ? '$excelLimit transacciones'
                                       : '$pdfLimit transacciones (100 páginas)',
                                   Colors.grey.shade700,
                                 ),
                                 const SizedBox(height: 8),
-                                if (exportType == 'excel' && totalTransactions > excelLimit)
+                                if (exportType == 'excel' &&
+                                    totalTransactions > excelLimit)
                                   _buildInfoRow(
                                     '⚠️ Se exportarán:',
                                     '$excelLimit de $totalTransactions',
                                     Colors.orange.shade700,
                                   )
-                                else if (exportType == 'pdf' && totalTransactions > pdfLimit)
+                                else if (exportType == 'pdf' &&
+                                    totalTransactions > pdfLimit)
                                   _buildInfoRow(
                                     '⚠️ Se exportarán:',
                                     '$pdfLimit de $totalTransactions',
@@ -2013,27 +2077,27 @@ class _StatsScreenState extends State<StatsScreen> {
                       ],
                     ),
                   );
-                  
+
                   if (shouldExport == true) {
                     Navigator.pop(context);
-                    
+
                     // Ejecutar exportación
                     if (exportType == 'excel') {
                       _executeExport(
-                        context, 
-                        service, 
-                        'excel', 
-                        selectedPeriod, 
-                        customStartDate, 
+                        context,
+                        service,
+                        'excel',
+                        selectedPeriod,
+                        customStartDate,
                         customEndDate,
                       );
                     } else {
                       _executeExport(
-                        context, 
-                        service, 
-                        'pdf', 
-                        selectedPeriod, 
-                        customStartDate, 
+                        context,
+                        service,
+                        'pdf',
+                        selectedPeriod,
+                        customStartDate,
                         customEndDate,
                       );
                     }
@@ -2097,7 +2161,8 @@ class _StatsScreenState extends State<StatsScreen> {
         break;
       case PeriodType.sixMonths:
         final sixMonthsAgo = DateTime(now.year, now.month - 6, now.day);
-        start = DateTime(sixMonthsAgo.year, sixMonthsAgo.month, sixMonthsAgo.day);
+        start =
+            DateTime(sixMonthsAgo.year, sixMonthsAgo.month, sixMonthsAgo.day);
         end = DateTime(now.year, now.month, now.day, 23, 59, 59);
         break;
       case PeriodType.month:
@@ -2107,12 +2172,14 @@ class _StatsScreenState extends State<StatsScreen> {
       case PeriodType.week:
         final weekStart = now.subtract(Duration(days: now.weekday - 1));
         start = DateTime(weekStart.year, weekStart.month, weekStart.day);
-        end = start.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+        end = start
+            .add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
         break;
       case PeriodType.custom:
         start = customStart;
-        end = customEnd != null 
-            ? DateTime(customEnd.year, customEnd.month, customEnd.day, 23, 59, 59)
+        end = customEnd != null
+            ? DateTime(
+                customEnd.year, customEnd.month, customEnd.day, 23, 59, 59)
             : null;
         break;
     }
@@ -2155,11 +2222,11 @@ class _StatsScreenState extends State<StatsScreen> {
     // Guardar el contexto de la pantalla antes de iniciar
     final screenContext = context;
     if (!screenContext.mounted) return;
-    
+
     // Mostrar diálogo de loading
     final loadingCompleter = Completer<void>();
     BuildContext? loadingDialogContext;
-    
+
     showDialog(
       context: screenContext,
       barrierDismissible: false,
@@ -2180,8 +2247,8 @@ class _StatsScreenState extends State<StatsScreen> {
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),
                 Text(
-                  exportType == 'excel' 
-                      ? 'Generando archivo Excel...' 
+                  exportType == 'excel'
+                      ? 'Generando archivo Excel...'
                       : 'Generando archivo PDF...',
                   style: const TextStyle(fontSize: 14),
                   textAlign: TextAlign.center,
@@ -2210,18 +2277,19 @@ class _StatsScreenState extends State<StatsScreen> {
         );
       },
     );
-    
+
     // Esperar a que el diálogo esté visible antes de continuar
     await loadingCompleter.future;
     // Dar tiempo extra para que la UI se estabilice
     await Future.delayed(const Duration(milliseconds: 100));
 
     try {
-      print('Iniciando exportación de ${filteredTransactions.length} transacciones...');
-      
+      print(
+          'Iniciando exportación de ${filteredTransactions.length} transacciones...');
+
       // Ejecutar exportación
       ExportResult result;
-      
+
       if (exportType == 'excel') {
         print('Exportando a Excel...');
         result = await ExportService.exportToExcel(
@@ -2255,20 +2323,20 @@ class _StatsScreenState extends State<StatsScreen> {
         );
         print('PDF exportado exitosamente: ${result.filePath}');
       }
-      
+
       // Cerrar el diálogo de carga y mostrar el de éxito
       print('Mostrando diálogo de éxito...');
-      
+
       if (loadingDialogContext != null && loadingDialogContext!.mounted) {
         // Usar el StatefulBuilder para actualizar el contenido del diálogo
         // Necesitamos acceder al setState del StatefulBuilder
         // Como no tenemos acceso directo, usaremos un enfoque diferente:
         // Cerrar el diálogo de carga y mostrar el de éxito inmediatamente
         Navigator.of(loadingDialogContext!).pop();
-        
+
         // Esperar un momento mínimo
         await Future.delayed(const Duration(milliseconds: 100));
-        
+
         // Mostrar el diálogo de éxito usando Navigator raíz para mayor confiabilidad
         try {
           // Intentar con el contexto de la pantalla primero
@@ -2277,101 +2345,14 @@ class _StatsScreenState extends State<StatsScreen> {
               context: screenContext,
               barrierDismissible: true,
               builder: (context) => AlertDialog(
-              title: Row(
-                children: [
-                  Icon(
-                    exportType == 'excel' 
-                        ? Icons.table_chart_rounded 
-                        : Icons.picture_as_pdf_rounded,
-                    color: exportType == 'excel' 
-                        ? Colors.green.shade600 
-                        : Colors.red.shade600,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text('¡Exportación exitosa!'),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'El archivo se ha exportado correctamente a la carpeta de Descargas.',
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            result.fileName,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${filteredTransactions.length} transacciones exportadas',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Aceptar'),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final dialogContext = context;
-                    Navigator.pop(dialogContext);
-                    await Future.delayed(const Duration(milliseconds: 200));
-                    if (screenContext.mounted) {
-                      _showExportOptionsDialog(screenContext, result, filteredTransactions.length);
-                    } else {
-                      try {
-                        await ExportService.shareFile(result);
-                      } catch (e) {
-                        print('Error al compartir: $e');
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.share, size: 18),
-                  label: const Text('Compartir'),
-                ),
-              ],
-            ),
-          );
-          } else {
-            // Si el contexto no está montado, intentar usar el contexto del diálogo de carga
-            print('Context de pantalla no montado, usando contexto del diálogo...');
-            if (loadingDialogContext != null && loadingDialogContext!.mounted) {
-              showDialog(
-                context: loadingDialogContext!,
-                barrierDismissible: true,
-                builder: (context) => AlertDialog(
                 title: Row(
                   children: [
                     Icon(
-                      exportType == 'excel' 
-                          ? Icons.table_chart_rounded 
+                      exportType == 'excel'
+                          ? Icons.table_chart_rounded
                           : Icons.picture_as_pdf_rounded,
-                      color: exportType == 'excel' 
-                          ? Colors.green.shade600 
+                      color: exportType == 'excel'
+                          ? Colors.green.shade600
                           : Colors.red.shade600,
                     ),
                     const SizedBox(width: 8),
@@ -2384,7 +2365,8 @@ class _StatsScreenState extends State<StatsScreen> {
                   children: [
                     Text(
                       'El archivo se ha exportado correctamente a la carpeta de Descargas.',
-                      style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                      style:
+                          TextStyle(fontSize: 14, color: Colors.grey.shade700),
                     ),
                     const SizedBox(height: 12),
                     Container(
@@ -2395,7 +2377,8 @@ class _StatsScreenState extends State<StatsScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
+                          Icon(Icons.check_circle,
+                              color: Colors.green.shade600, size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -2413,7 +2396,8 @@ class _StatsScreenState extends State<StatsScreen> {
                     const SizedBox(height: 8),
                     Text(
                       '${filteredTransactions.length} transacciones exportadas',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      style:
+                          TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
                   ],
                 ),
@@ -2424,12 +2408,18 @@ class _StatsScreenState extends State<StatsScreen> {
                   ),
                   ElevatedButton.icon(
                     onPressed: () async {
-                      Navigator.pop(context);
+                      final dialogContext = context;
+                      Navigator.pop(dialogContext);
                       await Future.delayed(const Duration(milliseconds: 200));
-                      try {
-                        await ExportService.shareFile(result);
-                      } catch (e) {
-                        print('Error al compartir: $e');
+                      if (screenContext.mounted) {
+                        _showExportOptionsDialog(
+                            screenContext, result, filteredTransactions.length);
+                      } else {
+                        try {
+                          await ExportService.shareFile(result);
+                        } catch (e) {
+                          print('Error al compartir: $e');
+                        }
                       }
                     },
                     icon: const Icon(Icons.share, size: 18),
@@ -2438,6 +2428,92 @@ class _StatsScreenState extends State<StatsScreen> {
                 ],
               ),
             );
+          } else {
+            // Si el contexto no está montado, intentar usar el contexto del diálogo de carga
+            print(
+                'Context de pantalla no montado, usando contexto del diálogo...');
+            if (loadingDialogContext != null && loadingDialogContext!.mounted) {
+              showDialog(
+                context: loadingDialogContext!,
+                barrierDismissible: true,
+                builder: (context) => AlertDialog(
+                  title: Row(
+                    children: [
+                      Icon(
+                        exportType == 'excel'
+                            ? Icons.table_chart_rounded
+                            : Icons.picture_as_pdf_rounded,
+                        color: exportType == 'excel'
+                            ? Colors.green.shade600
+                            : Colors.red.shade600,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('¡Exportación exitosa!'),
+                    ],
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'El archivo se ha exportado correctamente a la carpeta de Descargas.',
+                        style: TextStyle(
+                            fontSize: 14, color: Colors.grey.shade700),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle,
+                                color: Colors.green.shade600, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                result.fileName,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${filteredTransactions.length} transacciones exportadas',
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Aceptar'),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await Future.delayed(const Duration(milliseconds: 200));
+                        try {
+                          await ExportService.shareFile(result);
+                        } catch (e) {
+                          print('Error al compartir: $e');
+                        }
+                      },
+                      icon: const Icon(Icons.share, size: 18),
+                      label: const Text('Compartir'),
+                    ),
+                  ],
+                ),
+              );
             } else {
               // Último recurso: mostrar SnackBar
               print('No hay contexto disponible, mostrando SnackBar...');
@@ -2499,15 +2575,16 @@ class _StatsScreenState extends State<StatsScreen> {
       if (loadingDialogContext != null) {
         Navigator.of(loadingDialogContext!).pop();
       }
-      
+
       // Usar el contexto guardado
-      final errorContext = screenContext.mounted ? screenContext : loadingDialogContext;
+      final errorContext =
+          screenContext.mounted ? screenContext : loadingDialogContext;
       if (errorContext != null && errorContext.mounted) {
         // Mostrar error detallado
         final errorMessage = e.toString();
         print('Error en exportación: $errorMessage');
         print('Stack trace: $stackTrace');
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Column(
@@ -2520,8 +2597,8 @@ class _StatsScreenState extends State<StatsScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  errorMessage.length > 100 
-                      ? '${errorMessage.substring(0, 100)}...' 
+                  errorMessage.length > 100
+                      ? '${errorMessage.substring(0, 100)}...'
                       : errorMessage,
                   style: const TextStyle(fontSize: 12),
                 ),
@@ -2557,11 +2634,13 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   /// Muestra el diálogo con opciones después de exportar
-  void _showExportOptionsDialog(BuildContext context, ExportResult result, int transactionCount) {
+  void _showExportOptionsDialog(
+      BuildContext context, ExportResult result, int transactionCount) {
     final isExcel = result.fileType == 'excel';
-    final icon = isExcel ? Icons.table_chart_rounded : Icons.picture_as_pdf_rounded;
+    final icon =
+        isExcel ? Icons.table_chart_rounded : Icons.picture_as_pdf_rounded;
     final color = isExcel ? Colors.green : Colors.red;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -2597,7 +2676,8 @@ class _StatsScreenState extends State<StatsScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle_rounded, color: Colors.green.shade600, size: 20),
+                  Icon(Icons.check_circle_rounded,
+                      color: Colors.green.shade600, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -2636,10 +2716,10 @@ class _StatsScreenState extends State<StatsScreen> {
               // Guardar el contexto antes de cerrar el diálogo
               final dialogContext = context;
               Navigator.pop(dialogContext);
-              
+
               // Esperar a que el diálogo se cierre
               await Future.delayed(const Duration(milliseconds: 100));
-              
+
               try {
                 await ExportService.shareFile(result);
               } catch (e) {
@@ -2672,10 +2752,10 @@ class _StatsScreenState extends State<StatsScreen> {
               // Guardar el contexto antes de cerrar el diálogo
               final dialogContext = context;
               Navigator.pop(dialogContext);
-              
+
               // Esperar a que el diálogo se cierre
               await Future.delayed(const Duration(milliseconds: 100));
-              
+
               try {
                 await ExportService.openFile(result);
               } catch (e) {
@@ -2706,7 +2786,7 @@ class _StatsScreenState extends State<StatsScreen> {
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       ),
     );
-    
+
     // Mostrar también un mensaje informativo
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -2728,5 +2808,4 @@ class _StatsScreenState extends State<StatsScreen> {
       ),
     );
   }
-
 }

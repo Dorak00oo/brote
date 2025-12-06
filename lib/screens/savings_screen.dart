@@ -70,23 +70,24 @@ class NumberFormatInputFormatter extends TextInputFormatter {
 
   String _formatWithSeparators(String number) {
     if (number.isEmpty) return '';
-    
+
     // Revertir, agregar separadores cada 3 dígitos, y revertir de nuevo
     String reversed = number.split('').reversed.join();
     StringBuffer buffer = StringBuffer();
-    
+
     for (int i = 0; i < reversed.length; i++) {
       if (i > 0 && i % 3 == 0) {
         buffer.write(thousandsSeparator);
       }
       buffer.write(reversed[i]);
     }
-    
+
     return buffer.toString().split('').reversed.join();
   }
 
   /// Remueve los separadores de un texto formateado para obtener el número puro
-  static String removeFormatting(String formattedText, String thousandsSeparator, String decimalSeparator) {
+  static String removeFormatting(String formattedText,
+      String thousandsSeparator, String decimalSeparator) {
     return formattedText
         .replaceAll(thousandsSeparator, '')
         .replaceAll(decimalSeparator, '.');
@@ -264,7 +265,8 @@ class SavingsScreen extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 12),
-                ...activeGoals.map((goal) => _buildGoalCard(context, goal, service)),
+                ...activeGoals
+                    .map((goal) => _buildGoalCard(context, goal, service)),
                 const SizedBox(height: 24),
               ],
 
@@ -275,7 +277,8 @@ class SavingsScreen extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 12),
-                ...completedGoals.map((goal) => _buildGoalCard(context, goal, service)),
+                ...completedGoals
+                    .map((goal) => _buildGoalCard(context, goal, service)),
               ],
             ],
           );
@@ -317,8 +320,8 @@ class SavingsScreen extends StatelessWidget {
             'Crea tu primer bolsillo de ahorro\npara alcanzar tus objetivos',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
-            ),
+                  color: Colors.grey[600],
+                ),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -364,8 +367,8 @@ class SavingsScreen extends StatelessWidget {
               Text(
                 'Total Ahorrado',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.9),
-                ),
+                      color: Colors.white.withOpacity(0.9),
+                    ),
               ),
             ],
           ),
@@ -373,9 +376,9 @@ class SavingsScreen extends StatelessWidget {
           Text(
             currencyFormat.format(totalSaved),
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 16),
           ClipRRect(
@@ -391,8 +394,8 @@ class SavingsScreen extends StatelessWidget {
           Text(
             '${progress.toStringAsFixed(1)}% de ${currencyFormat.format(totalTarget)}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white.withOpacity(0.9),
-            ),
+                  color: Colors.white.withOpacity(0.9),
+                ),
           ),
         ],
       ),
@@ -411,13 +414,13 @@ class SavingsScreen extends StatelessWidget {
     );
 
     final isCompleted = goal.status == SavingsGoalStatus.completed;
-    
+
     // Obtener icono y color del bolsillo
     final iconOption = getSavingsIconById(goal.iconName);
-    final goalColor = goal.color != null 
-        ? getColorFromHex(goal.color) 
-        : iconOption.color;
-    final color = isCompleted ? Theme.of(context).colorScheme.primary : goalColor;
+    final goalColor =
+        goal.color != null ? getColorFromHex(goal.color) : iconOption.color;
+    final color =
+        isCompleted ? Theme.of(context).colorScheme.primary : goalColor;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -445,8 +448,8 @@ class SavingsScreen extends StatelessWidget {
             title: Text(
               goal.name,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -493,8 +496,11 @@ class SavingsScreen extends StatelessWidget {
                       Text(
                         'Faltan ${goal.daysRemaining} días',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
                       ),
                   ],
                 ),
@@ -503,7 +509,8 @@ class SavingsScreen extends StatelessWidget {
             trailing: !isCompleted
                 ? IconButton(
                     icon: Icon(Icons.add_circle_rounded, color: color),
-                    onPressed: () => _showAddContributionDialog(context, goal, service),
+                    onPressed: () =>
+                        _showAddContributionDialog(context, goal, service),
                   )
                 : null,
             onTap: () => _showGoalDetails(context, goal, service),
@@ -550,13 +557,16 @@ class SavingsScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Selector de icono
                     Text(
                       'Elige un icono',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.grey[700],
-                      ),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[700],
+                          ),
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
@@ -575,13 +585,16 @@ class SavingsScreen extends StatelessWidget {
                               width: 70,
                               margin: const EdgeInsets.only(right: 8),
                               decoration: BoxDecoration(
-                                color: isSelected 
+                                color: isSelected
                                     ? option.color.withOpacity(0.15)
-                                    : Colors.grey.shade100,
+                                    : (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.grey.shade800
+                                        : Colors.grey.shade100),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isSelected 
-                                      ? option.color 
+                                  color: isSelected
+                                      ? option.color
                                       : Colors.transparent,
                                   width: 2,
                                 ),
@@ -591,9 +604,12 @@ class SavingsScreen extends StatelessWidget {
                                 children: [
                                   Icon(
                                     option.icon,
-                                    color: isSelected 
-                                        ? option.color 
-                                        : Colors.grey[600],
+                                    color: isSelected
+                                        ? option.color
+                                        : (Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600]),
                                     size: 28,
                                   ),
                                   const SizedBox(height: 4),
@@ -601,11 +617,11 @@ class SavingsScreen extends StatelessWidget {
                                     option.label,
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: isSelected 
-                                          ? option.color 
+                                      color: isSelected
+                                          ? option.color
                                           : Colors.grey[600],
-                                      fontWeight: isSelected 
-                                          ? FontWeight.bold 
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
                                           : FontWeight.normal,
                                     ),
                                     overflow: TextOverflow.ellipsis,
@@ -618,16 +634,18 @@ class SavingsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
+
                     TextFormField(
                       controller: nameController,
                       decoration: InputDecoration(
                         labelText: 'Nombre de la meta',
                         hintText: 'Ej: ${selectedIcon.label}...',
-                        prefixIcon: Icon(Icons.flag_rounded, color: selectedIcon.color),
+                        prefixIcon:
+                            Icon(Icons.flag_rounded, color: selectedIcon.color),
                       ),
                       textCapitalization: TextCapitalization.sentences,
-                      validator: (v) => v?.isEmpty ?? true ? 'Ingresa un nombre' : null,
+                      validator: (v) =>
+                          v?.isEmpty ?? true ? 'Ingresa un nombre' : null,
                     ),
                     const SizedBox(height: 16),
                     Builder(
@@ -638,9 +656,11 @@ class SavingsScreen extends StatelessWidget {
                           controller: targetController,
                           decoration: InputDecoration(
                             labelText: 'Monto objetivo',
-                            prefixIcon: Icon(Icons.attach_money_rounded, color: selectedIcon.color),
+                            prefixIcon: Icon(Icons.attach_money_rounded,
+                                color: selectedIcon.color),
                           ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           inputFormatters: [
                             NumberFormatInputFormatter(
                               thousandsSeparator: settings.thousandsSeparator,
@@ -650,13 +670,15 @@ class SavingsScreen extends StatelessWidget {
                           validator: (v) {
                             if (v?.isEmpty ?? true) return 'Ingresa el monto';
                             // Remover separadores antes de parsear
-                            final cleanValue = NumberFormatInputFormatter.removeFormatting(
+                            final cleanValue =
+                                NumberFormatInputFormatter.removeFormatting(
                               v!,
                               settings.thousandsSeparator,
                               settings.decimalSeparator,
                             );
                             final parsed = double.tryParse(cleanValue);
-                            if (parsed == null || parsed <= 0) return 'Monto inválido';
+                            if (parsed == null || parsed <= 0)
+                              return 'Monto inválido';
                             return null;
                           },
                         );
@@ -667,9 +689,11 @@ class SavingsScreen extends StatelessWidget {
                       onTap: () async {
                         final date = await showDatePicker(
                           context: context,
-                          initialDate: DateTime.now().add(const Duration(days: 30)),
+                          initialDate:
+                              DateTime.now().add(const Duration(days: 30)),
                           firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 3650)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 3650)),
                         );
                         if (date != null) {
                           setState(() => targetDate = date);
@@ -679,11 +703,13 @@ class SavingsScreen extends StatelessWidget {
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Fecha límite (opcional)',
-                          prefixIcon: Icon(Icons.calendar_today_rounded, color: selectedIcon.color),
+                          prefixIcon: Icon(Icons.calendar_today_rounded,
+                              color: selectedIcon.color),
                         ),
                         child: Text(
                           targetDate != null
-                              ? DateFormat('d MMMM yyyy', 'es').format(targetDate!)
+                              ? DateFormat('d MMMM yyyy', 'es')
+                                  .format(targetDate!)
                               : 'Sin fecha límite',
                         ),
                       ),
@@ -694,7 +720,8 @@ class SavingsScreen extends StatelessWidget {
                       value: frequency,
                       decoration: InputDecoration(
                         labelText: 'Frecuencia de aportes',
-                        prefixIcon: Icon(Icons.repeat_rounded, color: selectedIcon.color),
+                        prefixIcon: Icon(Icons.repeat_rounded,
+                            color: selectedIcon.color),
                       ),
                       items: ContributionFrequency.values.map((f) {
                         return DropdownMenuItem(
@@ -722,16 +749,21 @@ class SavingsScreen extends StatelessWidget {
                             title: 'Configurar recordatorio',
                             currentSelection: notificationDays,
                             currentTime: notificationTime,
-                            helpText: 'Selecciona los días de la semana para recibir recordatorios',
+                            helpText:
+                                'Selecciona los días de la semana para recibir recordatorios',
                           );
                         } else {
                           String helpText;
                           if (frequency == ContributionFrequency.daily) {
-                            helpText = 'Selecciona los días del mes para recordatorio diario';
-                          } else if (frequency == ContributionFrequency.biweekly) {
-                            helpText = 'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
+                            helpText =
+                                'Selecciona los días del mes para recordatorio diario';
+                          } else if (frequency ==
+                              ContributionFrequency.biweekly) {
+                            helpText =
+                                'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
                           } else {
-                            helpText = 'Selecciona los días del mes para recibir recordatorios';
+                            helpText =
+                                'Selecciona los días del mes para recibir recordatorios';
                           }
                           result = await NotificationConfigDialog.show(
                             context: context,
@@ -752,12 +784,14 @@ class SavingsScreen extends StatelessWidget {
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Recordatorio de ahorro (opcional)',
-                          prefixIcon: Icon(Icons.notifications_rounded, color: selectedIcon.color),
+                          prefixIcon: Icon(Icons.notifications_rounded,
+                              color: selectedIcon.color),
                           helperText: _getNotificationHelperText(frequency),
                         ),
                         child: Text(
                           notificationDays.isNotEmpty
-                              ? _formatNotificationDisplay(notificationDays, frequency, notificationTime)
+                              ? _formatNotificationDisplay(
+                                  notificationDays, frequency, notificationTime)
                               : 'Sin notificación',
                         ),
                       ),
@@ -775,13 +809,16 @@ class SavingsScreen extends StatelessWidget {
                             final service = context.read<FinanceService>();
                             final settings = service.userSettings;
                             // Remover separadores antes de parsear
-                            final cleanValue = NumberFormatInputFormatter.removeFormatting(
+                            final cleanValue =
+                                NumberFormatInputFormatter.removeFormatting(
                               targetController.text,
                               settings.thousandsSeparator,
                               settings.decimalSeparator,
                             );
                             final goal = SavingsGoal(
-                              id: DateTime.now().millisecondsSinceEpoch.toString(),
+                              id: DateTime.now()
+                                  .millisecondsSinceEpoch
+                                  .toString(),
                               name: nameController.text.trim(),
                               targetAmount: double.parse(cleanValue),
                               createdAt: DateTime.now(),
@@ -789,8 +826,9 @@ class SavingsScreen extends StatelessWidget {
                               iconName: selectedIcon.id,
                               color: colorToHex(selectedIcon.color),
                               contributionFrequency: frequency,
-                              notificationDays: notificationDays.isNotEmpty 
-                                  ? (notificationDays.toList()..sort()).join(',')
+                              notificationDays: notificationDays.isNotEmpty
+                                  ? (notificationDays.toList()..sort())
+                                      .join(',')
                                   : null,
                               notificationTime: notificationTime,
                             );
@@ -822,7 +860,8 @@ class SavingsScreen extends StatelessWidget {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(text: goal.name);
     final settings = service.userSettings;
-    final formattedTarget = settings.formatNumber(goal.targetAmount, decimals: 0);
+    final formattedTarget =
+        settings.formatNumber(goal.targetAmount, decimals: 0);
     final targetController = TextEditingController(text: formattedTarget);
     DateTime? targetDate = goal.targetDate;
     SavingsIconOption selectedIcon = getSavingsIconById(goal.iconName);
@@ -857,13 +896,16 @@ class SavingsScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Selector de icono
                     Text(
                       'Elige un icono',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.grey[700],
-                      ),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[700],
+                          ),
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
@@ -882,13 +924,16 @@ class SavingsScreen extends StatelessWidget {
                               width: 70,
                               margin: const EdgeInsets.only(right: 8),
                               decoration: BoxDecoration(
-                                color: isSelected 
+                                color: isSelected
                                     ? option.color.withOpacity(0.15)
-                                    : Colors.grey.shade100,
+                                    : (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.grey.shade800
+                                        : Colors.grey.shade100),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isSelected 
-                                      ? option.color 
+                                  color: isSelected
+                                      ? option.color
                                       : Colors.transparent,
                                   width: 2,
                                 ),
@@ -898,9 +943,12 @@ class SavingsScreen extends StatelessWidget {
                                 children: [
                                   Icon(
                                     option.icon,
-                                    color: isSelected 
-                                        ? option.color 
-                                        : Colors.grey[600],
+                                    color: isSelected
+                                        ? option.color
+                                        : (Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600]),
                                     size: 28,
                                   ),
                                   const SizedBox(height: 4),
@@ -908,11 +956,11 @@ class SavingsScreen extends StatelessWidget {
                                     option.label,
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: isSelected 
-                                          ? option.color 
+                                      color: isSelected
+                                          ? option.color
                                           : Colors.grey[600],
-                                      fontWeight: isSelected 
-                                          ? FontWeight.bold 
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
                                           : FontWeight.normal,
                                     ),
                                     overflow: TextOverflow.ellipsis,
@@ -925,24 +973,28 @@ class SavingsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
+
                     TextFormField(
                       controller: nameController,
                       decoration: InputDecoration(
                         labelText: 'Nombre de la meta',
-                        prefixIcon: Icon(Icons.flag_rounded, color: selectedIcon.color),
+                        prefixIcon:
+                            Icon(Icons.flag_rounded, color: selectedIcon.color),
                       ),
                       textCapitalization: TextCapitalization.sentences,
-                      validator: (v) => v?.isEmpty ?? true ? 'Ingresa un nombre' : null,
+                      validator: (v) =>
+                          v?.isEmpty ?? true ? 'Ingresa un nombre' : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: targetController,
                       decoration: InputDecoration(
                         labelText: 'Monto objetivo',
-                        prefixIcon: Icon(Icons.attach_money_rounded, color: selectedIcon.color),
+                        prefixIcon: Icon(Icons.attach_money_rounded,
+                            color: selectedIcon.color),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         NumberFormatInputFormatter(
                           thousandsSeparator: settings.thousandsSeparator,
@@ -951,13 +1003,15 @@ class SavingsScreen extends StatelessWidget {
                       ],
                       validator: (v) {
                         if (v?.isEmpty ?? true) return 'Ingresa el monto';
-                        final cleanValue = NumberFormatInputFormatter.removeFormatting(
+                        final cleanValue =
+                            NumberFormatInputFormatter.removeFormatting(
                           v!,
                           settings.thousandsSeparator,
                           settings.decimalSeparator,
                         );
                         final parsed = double.tryParse(cleanValue);
-                        if (parsed == null || parsed <= 0) return 'Monto inválido';
+                        if (parsed == null || parsed <= 0)
+                          return 'Monto inválido';
                         return null;
                       },
                     ),
@@ -966,7 +1020,8 @@ class SavingsScreen extends StatelessWidget {
                       onTap: () async {
                         final date = await showDatePicker(
                           context: context,
-                          initialDate: targetDate ?? DateTime.now().add(const Duration(days: 30)),
+                          initialDate: targetDate ??
+                              DateTime.now().add(const Duration(days: 30)),
                           firstDate: DateTime(2010),
                           lastDate: DateTime(2100),
                         );
@@ -978,11 +1033,13 @@ class SavingsScreen extends StatelessWidget {
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Fecha límite (opcional)',
-                          prefixIcon: Icon(Icons.calendar_today_rounded, color: selectedIcon.color),
+                          prefixIcon: Icon(Icons.calendar_today_rounded,
+                              color: selectedIcon.color),
                         ),
                         child: Text(
                           targetDate != null
-                              ? DateFormat('d MMMM yyyy', 'es').format(targetDate!)
+                              ? DateFormat('d MMMM yyyy', 'es')
+                                  .format(targetDate!)
                               : 'Sin fecha límite',
                         ),
                       ),
@@ -993,7 +1050,8 @@ class SavingsScreen extends StatelessWidget {
                       value: frequency,
                       decoration: InputDecoration(
                         labelText: 'Frecuencia de aportes',
-                        prefixIcon: Icon(Icons.repeat_rounded, color: selectedIcon.color),
+                        prefixIcon: Icon(Icons.repeat_rounded,
+                            color: selectedIcon.color),
                       ),
                       items: ContributionFrequency.values.map((f) {
                         return DropdownMenuItem(
@@ -1021,16 +1079,21 @@ class SavingsScreen extends StatelessWidget {
                             title: 'Configurar recordatorio',
                             currentSelection: notificationDays,
                             currentTime: notificationTime,
-                            helpText: 'Selecciona los días de la semana para recibir recordatorios',
+                            helpText:
+                                'Selecciona los días de la semana para recibir recordatorios',
                           );
                         } else {
                           String helpText;
                           if (frequency == ContributionFrequency.daily) {
-                            helpText = 'Selecciona los días del mes para recordatorio diario';
-                          } else if (frequency == ContributionFrequency.biweekly) {
-                            helpText = 'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
+                            helpText =
+                                'Selecciona los días del mes para recordatorio diario';
+                          } else if (frequency ==
+                              ContributionFrequency.biweekly) {
+                            helpText =
+                                'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
                           } else {
-                            helpText = 'Selecciona los días del mes para recibir recordatorios';
+                            helpText =
+                                'Selecciona los días del mes para recibir recordatorios';
                           }
                           result = await NotificationConfigDialog.show(
                             context: context,
@@ -1051,12 +1114,14 @@ class SavingsScreen extends StatelessWidget {
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Recordatorio de ahorro (opcional)',
-                          prefixIcon: Icon(Icons.notifications_rounded, color: selectedIcon.color),
+                          prefixIcon: Icon(Icons.notifications_rounded,
+                              color: selectedIcon.color),
                           helperText: _getNotificationHelperText(frequency),
                         ),
                         child: Text(
                           notificationDays.isNotEmpty
-                              ? _formatNotificationDisplay(notificationDays, frequency, notificationTime)
+                              ? _formatNotificationDisplay(
+                                  notificationDays, frequency, notificationTime)
                               : 'Sin notificación',
                         ),
                       ),
@@ -1071,7 +1136,8 @@ class SavingsScreen extends StatelessWidget {
                         ),
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            final cleanValue = NumberFormatInputFormatter.removeFormatting(
+                            final cleanValue =
+                                NumberFormatInputFormatter.removeFormatting(
                               targetController.text,
                               settings.thousandsSeparator,
                               settings.decimalSeparator,
@@ -1083,8 +1149,9 @@ class SavingsScreen extends StatelessWidget {
                               iconName: selectedIcon.id,
                               color: colorToHex(selectedIcon.color),
                               contributionFrequency: frequency,
-                              notificationDays: notificationDays.isNotEmpty 
-                                  ? (notificationDays.toList()..sort()).join(',')
+                              notificationDays: notificationDays.isNotEmpty
+                                  ? (notificationDays.toList()..sort())
+                                      .join(',')
                                   : null,
                               notificationTime: notificationTime,
                             );
@@ -1120,12 +1187,11 @@ class SavingsScreen extends StatelessWidget {
       symbol: settings.currencySymbol,
       decimalDigits: 0,
     );
-    
+
     // Obtener icono y color del bolsillo
     final iconOption = getSavingsIconById(goal.iconName);
-    final goalColor = goal.color != null 
-        ? getColorFromHex(goal.color) 
-        : iconOption.color;
+    final goalColor =
+        goal.color != null ? getColorFromHex(goal.color) : iconOption.color;
 
     showModalBottomSheet(
       context: context,
@@ -1166,8 +1232,11 @@ class SavingsScreen extends StatelessWidget {
                       Text(
                         'Te faltan ${currencyFormat.format(goal.remainingAmount)}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
@@ -1182,7 +1251,8 @@ class SavingsScreen extends StatelessWidget {
                 labelText: 'Monto a agregar',
                 prefixIcon: Icon(Icons.attach_money_rounded, color: goalColor),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 NumberFormatInputFormatter(
                   thousandsSeparator: settings.thousandsSeparator,
@@ -1198,7 +1268,8 @@ class SavingsScreen extends StatelessWidget {
               children: [
                 ...([5000, 10000, 20000, 50000, 100000].map((amount) {
                   // Formatear el monto con separadores
-                  final formattedAmount = settings.formatNumber(amount.toDouble(), decimals: 0);
+                  final formattedAmount =
+                      settings.formatNumber(amount.toDouble(), decimals: 0);
                   return ActionChip(
                     label: Text('${settings.currencySymbol}$formattedAmount'),
                     backgroundColor: goalColor.withOpacity(0.1),
@@ -1237,7 +1308,8 @@ class SavingsScreen extends StatelessWidget {
                 ),
                 onPressed: () async {
                   // Remover separadores antes de parsear
-                  final cleanValue = NumberFormatInputFormatter.removeFormatting(
+                  final cleanValue =
+                      NumberFormatInputFormatter.removeFormatting(
                     amountController.text,
                     settings.thousandsSeparator,
                     settings.decimalSeparator,
@@ -1271,10 +1343,9 @@ class SavingsScreen extends StatelessWidget {
   ) {
     // Obtener icono y color del bolsillo
     final iconOption = getSavingsIconById(goal.iconName);
-    final goalColor = goal.color != null 
-        ? getColorFromHex(goal.color) 
-        : iconOption.color;
-    
+    final goalColor =
+        goal.color != null ? getColorFromHex(goal.color) : iconOption.color;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1316,7 +1387,8 @@ class SavingsScreen extends StatelessWidget {
                               color: goalColor.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(iconOption.icon, color: goalColor, size: 28),
+                            child: Icon(iconOption.icon,
+                                color: goalColor, size: 28),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -1354,7 +1426,8 @@ class SavingsScreen extends StatelessWidget {
                                 ),
                               const PopupMenuItem(
                                 value: 'delete',
-                                child: Text('Eliminar', style: TextStyle(color: Colors.red)),
+                                child: Text('Eliminar',
+                                    style: TextStyle(color: Colors.red)),
                               ),
                             ],
                           ),
@@ -1385,7 +1458,8 @@ class SavingsScreen extends StatelessWidget {
                         _buildDetailRow(
                           context,
                           'Fecha límite',
-                          DateFormat('d MMMM yyyy', 'es').format(goal.targetDate!),
+                          DateFormat('d MMMM yyyy', 'es')
+                              .format(goal.targetDate!),
                         ),
                         if (goal.dailySavingsRequired != null)
                           _buildDetailRow(
@@ -1400,14 +1474,21 @@ class SavingsScreen extends StatelessWidget {
                         currentFrequency.displayName,
                       ),
                       const SizedBox(height: 20),
-                      
+
                       // Sección de notificación
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey.shade900
+                              : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade200),
+                          border: Border.all(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey.shade700
+                                    : Colors.grey.shade200,
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1426,9 +1507,12 @@ class SavingsScreen extends StatelessWidget {
                                     const SizedBox(width: 8),
                                     Text(
                                       'Recordatorio',
-                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -1438,39 +1522,55 @@ class SavingsScreen extends StatelessWidget {
                                     if (value) {
                                       // Mostrar diálogo según frecuencia
                                       NotificationConfig? result;
-                                      if (currentFrequency == ContributionFrequency.weekly) {
-                                        result = await NotificationConfigDialog.showWeekly(
+                                      if (currentFrequency ==
+                                          ContributionFrequency.weekly) {
+                                        result = await NotificationConfigDialog
+                                            .showWeekly(
                                           context: context,
                                           title: 'Configurar recordatorio',
-                                          currentSelection: currentNotificationDays,
+                                          currentSelection:
+                                              currentNotificationDays,
                                           currentTime: currentNotificationTime,
-                                          helpText: 'Selecciona los días de la semana para recordatorio',
+                                          helpText:
+                                              'Selecciona los días de la semana para recordatorio',
                                         );
                                       } else {
                                         String helpText;
-                                        if (currentFrequency == ContributionFrequency.daily) {
-                                          helpText = 'Selecciona los días del mes para recordatorio diario';
-                                        } else if (currentFrequency == ContributionFrequency.biweekly) {
-                                          helpText = 'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
+                                        if (currentFrequency ==
+                                            ContributionFrequency.daily) {
+                                          helpText =
+                                              'Selecciona los días del mes para recordatorio diario';
+                                        } else if (currentFrequency ==
+                                            ContributionFrequency.biweekly) {
+                                          helpText =
+                                              'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
                                         } else {
-                                          helpText = 'Selecciona los días del mes para recordatorio';
+                                          helpText =
+                                              'Selecciona los días del mes para recordatorio';
                                         }
-                                        result = await NotificationConfigDialog.show(
+                                        result =
+                                            await NotificationConfigDialog.show(
                                           context: context,
                                           title: 'Configurar recordatorio',
-                                          currentSelection: currentNotificationDays,
+                                          currentSelection:
+                                              currentNotificationDays,
                                           currentTime: currentNotificationTime,
                                           helpText: helpText,
                                         );
                                       }
                                       if (result != null && result.isNotEmpty) {
                                         final updatedGoal = goal.copyWith(
-                                          notificationDays: (result.selection.toList()..sort()).join(','),
+                                          notificationDays:
+                                              (result.selection.toList()
+                                                    ..sort())
+                                                  .join(','),
                                           notificationTime: result.time,
                                         );
-                                        await service.updateSavingsGoal(updatedGoal);
+                                        await service
+                                            .updateSavingsGoal(updatedGoal);
                                         setState(() {
-                                          currentNotificationDays = result!.selection;
+                                          currentNotificationDays =
+                                              result!.selection;
                                           currentNotificationTime = result.time;
                                           isNotificationEnabled = true;
                                         });
@@ -1481,7 +1581,8 @@ class SavingsScreen extends StatelessWidget {
                                         notificationDays: null,
                                         notificationTime: null,
                                       );
-                                      await service.updateSavingsGoal(updatedGoal);
+                                      await service
+                                          .updateSavingsGoal(updatedGoal);
                                       setState(() {
                                         currentNotificationDays = {};
                                         currentNotificationTime = null;
@@ -1497,24 +1598,33 @@ class SavingsScreen extends StatelessWidget {
                               InkWell(
                                 onTap: () async {
                                   NotificationConfig? result;
-                                  if (currentFrequency == ContributionFrequency.weekly) {
-                                    result = await NotificationConfigDialog.showWeekly(
+                                  if (currentFrequency ==
+                                      ContributionFrequency.weekly) {
+                                    result = await NotificationConfigDialog
+                                        .showWeekly(
                                       context: context,
                                       title: 'Editar recordatorio',
                                       currentSelection: currentNotificationDays,
                                       currentTime: currentNotificationTime,
-                                      helpText: 'Selecciona los días de la semana para recordatorio',
+                                      helpText:
+                                          'Selecciona los días de la semana para recordatorio',
                                     );
                                   } else {
                                     String helpText;
-                                    if (currentFrequency == ContributionFrequency.daily) {
-                                      helpText = 'Selecciona los días del mes para recordatorio diario';
-                                    } else if (currentFrequency == ContributionFrequency.biweekly) {
-                                      helpText = 'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
+                                    if (currentFrequency ==
+                                        ContributionFrequency.daily) {
+                                      helpText =
+                                          'Selecciona los días del mes para recordatorio diario';
+                                    } else if (currentFrequency ==
+                                        ContributionFrequency.biweekly) {
+                                      helpText =
+                                          'Selecciona los días del mes para recordatorios quincenales (ej: día 1 y 15)';
                                     } else {
-                                      helpText = 'Selecciona los días del mes para recordatorio';
+                                      helpText =
+                                          'Selecciona los días del mes para recordatorio';
                                     }
-                                    result = await NotificationConfigDialog.show(
+                                    result =
+                                        await NotificationConfigDialog.show(
                                       context: context,
                                       title: 'Editar recordatorio',
                                       currentSelection: currentNotificationDays,
@@ -1524,14 +1634,17 @@ class SavingsScreen extends StatelessWidget {
                                   }
                                   if (result != null) {
                                     final updatedGoal = goal.copyWith(
-                                      notificationDays: result.isNotEmpty 
-                                          ? (result.selection.toList()..sort()).join(',')
+                                      notificationDays: result.isNotEmpty
+                                          ? (result.selection.toList()..sort())
+                                              .join(',')
                                           : null,
                                       notificationTime: result.time,
                                     );
-                                    await service.updateSavingsGoal(updatedGoal);
+                                    await service
+                                        .updateSavingsGoal(updatedGoal);
                                     setState(() {
-                                      currentNotificationDays = result!.selection;
+                                      currentNotificationDays =
+                                          result!.selection;
                                       currentNotificationTime = result.time;
                                       isNotificationEnabled = result.isNotEmpty;
                                     });
@@ -1540,12 +1653,21 @@ class SavingsScreen extends StatelessWidget {
                                 child: Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.grey.shade800
+                                        : Colors.white,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.grey.shade300),
+                                    border: Border.all(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.grey.shade600
+                                          : Colors.grey.shade300,
+                                    ),
                                   ),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Expanded(
                                         child: Text(
@@ -1554,10 +1676,19 @@ class SavingsScreen extends StatelessWidget {
                                             currentFrequency,
                                             currentNotificationTime,
                                           ),
-                                          style: Theme.of(context).textTheme.bodyMedium,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
                                         ),
                                       ),
-                                      Icon(Icons.edit_rounded, size: 18, color: Colors.grey[600]),
+                                      Icon(
+                                        Icons.edit_rounded,
+                                        size: 18,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -1566,9 +1697,12 @@ class SavingsScreen extends StatelessWidget {
                               const SizedBox(height: 8),
                               Text(
                                 'Activa las notificaciones para recibir recordatorios',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: Colors.grey[600],
+                                    ),
                               ),
                             ],
                           ],
@@ -1604,12 +1738,14 @@ class SavingsScreen extends StatelessWidget {
                                 title: Text(
                                   '+${currencyFormat.format(contribution.amount)}',
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 subtitle: Text(
-                                  DateFormat('d MMM yyyy', 'es').format(contribution.date),
+                                  DateFormat('d MMM yyyy', 'es')
+                                      .format(contribution.date),
                                 ),
                               );
                             }).toList(),
@@ -1637,14 +1773,14 @@ class SavingsScreen extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
-            ),
+                  color: Colors.grey[600],
+                ),
           ),
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
         ],
       ),
@@ -1668,9 +1804,10 @@ class SavingsScreen extends StatelessWidget {
   }
 
   /// Formatea la visualización de las notificaciones según la frecuencia
-  String _formatNotificationDisplay(Set<int> selection, ContributionFrequency frequency, String? time) {
+  String _formatNotificationDisplay(
+      Set<int> selection, ContributionFrequency frequency, String? time) {
     if (selection.isEmpty) return 'Sin notificación';
-    
+
     switch (frequency) {
       case ContributionFrequency.weekly:
         return NotificationConfigDialog.formatWeekDaysDisplay(selection, time);
@@ -1682,4 +1819,3 @@ class SavingsScreen extends StatelessWidget {
     }
   }
 }
-

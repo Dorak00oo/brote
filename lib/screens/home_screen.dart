@@ -74,7 +74,9 @@ class HomeScreen extends StatelessWidget {
               Text(
                 greeting,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[400]
+                          : Colors.grey[600],
                     ),
               ),
               const SizedBox(height: 4),
@@ -84,15 +86,26 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.notifications_outlined,
-              color: Theme.of(context).colorScheme.primary,
+          GestureDetector(
+            onTap: () async {
+              final currentTheme = service.userSettings.theme;
+              final newTheme = (currentTheme == null || currentTheme == 'light')
+                  ? 'dark'
+                  : 'light';
+              await service.updateTheme(newTheme);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                (service.userSettings.theme == 'dark')
+                    ? Icons.light_mode_rounded
+                    : Icons.dark_mode_rounded,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
         ],
@@ -400,7 +413,7 @@ class HomeScreen extends StatelessWidget {
                   'Por cobrar',
                   currencyFormat.format(service.totalReceivables),
                   Icons.call_received_rounded,
-                  const Color(0xFF40916C),
+                  Theme.of(context).colorScheme.income,
                   '${service.loansGiven.where((l) => l.status == models.LoanStatus.active).length} préstamos',
                 ),
               ),
@@ -433,9 +446,13 @@ class HomeScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey.shade700
+              : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,7 +481,9 @@ class HomeScreen extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[400]
+                      : Colors.grey[600],
                 ),
           ),
           const SizedBox(height: 4),
@@ -513,9 +532,13 @@ class HomeScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade700
+                      : Colors.grey.shade200,
+                ),
               ),
               child: Center(
                 child: Column(
@@ -546,9 +569,13 @@ class HomeScreen extends StatelessWidget {
           else
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade700
+                      : Colors.grey.shade200,
+                ),
               ),
               child: ListView.separated(
                 shrinkWrap: true,
@@ -556,7 +583,9 @@ class HomeScreen extends StatelessWidget {
                 itemCount: recentTransactions.length,
                 separatorBuilder: (_, __) => Divider(
                   height: 1,
-                  color: Colors.grey.shade200,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade700
+                      : Colors.grey.shade200,
                 ),
                 itemBuilder: (context, index) {
                   final transaction = recentTransactions[index];
@@ -616,5 +645,4 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
 }

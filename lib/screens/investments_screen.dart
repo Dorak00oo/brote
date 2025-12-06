@@ -63,21 +63,22 @@ class NumberFormatInputFormatter extends TextInputFormatter {
 
   String _formatWithSeparators(String number) {
     if (number.isEmpty) return '';
-    
+
     String reversed = number.split('').reversed.join();
     StringBuffer buffer = StringBuffer();
-    
+
     for (int i = 0; i < reversed.length; i++) {
       if (i > 0 && i % 3 == 0) {
         buffer.write(thousandsSeparator);
       }
       buffer.write(reversed[i]);
     }
-    
+
     return buffer.toString().split('').reversed.join();
   }
 
-  static String removeFormatting(String formattedText, String thousandsSeparator, String decimalSeparator) {
+  static String removeFormatting(String formattedText,
+      String thousandsSeparator, String decimalSeparator) {
     return formattedText
         .replaceAll(thousandsSeparator, '')
         .replaceAll(decimalSeparator, '.');
@@ -196,7 +197,8 @@ class InvestmentsScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 12),
-              ...service.investments.map((inv) => _buildInvestmentCard(context, inv, service)),
+              ...service.investments
+                  .map((inv) => _buildInvestmentCard(context, inv, service)),
               const SizedBox(height: 80),
             ],
           );
@@ -238,8 +240,8 @@ class InvestmentsScreen extends StatelessWidget {
             'Registra tus inversiones para\ndar seguimiento a tu portafolio',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
-            ),
+                  color: Colors.grey[600],
+                ),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -286,8 +288,8 @@ class InvestmentsScreen extends StatelessWidget {
               Text(
                 'Portafolio',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.9),
-                ),
+                      color: Colors.white.withOpacity(0.9),
+                    ),
               ),
             ],
           ),
@@ -295,9 +297,9 @@ class InvestmentsScreen extends StatelessWidget {
           Text(
             currencyFormat.format(service.totalInvestmentsValue),
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 8),
           Container(
@@ -310,7 +312,9 @@ class InvestmentsScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  isPositive ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                  isPositive
+                      ? Icons.arrow_upward_rounded
+                      : Icons.arrow_downward_rounded,
                   color: Colors.white,
                   size: 16,
                 ),
@@ -452,7 +456,8 @@ class InvestmentsScreen extends StatelessWidget {
     // Obtener el icono y color personalizado o usar el predeterminado
     final iconOption = getInvestmentIconById(investment.iconName);
     final cardColor = investment.color != null
-        ? Color(int.parse(investment.color!.substring(1), radix: 16) + 0xFF000000)
+        ? Color(
+            int.parse(investment.color!.substring(1), radix: 16) + 0xFF000000)
         : iconOption.color;
 
     return Container(
@@ -478,8 +483,8 @@ class InvestmentsScreen extends StatelessWidget {
         title: Text(
           investment.name,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -495,7 +500,8 @@ class InvestmentsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: returnColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -559,12 +565,14 @@ class InvestmentsScreen extends StatelessWidget {
                   ),
                   const PopupMenuItem(
                     value: 'delete',
-                    child: Text('Eliminar', style: TextStyle(color: Colors.red)),
+                    child:
+                        Text('Eliminar', style: TextStyle(color: Colors.red)),
                   ),
                 ],
               )
             : Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(12),
@@ -607,7 +615,8 @@ class InvestmentsScreen extends StatelessWidget {
     final returnRateController = TextEditingController(text: '10');
     InvestmentType selectedType = InvestmentType.stocks;
     InvestmentIconOption selectedIcon = investmentIconOptions.first;
-    InterestRatePeriod ratePeriod = InterestRatePeriod.yearly; // Anual por defecto
+    InterestRatePeriod ratePeriod =
+        InterestRatePeriod.yearly; // Anual por defecto
     DateTime purchaseDate = DateTime.now();
     Set<int> notificationDays = {};
     String? notificationTime;
@@ -639,13 +648,16 @@ class InvestmentsScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Selector de icono
                     Text(
                       'Elige un icono',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
+                          ),
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
@@ -657,17 +669,22 @@ class InvestmentsScreen extends StatelessWidget {
                           final iconOption = investmentIconOptions[index];
                           final isSelected = selectedIcon.id == iconOption.id;
                           return GestureDetector(
-                            onTap: () => setState(() => selectedIcon = iconOption),
+                            onTap: () =>
+                                setState(() => selectedIcon = iconOption),
                             child: Container(
                               width: 70,
                               margin: const EdgeInsets.only(right: 8),
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? iconOption.color.withOpacity(0.15)
-                                    : Colors.grey.shade100,
+                                    : (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.grey.shade800
+                                        : Colors.grey.shade100),
                                 borderRadius: BorderRadius.circular(12),
                                 border: isSelected
-                                    ? Border.all(color: iconOption.color, width: 2)
+                                    ? Border.all(
+                                        color: iconOption.color, width: 2)
                                     : null,
                               ),
                               child: Column(
@@ -675,7 +692,12 @@ class InvestmentsScreen extends StatelessWidget {
                                 children: [
                                   Icon(
                                     iconOption.icon,
-                                    color: isSelected ? iconOption.color : Colors.grey[600],
+                                    color: isSelected
+                                        ? iconOption.color
+                                        : (Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600]),
                                     size: 28,
                                   ),
                                   const SizedBox(height: 4),
@@ -683,8 +705,15 @@ class InvestmentsScreen extends StatelessWidget {
                                     iconOption.label,
                                     style: TextStyle(
                                       fontSize: 10,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      color: isSelected ? iconOption.color : Colors.grey[600],
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: isSelected
+                                          ? iconOption.color
+                                          : (Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600]),
                                     ),
                                     textAlign: TextAlign.center,
                                     overflow: TextOverflow.ellipsis,
@@ -697,7 +726,7 @@ class InvestmentsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
+
                     TextFormField(
                       controller: nameController,
                       decoration: const InputDecoration(
@@ -727,40 +756,44 @@ class InvestmentsScreen extends StatelessWidget {
                       builder: (context, service, _) {
                         final settings = service.userSettings;
                         return TextFormField(
-                      controller: amountController,
-                      decoration: const InputDecoration(
-                        labelText: 'Monto invertido',
-                        prefixIcon: Icon(Icons.attach_money_rounded),
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
+                          controller: amountController,
+                          decoration: const InputDecoration(
+                            labelText: 'Monto invertido',
+                            prefixIcon: Icon(Icons.attach_money_rounded),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          inputFormatters: [
                             NumberFormatInputFormatter(
                               thousandsSeparator: settings.thousandsSeparator,
                               decimalSeparator: settings.decimalSeparator,
                             ),
-                      ],
-                      validator: (v) => v?.isEmpty ?? true ? 'Requerido' : null,
+                          ],
+                          validator: (v) =>
+                              v?.isEmpty ?? true ? 'Requerido' : null,
                         );
                       },
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Rentabilidad esperada con selector de periodicidad
                     Row(
                       children: [
                         Expanded(
                           flex: 2,
                           child: TextFormField(
-                      controller: returnRateController,
-                      decoration: const InputDecoration(
+                            controller: returnRateController,
+                            decoration: const InputDecoration(
                               labelText: 'Rentabilidad (%)',
-                        prefixIcon: Icon(Icons.percent_rounded),
-                        suffixText: '%',
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                      ],
+                              prefixIcon: Icon(Icons.percent_rounded),
+                              suffixText: '%',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d+\.?\d{0,2}')),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -783,7 +816,7 @@ class InvestmentsScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Fecha de compra/inversión
                     InkWell(
                       onTap: () async {
@@ -817,7 +850,8 @@ class InvestmentsScreen extends StatelessWidget {
                           title: 'Configurar recordatorio',
                           currentSelection: notificationDays,
                           currentTime: notificationTime,
-                          helpText: 'Selecciona los días del mes para recibir recordatorios de inversión',
+                          helpText:
+                              'Selecciona los días del mes para recibir recordatorios de inversión',
                         );
                         if (result != null) {
                           setState(() {
@@ -830,12 +864,15 @@ class InvestmentsScreen extends StatelessWidget {
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Recordatorio de inversión (opcional)',
-                          prefixIcon: Icon(Icons.notifications_rounded, color: selectedIcon.color),
-                          helperText: 'Selecciona días del mes y hora para recordatorio',
+                          prefixIcon: Icon(Icons.notifications_rounded,
+                              color: selectedIcon.color),
+                          helperText:
+                              'Selecciona días del mes y hora para recordatorio',
                         ),
                         child: Text(
                           notificationDays.isNotEmpty
-                              ? NotificationConfigDialog.formatMonthDaysDisplay(notificationDays, notificationTime)
+                              ? NotificationConfigDialog.formatMonthDaysDisplay(
+                                  notificationDays, notificationTime)
                               : 'Sin notificación',
                         ),
                       ),
@@ -849,32 +886,40 @@ class InvestmentsScreen extends StatelessWidget {
                           if (formKey.currentState!.validate()) {
                             final service = context.read<FinanceService>();
                             final settings = service.userSettings;
-                            final cleanAmount = NumberFormatInputFormatter.removeFormatting(
+                            final cleanAmount =
+                                NumberFormatInputFormatter.removeFormatting(
                               amountController.text,
                               settings.thousandsSeparator,
                               settings.decimalSeparator,
                             );
                             final amount = double.parse(cleanAmount);
                             final investment = Investment(
-                              id: DateTime.now().millisecondsSinceEpoch.toString(),
+                              id: DateTime.now()
+                                  .millisecondsSinceEpoch
+                                  .toString(),
                               name: nameController.text.trim(),
                               type: selectedType,
                               initialAmount: amount,
                               currentValue: amount,
-                              expectedReturnRate: double.tryParse(returnRateController.text) ?? 10,
+                              expectedReturnRate:
+                                  double.tryParse(returnRateController.text) ??
+                                      10,
                               returnRatePeriod: ratePeriod,
                               purchaseDate: purchaseDate,
                               iconName: selectedIcon.id,
-                              color: '#${selectedIcon.color.value.toRadixString(16).substring(2)}',
-                              notificationDays: notificationDays.isNotEmpty 
-                                  ? (notificationDays.toList()..sort()).join(',')
+                              color:
+                                  '#${selectedIcon.color.value.toRadixString(16).substring(2)}',
+                              notificationDays: notificationDays.isNotEmpty
+                                  ? (notificationDays.toList()..sort())
+                                      .join(',')
                                   : null,
                               notificationTime: notificationTime,
                             );
                             await service.addInvestment(investment);
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Inversión agregada')),
+                              const SnackBar(
+                                  content: Text('Inversión agregada')),
                             );
                           }
                         },
@@ -903,11 +948,14 @@ class InvestmentsScreen extends StatelessWidget {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(text: investment.name);
     final settings = service.userSettings;
-    final formattedAmount = settings.formatNumber(investment.initialAmount, decimals: 0);
+    final formattedAmount =
+        settings.formatNumber(investment.initialAmount, decimals: 0);
     final amountController = TextEditingController(text: formattedAmount);
-    final returnRateController = TextEditingController(text: investment.expectedReturnRate.toStringAsFixed(2));
+    final returnRateController = TextEditingController(
+        text: investment.expectedReturnRate.toStringAsFixed(2));
     InvestmentType selectedType = investment.type;
-    InvestmentIconOption selectedIcon = getInvestmentIconById(investment.iconName);
+    InvestmentIconOption selectedIcon =
+        getInvestmentIconById(investment.iconName);
     InterestRatePeriod ratePeriod = investment.returnRatePeriod;
     DateTime purchaseDate = investment.purchaseDate;
     Set<int> notificationDays = investment.notificationDaysList.toSet();
@@ -940,13 +988,16 @@ class InvestmentsScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Selector de icono
                     Text(
                       'Elige un icono',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
+                          ),
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
@@ -958,17 +1009,22 @@ class InvestmentsScreen extends StatelessWidget {
                           final iconOption = investmentIconOptions[index];
                           final isSelected = selectedIcon.id == iconOption.id;
                           return GestureDetector(
-                            onTap: () => setState(() => selectedIcon = iconOption),
+                            onTap: () =>
+                                setState(() => selectedIcon = iconOption),
                             child: Container(
                               width: 70,
                               margin: const EdgeInsets.only(right: 8),
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? iconOption.color.withOpacity(0.15)
-                                    : Colors.grey.shade100,
+                                    : (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.grey.shade800
+                                        : Colors.grey.shade100),
                                 borderRadius: BorderRadius.circular(12),
                                 border: isSelected
-                                    ? Border.all(color: iconOption.color, width: 2)
+                                    ? Border.all(
+                                        color: iconOption.color, width: 2)
                                     : null,
                               ),
                               child: Column(
@@ -976,7 +1032,12 @@ class InvestmentsScreen extends StatelessWidget {
                                 children: [
                                   Icon(
                                     iconOption.icon,
-                                    color: isSelected ? iconOption.color : Colors.grey[600],
+                                    color: isSelected
+                                        ? iconOption.color
+                                        : (Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600]),
                                     size: 28,
                                   ),
                                   const SizedBox(height: 4),
@@ -984,8 +1045,15 @@ class InvestmentsScreen extends StatelessWidget {
                                     iconOption.label,
                                     style: TextStyle(
                                       fontSize: 10,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      color: isSelected ? iconOption.color : Colors.grey[600],
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: isSelected
+                                          ? iconOption.color
+                                          : (Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600]),
                                     ),
                                     textAlign: TextAlign.center,
                                     overflow: TextOverflow.ellipsis,
@@ -998,7 +1066,7 @@ class InvestmentsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
+
                     TextFormField(
                       controller: nameController,
                       decoration: const InputDecoration(
@@ -1029,7 +1097,8 @@ class InvestmentsScreen extends StatelessWidget {
                         labelText: 'Monto invertido',
                         prefixIcon: Icon(Icons.attach_money_rounded),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         NumberFormatInputFormatter(
                           thousandsSeparator: settings.thousandsSeparator,
@@ -1039,7 +1108,7 @@ class InvestmentsScreen extends StatelessWidget {
                       validator: (v) => v?.isEmpty ?? true ? 'Requerido' : null,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Rentabilidad esperada con selector de periodicidad
                     Row(
                       children: [
@@ -1052,9 +1121,11 @@ class InvestmentsScreen extends StatelessWidget {
                               prefixIcon: Icon(Icons.percent_rounded),
                               suffixText: '%',
                             ),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                              FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d+\.?\d{0,2}')),
                             ],
                           ),
                         ),
@@ -1078,12 +1149,12 @@ class InvestmentsScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Fecha de compra/inversión
                     InkWell(
                       onTap: () async {
                         final picked = await showDatePicker(
-      context: context,
+                          context: context,
                           initialDate: purchaseDate,
                           firstDate: DateTime(2010),
                           lastDate: DateTime(2100),
@@ -1112,7 +1183,8 @@ class InvestmentsScreen extends StatelessWidget {
                           title: 'Configurar recordatorio',
                           currentSelection: notificationDays,
                           currentTime: notificationTime,
-                          helpText: 'Selecciona los días del mes para recibir recordatorios de inversión',
+                          helpText:
+                              'Selecciona los días del mes para recibir recordatorios de inversión',
                         );
                         if (result != null) {
                           setState(() {
@@ -1125,12 +1197,15 @@ class InvestmentsScreen extends StatelessWidget {
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Recordatorio de inversión (opcional)',
-                          prefixIcon: Icon(Icons.notifications_rounded, color: selectedIcon.color),
-                          helperText: 'Selecciona días del mes y hora para recordatorio',
+                          prefixIcon: Icon(Icons.notifications_rounded,
+                              color: selectedIcon.color),
+                          helperText:
+                              'Selecciona días del mes y hora para recordatorio',
                         ),
                         child: Text(
                           notificationDays.isNotEmpty
-                              ? NotificationConfigDialog.formatMonthDaysDisplay(notificationDays, notificationTime)
+                              ? NotificationConfigDialog.formatMonthDaysDisplay(
+                                  notificationDays, notificationTime)
                               : 'Sin notificación',
                         ),
                       ),
@@ -1142,7 +1217,8 @@ class InvestmentsScreen extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            final cleanAmount = NumberFormatInputFormatter.removeFormatting(
+                            final cleanAmount =
+                                NumberFormatInputFormatter.removeFormatting(
                               amountController.text,
                               settings.thousandsSeparator,
                               settings.decimalSeparator,
@@ -1152,20 +1228,25 @@ class InvestmentsScreen extends StatelessWidget {
                               name: nameController.text.trim(),
                               type: selectedType,
                               initialAmount: amount,
-                              expectedReturnRate: double.tryParse(returnRateController.text) ?? investment.expectedReturnRate,
+                              expectedReturnRate:
+                                  double.tryParse(returnRateController.text) ??
+                                      investment.expectedReturnRate,
                               returnRatePeriod: ratePeriod,
                               purchaseDate: purchaseDate,
                               iconName: selectedIcon.id,
-                              color: '#${selectedIcon.color.value.toRadixString(16).substring(2)}',
-                              notificationDays: notificationDays.isNotEmpty 
-                                  ? (notificationDays.toList()..sort()).join(',')
+                              color:
+                                  '#${selectedIcon.color.value.toRadixString(16).substring(2)}',
+                              notificationDays: notificationDays.isNotEmpty
+                                  ? (notificationDays.toList()..sort())
+                                      .join(',')
                                   : null,
                               notificationTime: notificationTime,
                             );
                             await service.updateInvestment(updatedInvestment);
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Inversión actualizada')),
+                              const SnackBar(
+                                  content: Text('Inversión actualizada')),
                             );
                           }
                         },
@@ -1192,13 +1273,15 @@ class InvestmentsScreen extends StatelessWidget {
     FinanceService service,
   ) {
     final settings = service.userSettings;
-    final formattedValue = settings.formatNumber(investment.currentValue, decimals: 0);
+    final formattedValue =
+        settings.formatNumber(investment.currentValue, decimals: 0);
     final controller = TextEditingController(text: formattedValue);
-    
+
     // Obtener icono y color de la inversión
     final iconOption = getInvestmentIconById(investment.iconName);
     final investmentColor = investment.color != null
-        ? Color(int.parse(investment.color!.substring(1), radix: 16) + 0xFF000000)
+        ? Color(
+            int.parse(investment.color!.substring(1), radix: 16) + 0xFF000000)
         : iconOption.color;
 
     showModalBottomSheet(
@@ -1226,7 +1309,8 @@ class InvestmentsScreen extends StatelessWidget {
                     color: investmentColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(iconOption.icon, color: investmentColor, size: 24),
+                  child:
+                      Icon(iconOption.icon, color: investmentColor, size: 24),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1240,8 +1324,11 @@ class InvestmentsScreen extends StatelessWidget {
                       Text(
                         investment.name,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
@@ -1249,180 +1336,16 @@ class InvestmentsScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 20),
-            TextFormField(
-          controller: controller,
-          autofocus: true,
-              decoration: InputDecoration(
-            labelText: 'Valor actual',
-                prefixIcon: Icon(Icons.attach_money_rounded, color: investmentColor),
-          ),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                NumberFormatInputFormatter(
-                  thousandsSeparator: settings.thousandsSeparator,
-                  decimalSeparator: settings.decimalSeparator,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Botones rápidos
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ...([5000, 10000, 20000, 50000, 100000].map((amount) {
-                  // Formatear el monto con separadores
-                  final formattedAmount = settings.formatNumber(amount.toDouble(), decimals: 0);
-                  return ActionChip(
-                    label: Text('${settings.currencySymbol}$formattedAmount'),
-                    backgroundColor: investmentColor.withOpacity(0.1),
-                    onPressed: () {
-                      controller.text = formattedAmount;
-                    },
-                  );
-                }).toList()),
-                ActionChip(
-                  label: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.edit_rounded, size: 16),
-                      SizedBox(width: 4),
-                      Text('Personalizado'),
-                    ],
-                  ),
-                  backgroundColor: investmentColor.withOpacity(0.1),
-                  onPressed: () {
-                    // El campo ya está disponible para escribir
-                    controller.selection = TextSelection(
-                      baseOffset: 0,
-                      extentOffset: controller.text.length,
-                    );
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: investmentColor,
-                ),
-            onPressed: () async {
-                  final cleanValue = NumberFormatInputFormatter.removeFormatting(
-                    controller.text,
-                    settings.thousandsSeparator,
-                    settings.decimalSeparator,
-                  );
-                  final value = double.tryParse(cleanValue);
-              if (value != null) {
-                await service.updateInvestmentValue(investment.id, value);
-                Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Valor actualizado')),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Ingresa un valor válido'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-              }
-            },
-            child: const Text('Actualizar'),
-              ),
-          ),
-        ],
-        ),
-      ),
-    );
-  }
-
-  void _showSellDialog(
-    BuildContext context,
-    Investment investment,
-    FinanceService service,
-  ) {
-    final settings = service.userSettings;
-    final currencyFormat = NumberFormat.currency(
-      locale: 'es_MX',
-      symbol: settings.currencySymbol,
-      decimalDigits: 2,
-    );
-    final formattedValue = settings.formatNumber(investment.currentValue, decimals: 0);
-    final controller = TextEditingController(text: formattedValue);
-    
-    // Obtener icono y color de la inversión
-    final iconOption = getInvestmentIconById(investment.iconName);
-    final investmentColor = investment.color != null
-        ? Color(int.parse(investment.color!.substring(1), radix: 16) + 0xFF000000)
-        : iconOption.color;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: investmentColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(iconOption.icon, color: investmentColor, size: 24),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Vender inversión',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      Text(
-                        investment.name,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Valor actual: ${currencyFormat.format(investment.currentValue)}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[700],
-              ),
-            ),
-            const SizedBox(height: 16),
             TextFormField(
               controller: controller,
               autofocus: true,
               decoration: InputDecoration(
-                labelText: 'Monto de venta',
-                prefixIcon: Icon(Icons.attach_money_rounded, color: investmentColor),
+                labelText: 'Valor actual',
+                prefixIcon:
+                    Icon(Icons.attach_money_rounded, color: investmentColor),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 NumberFormatInputFormatter(
                   thousandsSeparator: settings.thousandsSeparator,
@@ -1438,7 +1361,8 @@ class InvestmentsScreen extends StatelessWidget {
               children: [
                 ...([5000, 10000, 20000, 50000, 100000].map((amount) {
                   // Formatear el monto con separadores
-                  final formattedAmount = settings.formatNumber(amount.toDouble(), decimals: 0);
+                  final formattedAmount =
+                      settings.formatNumber(amount.toDouble(), decimals: 0);
                   return ActionChip(
                     label: Text('${settings.currencySymbol}$formattedAmount'),
                     backgroundColor: investmentColor.withOpacity(0.1),
@@ -1476,7 +1400,186 @@ class InvestmentsScreen extends StatelessWidget {
                   backgroundColor: investmentColor,
                 ),
                 onPressed: () async {
-                  final cleanValue = NumberFormatInputFormatter.removeFormatting(
+                  final cleanValue =
+                      NumberFormatInputFormatter.removeFormatting(
+                    controller.text,
+                    settings.thousandsSeparator,
+                    settings.decimalSeparator,
+                  );
+                  final value = double.tryParse(cleanValue);
+                  if (value != null) {
+                    await service.updateInvestmentValue(investment.id, value);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Valor actualizado')),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Ingresa un valor válido'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Actualizar'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSellDialog(
+    BuildContext context,
+    Investment investment,
+    FinanceService service,
+  ) {
+    final settings = service.userSettings;
+    final currencyFormat = NumberFormat.currency(
+      locale: 'es_MX',
+      symbol: settings.currencySymbol,
+      decimalDigits: 2,
+    );
+    final formattedValue =
+        settings.formatNumber(investment.currentValue, decimals: 0);
+    final controller = TextEditingController(text: formattedValue);
+
+    // Obtener icono y color de la inversión
+    final iconOption = getInvestmentIconById(investment.iconName);
+    final investmentColor = investment.color != null
+        ? Color(
+            int.parse(investment.color!.substring(1), radix: 16) + 0xFF000000)
+        : iconOption.color;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: investmentColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child:
+                      Icon(iconOption.icon, color: investmentColor, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Vender inversión',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      Text(
+                        investment.name,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Valor actual: ${currencyFormat.format(investment.currentValue)}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[400]
+                        : Colors.grey[700],
+                  ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: controller,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'Monto de venta',
+                prefixIcon:
+                    Icon(Icons.attach_money_rounded, color: investmentColor),
+              ),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                NumberFormatInputFormatter(
+                  thousandsSeparator: settings.thousandsSeparator,
+                  decimalSeparator: settings.decimalSeparator,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Botones rápidos
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ...([5000, 10000, 20000, 50000, 100000].map((amount) {
+                  // Formatear el monto con separadores
+                  final formattedAmount =
+                      settings.formatNumber(amount.toDouble(), decimals: 0);
+                  return ActionChip(
+                    label: Text('${settings.currencySymbol}$formattedAmount'),
+                    backgroundColor: investmentColor.withOpacity(0.1),
+                    onPressed: () {
+                      controller.text = formattedAmount;
+                    },
+                  );
+                }).toList()),
+                ActionChip(
+                  label: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.edit_rounded, size: 16),
+                      SizedBox(width: 4),
+                      Text('Personalizado'),
+                    ],
+                  ),
+                  backgroundColor: investmentColor.withOpacity(0.1),
+                  onPressed: () {
+                    // El campo ya está disponible para escribir
+                    controller.selection = TextSelection(
+                      baseOffset: 0,
+                      extentOffset: controller.text.length,
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: investmentColor,
+                ),
+                onPressed: () async {
+                  final cleanValue =
+                      NumberFormatInputFormatter.removeFormatting(
                     controller.text,
                     settings.thousandsSeparator,
                     settings.decimalSeparator,
@@ -1539,11 +1642,13 @@ class InvestmentsScreen extends StatelessWidget {
                             title: 'Configurar recordatorio',
                             currentSelection: currentNotificationDays,
                             currentTime: currentNotificationTime,
-                            helpText: 'Selecciona los días del mes para recibir recordatorios de inversión',
+                            helpText:
+                                'Selecciona los días del mes para recibir recordatorios de inversión',
                           );
                           if (result != null && result.isNotEmpty) {
                             final updatedInvestment = investment.copyWith(
-                              notificationDays: (result.selection.toList()..sort()).join(','),
+                              notificationDays:
+                                  (result.selection.toList()..sort()).join(','),
                               notificationTime: result.time,
                             );
                             await service.updateInvestment(updatedInvestment);
@@ -1579,11 +1684,12 @@ class InvestmentsScreen extends StatelessWidget {
                         title: 'Editar recordatorio',
                         currentSelection: currentNotificationDays,
                         currentTime: currentNotificationTime,
-                        helpText: 'Selecciona los días del mes para recibir recordatorios de inversión',
+                        helpText:
+                            'Selecciona los días del mes para recibir recordatorios de inversión',
                       );
                       if (result != null) {
                         final updatedInvestment = investment.copyWith(
-                          notificationDays: result.isNotEmpty 
+                          notificationDays: result.isNotEmpty
                               ? (result.selection.toList()..sort()).join(',')
                               : null,
                           notificationTime: result.time,
@@ -1599,9 +1705,15 @@ class InvestmentsScreen extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade300),
+                        border: Border.all(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey.shade600
+                              : Colors.grey.shade300,
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1615,7 +1727,8 @@ class InvestmentsScreen extends StatelessWidget {
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ),
-                          Icon(Icons.edit_rounded, size: 18, color: Colors.grey[600]),
+                          Icon(Icons.edit_rounded,
+                              size: 18, color: Colors.grey[600]),
                         ],
                       ),
                     ),
@@ -1625,8 +1738,8 @@ class InvestmentsScreen extends StatelessWidget {
                   Text(
                     'Activa las notificaciones para recibir recordatorios',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                          color: Colors.grey[600],
+                        ),
                   ),
                 ],
               ],
@@ -1643,4 +1756,3 @@ class InvestmentsScreen extends StatelessWidget {
     );
   }
 }
-

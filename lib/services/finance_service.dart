@@ -1529,6 +1529,30 @@ class FinanceService extends ChangeNotifier {
     }
   }
 
+  Future<void> updateTheme(String theme) async {
+    try {
+      await _db.updateUserSettings(UserSettingsTableCompanion(
+        theme: Value(theme),
+      ));
+      // El listener de la base de datos actualizará automáticamente el estado
+      // pero también actualizamos inmediatamente para respuesta instantánea
+      if (_userSettings != null) {
+        _userSettings = _userSettings!.copyWith(
+          theme: theme,
+          updatedAt: DateTime.now(),
+        );
+        notifyListeners();
+      } else {
+        // Si aún no hay settings, forzar recarga
+        await _loadUserSettings();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error updating theme: $e');
+      rethrow;
+    }
+  }
+
   // ========== RESUMEN FINANCIERO ==========
   Future<Map<String, double>> getFinancialSummary() async {
     final start = userSettings.getCurrentPeriodStart();

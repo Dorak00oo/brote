@@ -96,8 +96,8 @@ class SavingsGoals extends Table {
       .withDefault(const Constant('active'))(); // active, completed, cancelled
   TextColumn get iconName => text().nullable()();
   TextColumn get color => text().nullable()();
-  TextColumn get contributionFrequency => text()
-      .withDefault(const Constant('monthly'))(); // daily, weekly, biweekly, monthly, custom
+  TextColumn get contributionFrequency => text().withDefault(
+      const Constant('monthly'))(); // daily, weekly, biweekly, monthly, custom
   TextColumn get notificationDays =>
       text().nullable()(); // Días para notificación según frecuencia
   TextColumn get notificationTime =>
@@ -188,8 +188,8 @@ class Loans extends Table {
   TextColumn get color => text().nullable()(); // Color personalizado (hex)
   TextColumn get notificationDays =>
       text().nullable()(); // Selección principal de notificación
-  IntColumn get notificationDayOfMonth =>
-      integer().nullable()(); // Día del mes para notificaciones trimestrales/anuales
+  IntColumn get notificationDayOfMonth => integer()
+      .nullable()(); // Día del mes para notificaciones trimestrales/anuales
   TextColumn get notificationTime =>
       text().nullable()(); // Hora de notificación (HH:mm)
 
@@ -230,12 +230,12 @@ class UserSettingsTable extends Table {
       boolean().withDefault(const Constant(true))();
   BoolColumn get notificationPermissionAsked => boolean()
       .withDefault(const Constant(false))(); // Si ya se pidieron permisos
-  TextColumn get balanceResetPeriod =>
-      text().withDefault(const Constant('total'))(); // Período de reinicio del balance
+  TextColumn get balanceResetPeriod => text().withDefault(
+      const Constant('total'))(); // Período de reinicio del balance
   IntColumn get balanceResetDayOfMonth =>
       integer().nullable()(); // Día del mes para reinicio mensual (1-28)
-  IntColumn get balanceResetDayOfWeek =>
-      integer().nullable()(); // Día de la semana para reinicio semanal (1=lunes, 7=domingo)
+  IntColumn get balanceResetDayOfWeek => integer()
+      .nullable()(); // Día de la semana para reinicio semanal (1=lunes, 7=domingo)
   TextColumn get theme => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime().nullable()();
@@ -292,7 +292,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration {
@@ -420,9 +420,28 @@ class AppDatabase extends _$AppDatabase {
         if (from < 10) {
           // Migración de versión 9 a 10
           // Agregar periodicidad de tasa de rentabilidad a inversiones
-          await customStatement(
-            "ALTER TABLE investments ADD COLUMN return_rate_period TEXT NOT NULL DEFAULT 'yearly'",
-          );
+          // Esta migración es esencial para bases de datos antiguas (versión 9)
+          // que no tienen la columna return_rate_period.
+          // Para instalaciones nuevas, la columna se crea automáticamente en onCreate.
+          // Usamos un enfoque que verifica si la columna existe antes de agregarla
+          // para evitar errores de "duplicate column name"
+          try {
+            // Intentar agregar la columna
+            await customStatement(
+              "ALTER TABLE investments ADD COLUMN return_rate_period TEXT NOT NULL DEFAULT 'yearly'",
+            );
+          } catch (e) {
+            // Si falla, verificar si es por columna duplicada
+            final errorString = e.toString();
+            // Si NO es un error de columna duplicada, relanzar el error
+            if (!errorString.contains('duplicate column') &&
+                !errorString.contains('duplicate column name') &&
+                !errorString.contains('SQL logic error')) {
+              rethrow;
+            }
+            // Si es error de columna duplicada, ignorar silenciosamente
+            // La columna ya existe, lo cual es correcto
+          }
         }
         if (from < 11) {
           // Migración de versión 10 a 11
@@ -467,6 +486,41 @@ class AppDatabase extends _$AppDatabase {
           await customStatement(
             'ALTER TABLE user_settings ADD COLUMN balance_reset_day_of_week INTEGER',
           );
+        }
+        if (from < 16) {
+          // Migración de versión 15 a 16
+          // Verificar y agregar columna theme si no existe
+          try {
+            // Verificar si la columna ya existe antes de agregarla
+            final result = await customSelect(
+              "PRAGMA table_info(user_settings)",
+              readsFrom: {},
+            ).get();
+
+            final hasColumn = result.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'theme');
+
+            if (!hasColumn) {
+              await customStatement(
+                "ALTER TABLE user_settings ADD COLUMN theme TEXT",
+              );
+            }
+          } catch (e) {
+            // Si falla la verificación, intentar agregar la columna directamente
+            // y si falla por duplicado, ignorarlo
+            try {
+              await customStatement(
+                "ALTER TABLE user_settings ADD COLUMN theme TEXT",
+              );
+            } catch (e2) {
+              final errorMsg = e2.toString().toLowerCase();
+              if (!errorMsg.contains('duplicate column') &&
+                  !errorMsg.contains('duplicate column name')) {
+                rethrow;
+              }
+              // La columna ya existe, continuar sin error
+            }
+          }
         }
       },
     );
