@@ -112,26 +112,130 @@ class FinanceService extends ChangeNotifier {
         .fold(0.0, (sum, t) => sum + t.amount);
   }
 
-  // Ingresos y gastos del período actual (respetando el día de inicio del mes)
+  /// Obtiene la fecha de inicio del período actual según balanceResetPeriod
+  DateTime? _getPeriodStartDate() {
+    if (_userSettings == null) return null;
+    
+    final resetPeriod = _userSettings!.balanceResetPeriod;
+    if (resetPeriod == models.BalanceResetPeriod.total) {
+      return null; // Sin filtro de período
+    }
+    
+    final now = DateTime.now();
+    DateTime startDate;
+    
+    switch (resetPeriod) {
+      case models.BalanceResetPeriod.daily:
+        startDate = DateTime(now.year, now.month, now.day);
+        break;
+      case models.BalanceResetPeriod.weekly:
+        // Día de la semana configurado (por defecto lunes = 1)
+        final configuredDayOfWeek = _userSettings!.balanceResetDayOfWeek ?? 1;
+        final weekday = now.weekday;
+        // Calcular días desde el día configurado de esta semana
+        int daysFromConfiguredDay;
+        if (weekday >= configuredDayOfWeek) {
+          daysFromConfiguredDay = weekday - configuredDayOfWeek;
+        } else {
+          // Si el día actual es anterior al día configurado, ir a la semana pasada
+          daysFromConfiguredDay = weekday + (7 - configuredDayOfWeek);
+        }
+        startDate = now.subtract(Duration(days: daysFromConfiguredDay));
+        startDate = DateTime(startDate.year, startDate.month, startDate.day);
+        break;
+      case models.BalanceResetPeriod.monthly:
+        // Día del mes configurado (por defecto día 1)
+        final configuredDayOfMonth = _userSettings!.balanceResetDayOfMonth ?? 1;
+        if (now.day >= configuredDayOfMonth) {
+          // El período actual empezó este mes
+          startDate = DateTime(now.year, now.month, configuredDayOfMonth);
+        } else {
+          // El período actual empezó el mes pasado
+          final previousMonth = DateTime(now.year, now.month - 1, 1);
+          startDate = DateTime(previousMonth.year, previousMonth.month, configuredDayOfMonth);
+        }
+        break;
+      case models.BalanceResetPeriod.total:
+        return null;
+    }
+    
+    return startDate;
+  }
+
+  /// Obtiene la fecha de fin del período actual según balanceResetPeriod
+  DateTime? _getPeriodEndDate() {
+    final startDate = _getPeriodStartDate();
+    if (startDate == null) return null;
+    
+    final resetPeriod = _userSettings!.balanceResetPeriod;
+    final now = DateTime.now();
+    
+    switch (resetPeriod) {
+      case models.BalanceResetPeriod.daily:
+        // Fin del día actual
+        return DateTime(now.year, now.month, now.day, 23, 59, 59);
+      case models.BalanceResetPeriod.weekly:
+        // Fin de la semana (6 días después del inicio)
+        final endDate = startDate.add(const Duration(days: 6));
+        return DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+      case models.BalanceResetPeriod.monthly:
+        // Calcular el inicio del siguiente período mensual
+        DateTime nextPeriodStart;
+        if (startDate.month == 12) {
+          nextPeriodStart = DateTime(startDate.year + 1, 1, startDate.day);
+        } else {
+          nextPeriodStart = DateTime(startDate.year, startDate.month + 1, startDate.day);
+        }
+        // Fin del período es un día antes del inicio del siguiente
+        final endDate = nextPeriodStart.subtract(const Duration(days: 1));
+        return DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+      case models.BalanceResetPeriod.total:
+        return null;
+    }
+  }
+
+  // Ingresos y gastos del período actual (respetando balanceResetPeriod)
   double get periodIncome {
-    final period = userSettings.getCurrentPeriodStart();
-    final end = userSettings.getCurrentPeriodEnd();
+    final startDate = _getPeriodStartDate();
+    final endDate = _getPeriodEndDate();
+    
+    // Si no hay filtro de período, retornar todos los ingresos
+    if (startDate == null || endDate == null) {
+      return _transactions
+          .where((t) => t.type == models.TransactionType.income)
+          .fold(0.0, (sum, t) => sum + t.amount);
+    }
+    
     return _transactions
-        .where((t) =>
-            t.type == models.TransactionType.income &&
-            t.date.isAfter(period.subtract(const Duration(days: 1))) &&
-            t.date.isBefore(end.add(const Duration(days: 1))))
+        .where((t) {
+          if (t.type != models.TransactionType.income) return false;
+          final tDate = DateTime(t.date.year, t.date.month, t.date.day);
+          final start = DateTime(startDate.year, startDate.month, startDate.day);
+          final end = DateTime(endDate.year, endDate.month, endDate.day);
+          return !tDate.isBefore(start) && !tDate.isAfter(end);
+        })
         .fold(0.0, (sum, t) => sum + t.amount);
   }
 
   double get periodExpenses {
-    final period = userSettings.getCurrentPeriodStart();
-    final end = userSettings.getCurrentPeriodEnd();
+    final startDate = _getPeriodStartDate();
+    final endDate = _getPeriodEndDate();
+    
+    // Si no hay filtro de período, retornar todos los gastos
+    if (startDate == null || endDate == null) {
+      return _transactions
+          .where((t) => t.type == models.TransactionType.expense)
+          .fold(0.0, (sum, t) => sum + t.amount);
+    }
+    
     return _transactions
-        .where((t) =>
-            t.type == models.TransactionType.expense &&
-            t.date.isAfter(period.subtract(const Duration(days: 1))) &&
-            t.date.isBefore(end.add(const Duration(days: 1))))
+        .where((t) {
+          if (t.type != models.TransactionType.expense) return false;
+          final tDate = DateTime(t.date.year, t.date.month, t.date.day);
+          final start = DateTime(startDate.year, startDate.month, startDate.day);
+          final end = DateTime(endDate.year, endDate.month, endDate.day);
+          return !tDate.isBefore(start) && !tDate.isAfter(end);
+        })
         .fold(0.0, (sum, t) => sum + t.amount);
   }
 

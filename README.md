@@ -2,6 +2,17 @@
 
 Aplicación móvil completa de gestión financiera personal desarrollada con Flutter.
 
+## 🆕 Versión 1.3.2 - Novedades
+
+### 🎯 **Corrección en Ingresos y Gastos del Home**
+- **Filtrado por Período Configurado**: Los ingresos y gastos mostrados en la parte inferior de la pantalla de inicio ahora respetan correctamente la configuración de período seleccionada en ajustes:
+  - **Diario**: Muestra ingresos y gastos del día actual
+  - **Semanal**: Muestra ingresos y gastos de la semana actual (según día configurado)
+  - **Mensual**: Muestra ingresos y gastos del mes actual (según día configurado)
+  - **Total**: Muestra todos los ingresos y gastos acumulados
+- **Sincronización con Balance**: Los valores de ingresos y gastos ahora se actualizan automáticamente cuando cambias la configuración de período, manteniendo consistencia con el balance total mostrado
+- **Cálculo Preciso**: Los períodos se calculan correctamente usando la misma lógica que el balance, asegurando coherencia en toda la interfaz
+
 ## 🆕 Versión 1.3.1 - Novedades
 
 ### 🎯 **Mejoras en Navegación y UX**
@@ -276,7 +287,12 @@ lib/
 
 ## Historial de Versiones
 
-### Versión 1.3.1 (Actual)
+### Versión 1.3.2 (Actual)
+- 🎯 Corrección en filtrado de ingresos y gastos del home según período configurado
+- 🔄 Sincronización automática con la configuración de balance reset period
+- ✨ Cálculo preciso de períodos diarios, semanales, mensuales y totales
+
+### Versión 1.3.1
 - 🎯 Navegación por deslizamiento entre pestañas en todos los módulos financieros
 - 💬 Mensajes personalizados de estado vacío en historial para cada módulo
 - 🐛 Corrección del swipe en módulo de ahorros
