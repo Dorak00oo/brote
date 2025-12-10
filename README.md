@@ -2,6 +2,21 @@
 
 Aplicación móvil completa de gestión financiera personal desarrollada con Flutter.
 
+## 🆕 Versión 1.3.1 - Novedades
+
+### 🎯 **Mejoras en Navegación y UX**
+- **Navegación por Deslizamiento**: Ahora puedes deslizar entre las pestañas "Activas" e "Historial" en todos los módulos financieros (Ahorros, Inversiones, Préstamos)
+- **Mensajes Personalizados en Historial**: Cada módulo muestra mensajes de estado vacío personalizados y contextuales:
+  - **Ahorros**: "No tienes metas de ahorro completadas" con icono y descripción específica
+  - **Inversiones**: "No tienes inversiones completadas" con icono y descripción específica
+  - **Préstamos**: "No tienes préstamos completados" con icono y descripción específica
+- **Corrección en Módulo de Ahorros**: Solucionado el problema que impedía deslizar entre pestañas cuando no había metas de ahorro
+- **Consistencia de Navegación**: Todos los módulos financieros ahora tienen el mismo comportamiento de navegación por deslizamiento
+
+### ✨ Otras Mejoras
+- **Iconos Contextuales**: Los mensajes de estado vacío incluyen iconos circulares con el color del módulo correspondiente
+- **Mejor Feedback Visual**: Descripciones más claras y específicas para guiar al usuario
+
 ## 🆕 Versión 1.3.0 - Novedades
 
 ### 🎨 **Mejoras en Modo Oscuro**
@@ -261,7 +276,13 @@ lib/
 
 ## Historial de Versiones
 
-### Versión 1.3.0 (Actual)
+### Versión 1.3.1 (Actual)
+- 🎯 Navegación por deslizamiento entre pestañas en todos los módulos financieros
+- 💬 Mensajes personalizados de estado vacío en historial para cada módulo
+- 🐛 Corrección del swipe en módulo de ahorros
+- ✨ Mejoras en consistencia de navegación y feedback visual
+
+### Versión 1.3.0
 - 🎨 Mejoras completas en modo oscuro con mejor contraste y legibilidad
 - 📚 Sistema de historial integrado con ordenamiento y gestión de completados
 - 🔗 Conexión de pagos y finanzas para vinculación de transacciones

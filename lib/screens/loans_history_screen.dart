@@ -148,25 +148,39 @@ class _LoansHistoryScreenState extends State<LoansHistoryScreen> {
         final completedLoans = loans.where((l) => l.status == LoanStatus.paidOff).toList();
 
         if (completedLoans.isEmpty) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.history_rounded,
-                  size: 64,
-                  color: Colors.grey[400],
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.loan.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.account_balance_rounded,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.loan,
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 Text(
-                  'No hay historial',
+                  'No tienes préstamos completados',
                   style: Theme.of(context).textTheme.titleLarge,
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'Los préstamos completados aparecerán aquí',
-                  style: TextStyle(color: Colors.grey[600]),
-                  textAlign: TextAlign.center,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Text(
+                    'Cuando termines de pagar o cobrar un préstamo, aparecerá aquí en tu historial',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ],
             ),

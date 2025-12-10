@@ -52,25 +52,39 @@ class _SavingsHistoryWithCompletedScreenState extends State<SavingsHistoryWithCo
     final hasCompleted = widget.completedGoals.isNotEmpty;
 
     if (!hasCompleted) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.history_rounded,
-              size: 64,
-              color: Colors.grey[400],
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.savings.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.savings_rounded,
+                size: 64,
+                color: Theme.of(context).colorScheme.savings,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
-              'No hay historial',
+              'No tienes metas de ahorro completadas',
               style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            Text(
-              'Las metas completadas aparecerán aquí',
-              style: TextStyle(color: Colors.grey[600]),
-              textAlign: TextAlign.center,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                'Cuando completes una meta de ahorro, aparecerá aquí en tu historial',
+                style: TextStyle(
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ],
         ),

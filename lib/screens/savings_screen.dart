@@ -273,10 +273,6 @@ class _SavingsScreenState extends State<SavingsScreen>
       ),
       body: Consumer<FinanceService>(
         builder: (context, service, _) {
-          if (service.savingsGoals.isEmpty) {
-            return _buildEmptyState(context);
-          }
-
           final activeGoals = service.activeSavingsGoals;
           final completedGoals = service.savingsGoals
               .where((g) => g.status == SavingsGoalStatus.completed)
@@ -286,43 +282,45 @@ class _SavingsScreenState extends State<SavingsScreen>
             controller: _tabController,
             children: [
               // Tab Activas
-              ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _buildSummaryCard(context, service),
-                  const SizedBox(height: 24),
-                  if (activeGoals.isNotEmpty) ...[
-                    Text(
-                      'Metas activas',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 12),
-                    ...activeGoals
-                        .map((goal) => _buildGoalCard(context, goal, service)),
-                  ] else ...[
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(40),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.savings_rounded,
-                              size: 64,
-                              color: Colors.grey[400],
+              service.savingsGoals.isEmpty
+                  ? _buildEmptyState(context)
+                  : ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        _buildSummaryCard(context, service),
+                        const SizedBox(height: 24),
+                        if (activeGoals.isNotEmpty) ...[
+                          Text(
+                            'Metas activas',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 12),
+                          ...activeGoals
+                              .map((goal) => _buildGoalCard(context, goal, service)),
+                        ] else ...[
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(40),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.savings_rounded,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No hay metas activas',
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No hay metas activas',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        ],
+                        const SizedBox(height: 80),
+                      ],
                     ),
-                  ],
-                  const SizedBox(height: 80),
-                ],
-              ),
               // Tab Historial (incluye completadas)
               SavingsHistoryWithCompletedScreen(completedGoals: completedGoals, service: service),
             ],

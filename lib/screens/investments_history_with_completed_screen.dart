@@ -84,25 +84,39 @@ class _InvestmentsHistoryWithCompletedScreenState extends State<InvestmentsHisto
     final hasCompleted = widget.completedInvestments.isNotEmpty;
 
     if (!hasCompleted) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.history_rounded,
-              size: 64,
-              color: Colors.grey[400],
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.investment.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.trending_up_rounded,
+                size: 64,
+                color: Theme.of(context).colorScheme.investment,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
-              'No hay historial',
+              'No tienes inversiones completadas',
               style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            Text(
-              'Las inversiones completadas aparecerán aquí',
-              style: TextStyle(color: Colors.grey[600]),
-              textAlign: TextAlign.center,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                'Cuando vendas o canceles una inversión, aparecerá aquí en tu historial',
+                style: TextStyle(
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ],
         ),
