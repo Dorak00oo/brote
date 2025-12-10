@@ -2,6 +2,40 @@
 
 Aplicación móvil completa de gestión financiera personal desarrollada con Flutter.
 
+## 🆕 Versión 1.3.0 - Novedades
+
+### 🎨 **Mejoras en Modo Oscuro**
+- **Correcciones de Contraste**: Mejoras en la legibilidad de textos y elementos en modo oscuro
+- **Colores Adaptativos**: Todos los componentes ahora se adaptan correctamente al tema oscuro
+- **Paleta de Colores Mejorada**: Verde menos brillante y más matte en modo oscuro para mejor experiencia visual
+- **Consistencia Visual**: Correcciones en pantallas de finanzas, estadísticas, ajustes y categorías para una experiencia uniforme
+
+### 📚 **Sistema de Historial Integrado**
+- **Pestañas de Historial**: Cada módulo financiero (Ahorros, Inversiones, Préstamos) ahora incluye una pestaña dedicada de "Historial"
+- **Gestión de Completados**: Los elementos completados se mueven automáticamente al historial
+- **Opciones de Ordenamiento**: 
+  - Ordenar por fecha (más recientes/más antiguos)
+  - Ordenar por valor (mayor/menor)
+  - Ordenar por ganancia (para inversiones)
+- **Acciones en Historial**: 
+  - Reactivar elementos completados
+  - Eliminar elementos del historial
+- **Resumen de Historial**: Vista resumida con totales y estadísticas de elementos completados
+
+### 🔗 **Conexión de Pagos y Finanzas**
+- **Vinculación de Transacciones**: Al agregar un ingreso o gasto, puedes vincularlo opcionalmente a:
+  - **Gastos**: Vincular a deudas (préstamos recibidos) o metas de ahorro
+  - **Ingresos**: Vincular a préstamos dados (que me deben)
+- **Integración Automática**: Los pagos vinculados se registran automáticamente en el módulo correspondiente
+- **Lógica Inteligente**: 
+  - Las metas de ahorro solo se pueden vincular con gastos (para ahorrar dinero)
+  - Los préstamos se pueden vincular tanto con ingresos como con gastos según corresponda
+- **Seguimiento Unificado**: Mantén un registro coherente entre transacciones y módulos financieros
+
+### ✨ Otras Mejoras
+- **Limpieza de Interfaz**: Los préstamos completados ya no aparecen en las pestañas activas, solo en historial
+- **Mejoras en UX**: Mejor organización y navegación entre módulos activos e historial
+
 ## 🆕 Versión 1.1.0 - Novedades
 
 ### 🔔 **Mejoras Destacadas en Notificaciones**
@@ -62,6 +96,8 @@ Aplicación móvil completa de gestión financiera personal desarrollada con Flu
 - Historial completo con búsqueda y filtros
 - Edición y eliminación de transacciones
 - Soporte para transacciones recurrentes
+- **Vinculación a Finanzas**: Opción de vincular transacciones a módulos financieros (ahorros, préstamos)
+- **Registro Automático**: Los pagos vinculados se registran automáticamente en el módulo correspondiente
 
 ### 🏦 Hub Financiero
 - Vista centralizada de todas las finanzas
@@ -76,6 +112,8 @@ Aplicación móvil completa de gestión financiera personal desarrollada con Flu
 - **Frecuencia de Aportes**: Configuración de frecuencia (diario, semanal, quincenal, mensual, personalizado)
 - **Edición Completa**: Modal de edición con todos los campos pre-llenados
 - Recordatorios configurables adaptados a la frecuencia de aportes
+- **Pestaña de Historial**: Vista de metas completadas con ordenamiento y acciones
+- **Vinculación con Gastos**: Los gastos pueden vincularse automáticamente a metas de ahorro
 
 ### 📈 Inversiones
 - Registro de inversiones con valor inicial y actual
@@ -86,6 +124,8 @@ Aplicación móvil completa de gestión financiera personal desarrollada con Flu
 - Cálculo automático de rentabilidad
 - Venta parcial o total
 - **Edición Completa**: Modal de edición con todos los campos pre-llenados
+- **Pestaña de Historial**: Vista de inversiones completadas con ordenamiento por fecha, valor o ganancia
+- **Gestión de Completados**: Reactivar o eliminar inversiones del historial
 
 ### 💳 Préstamos
 - Gestión de préstamos (por cobrar y por pagar)
@@ -95,6 +135,8 @@ Aplicación móvil completa de gestión financiera personal desarrollada con Flu
 - Seguimiento de pagos realizados
 - Recordatorios de cobro/pago adaptados a la frecuencia de pago
 - **Edición Completa**: Modal de edición con todos los campos pre-llenados
+- **Pestaña de Historial**: Vista de préstamos completados con ordenamiento y acciones
+- **Vinculación con Transacciones**: Los ingresos y gastos pueden vincularse a préstamos para registro automático de pagos
 
 ### 📊 Estadísticas
 - Gráficos circulares de distribución (ingresos/gastos)
@@ -124,7 +166,7 @@ Aplicación móvil completa de gestión financiera personal desarrollada con Flu
 - **Personalización del Ciclo de Balance**: Configura cómo se reinicia el balance (diario, semanal, mensual, total)
 - **Día de Reinicio Personalizado**: Para períodos semanales y mensuales
 - Activar/desactivar notificaciones
-- Tema claro (Material 3)
+- **Tema Claro y Oscuro**: Soporte completo para modo oscuro con mejoras en contraste y legibilidad
 
 ## Requisitos
 
@@ -219,7 +261,16 @@ lib/
 
 ## Historial de Versiones
 
-### Versión 1.1.0 (Actual)
+### Versión 1.3.0 (Actual)
+- 🎨 Mejoras completas en modo oscuro con mejor contraste y legibilidad
+- 📚 Sistema de historial integrado con ordenamiento y gestión de completados
+- 🔗 Conexión de pagos y finanzas para vinculación de transacciones
+- ✨ Mejoras en UX y organización de módulos
+
+### Versión 1.2.0
+- Mejoras y correcciones menores
+
+### Versión 1.1.0
 - 🔔 Sistema de notificaciones avanzado y adaptativo
 - ⚙️ Personalización del ciclo de reinicio del balance
 - ✏️ Funcionalidad de edición en todos los módulos financieros

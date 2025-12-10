@@ -981,6 +981,7 @@ class SettingsScreen extends StatelessWidget {
           builder: (context, setState) {
             // Usar allExpenseCategories que ya filtra las ocultas
             final allCategories = service.allExpenseCategories;
+            final isDark = Theme.of(context).brightness == Brightness.dark;
 
             return Padding(
               padding: EdgeInsets.only(
@@ -1065,10 +1066,33 @@ class SettingsScreen extends StatelessWidget {
                             .defaultExpenseCategories
                             .contains(cat);
                         return Chip(
-                          label: Text(cat),
-                          backgroundColor:
-                              isDefault ? Colors.grey[100] : Colors.red[50],
-                          deleteIcon: const Icon(Icons.close, size: 18),
+                          label: Text(
+                            cat,
+                            style: TextStyle(
+                              color: isDark
+                                  ? (isDefault
+                                      ? Colors.grey[300]
+                                      : Theme.of(context).colorScheme.error)
+                                  : (isDefault ? Colors.black87 : Colors.red[900]),
+                            ),
+                          ),
+                          backgroundColor: isDefault
+                              ? (isDark ? Colors.grey.shade800 : Colors.grey[100])
+                              : (isDark
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .error
+                                      .withOpacity(0.1)
+                                  : Colors.red[50]),
+                          deleteIcon: Icon(
+                            Icons.close,
+                            size: 18,
+                            color: isDark
+                                ? (isDefault
+                                    ? Colors.grey[400]
+                                    : Theme.of(context).colorScheme.error)
+                                : (isDefault ? Colors.black54 : Colors.red[700]),
+                          ),
                           onDeleted: () async {
                             if (isDefault) {
                               // Ocultar la categoría predefinida
@@ -1116,6 +1140,7 @@ class SettingsScreen extends StatelessWidget {
           builder: (context, setState) {
             // Usar allIncomeSources que ya filtra las ocultas
             final allSources = service.allIncomeSources;
+            final isDark = Theme.of(context).brightness == Brightness.dark;
 
             return Padding(
               padding: EdgeInsets.only(
@@ -1200,10 +1225,33 @@ class SettingsScreen extends StatelessWidget {
                         final isDefault = FinanceService.defaultIncomeSources
                             .contains(source);
                         return Chip(
-                          label: Text(source),
-                          backgroundColor:
-                              isDefault ? Colors.grey[100] : Colors.green[50],
-                          deleteIcon: const Icon(Icons.close, size: 18),
+                          label: Text(
+                            source,
+                            style: TextStyle(
+                              color: isDark
+                                  ? (isDefault
+                                      ? Colors.grey[300]
+                                      : Theme.of(context).colorScheme.primary)
+                                  : (isDefault ? Colors.black87 : Colors.green[900]),
+                            ),
+                          ),
+                          backgroundColor: isDefault
+                              ? (isDark ? Colors.grey.shade800 : Colors.grey[100])
+                              : (isDark
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.1)
+                                  : Colors.green[50]),
+                          deleteIcon: Icon(
+                            Icons.close,
+                            size: 18,
+                            color: isDark
+                                ? (isDefault
+                                    ? Colors.grey[400]
+                                    : Theme.of(context).colorScheme.primary)
+                                : (isDefault ? Colors.black54 : Colors.green[700]),
+                          ),
                           onDeleted: () async {
                             if (isDefault) {
                               // Ocultar la fuente predefinida

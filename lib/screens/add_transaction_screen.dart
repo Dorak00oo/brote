@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../services/finance_service.dart';
 import '../models/transaction.dart';
+import '../models/loan.dart';
 import '../main.dart';
 
 class AddTransactionScreen extends StatefulWidget {
@@ -32,6 +33,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? _selectedSource;
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
+  
+  // Opciones opcionales de vinculación
+  String? _selectedFinanceModule; // 'loan' o 'savings'
+  String? _selectedLoanId; // Para vincular a préstamo
+  String? _selectedSavingsGoalId; // Para vincular a meta de ahorro
 
   @override
   void initState() {
@@ -129,6 +135,27 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
             ),
+            const SizedBox(height: 24),
+
+            // Opciones opcionales de vinculación
+            Text(
+              'Vincular a finanzas (opcional)',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            
+            // Selector de módulo de finanzas
+            _buildFinanceModuleSelector(service),
+            
+            // Mostrar dropdown según el módulo seleccionado
+            if (_selectedFinanceModule == 'loan') ...[
+              const SizedBox(height: 16),
+              _buildLoanDropdown(service, isDebt: !_isIncome),
+            ] else if (_selectedFinanceModule == 'savings') ...[
+              const SizedBox(height: 16),
+              _buildSavingsGoalDropdown(service),
+            ],
+            
             const SizedBox(height: 32),
 
             // Botón guardar
@@ -171,6 +198,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               onTap: () => setState(() {
                 _isIncome = true;
                 _selectedCategory = null;
+                // Limpiar vinculación cuando cambia el tipo
+                _selectedFinanceModule = null;
+                _selectedLoanId = null;
+                _selectedSavingsGoalId = null;
               }),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
@@ -223,6 +254,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               onTap: () => setState(() {
                 _isIncome = false;
                 _selectedSource = null;
+                // Limpiar vinculación cuando cambia el tipo
+                _selectedFinanceModule = null;
+                _selectedLoanId = null;
+                _selectedSavingsGoalId = null;
               }),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
@@ -480,6 +515,150 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
+  Widget _buildFinanceModuleSelector(FinanceService service) {
+    // Verificar disponibilidad de módulos
+    // Para gastos: puede vincular a deudas (préstamos recibidos) o ahorros
+    // Para ingresos: solo puede vincular a préstamos dados (que me deben), NO ahorros
+    final hasActiveLoans = _isIncome
+        ? service.loansGiven.any((l) => l.status == LoanStatus.active)
+        : service.loansReceived.any((l) => l.status == LoanStatus.active);
+    // Solo mostrar ahorros para gastos, no para ingresos
+    final hasActiveSavings = !_isIncome && service.activeSavingsGoals.isNotEmpty;
+    
+    // Si no hay ningún módulo disponible, no mostrar el selector
+    if (!hasActiveLoans && !hasActiveSavings) {
+      return const SizedBox.shrink();
+    }
+    
+    // Si el módulo seleccionado ya no está disponible, limpiar la selección
+    if (_selectedFinanceModule == 'loan' && !hasActiveLoans) {
+      _selectedFinanceModule = null;
+      _selectedLoanId = null;
+    } else if (_selectedFinanceModule == 'savings' && !hasActiveSavings) {
+      _selectedFinanceModule = null;
+      _selectedSavingsGoalId = null;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<String>(
+          value: _selectedFinanceModule,
+          decoration: InputDecoration(
+            labelText: 'Módulo de finanzas',
+            prefixIcon: const Icon(Icons.account_balance_rounded),
+            helperText: 'Selecciona el módulo al que deseas vincular este movimiento',
+          ),
+          items: [
+            const DropdownMenuItem<String>(
+              value: null,
+              child: Text('Ninguno'),
+            ),
+            if (hasActiveLoans)
+              DropdownMenuItem<String>(
+                value: 'loan',
+                child: Row(
+                  children: [
+                    Icon(
+                      _isIncome ? Icons.account_balance_wallet_rounded : Icons.payment_rounded,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(_isIncome ? 'Préstamo' : 'Deuda'),
+                  ],
+                ),
+              ),
+            if (hasActiveSavings)
+              const DropdownMenuItem<String>(
+                value: 'savings',
+                child: Row(
+                  children: [
+                    Icon(Icons.savings_rounded, size: 20),
+                    SizedBox(width: 8),
+                    Text('Meta de ahorro'),
+                  ],
+                ),
+              ),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _selectedFinanceModule = value;
+              // Limpiar selecciones cuando se cambia el módulo
+              if (value != 'loan') {
+                _selectedLoanId = null;
+              }
+              if (value != 'savings') {
+                _selectedSavingsGoalId = null;
+              }
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoanDropdown(FinanceService service, {required bool isDebt}) {
+    // Si es deuda (gasto), mostrar préstamos recibidos (que debo)
+    // Si es ingreso, mostrar préstamos dados (que me deben)
+    final loans = isDebt 
+        ? service.loansReceived.where((l) => l.status == LoanStatus.active).toList()
+        : service.loansGiven.where((l) => l.status == LoanStatus.active).toList();
+
+    if (loans.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return DropdownButtonFormField<String>(
+      value: _selectedLoanId,
+      decoration: InputDecoration(
+        labelText: isDebt ? 'Abonar a deuda (opcional)' : 'Recibir pago de préstamo (opcional)',
+        prefixIcon: Icon(isDebt ? Icons.payment_rounded : Icons.account_balance_wallet_rounded),
+        helperText: isDebt 
+            ? 'Este gasto se registrará como abono a la deuda seleccionada'
+            : 'Este ingreso se registrará como pago recibido del préstamo seleccionado',
+      ),
+      items: [
+        const DropdownMenuItem<String>(
+          value: null,
+          child: Text('Ninguno'),
+        ),
+        ...loans.map((loan) => DropdownMenuItem(
+              value: loan.id,
+              child: Text(loan.name),
+            )),
+      ],
+      onChanged: (value) => setState(() => _selectedLoanId = value),
+    );
+  }
+
+  Widget _buildSavingsGoalDropdown(FinanceService service) {
+    final activeGoals = service.activeSavingsGoals;
+
+    if (activeGoals.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return DropdownButtonFormField<String>(
+      value: _selectedSavingsGoalId,
+      decoration: const InputDecoration(
+        labelText: 'Agregar a meta de ahorro (opcional)',
+        prefixIcon: Icon(Icons.savings_rounded),
+        helperText: 'Este movimiento se agregará como contribución a la meta seleccionada',
+      ),
+      items: [
+        const DropdownMenuItem<String>(
+          value: null,
+          child: Text('Ninguno'),
+        ),
+        ...activeGoals.map((goal) => DropdownMenuItem(
+              value: goal.id,
+              child: Text(goal.name),
+            )),
+      ],
+      onChanged: (value) => setState(() => _selectedSavingsGoalId = value),
+    );
+  }
+
   Future<void> _saveTransaction(
     BuildContext context,
     FinanceService service,
@@ -507,6 +686,48 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         await service.updateTransaction(transaction);
       } else {
         await service.addTransaction(transaction);
+        
+        // Vincular solo al módulo seleccionado
+        if (_selectedFinanceModule == 'loan' && _selectedLoanId != null) {
+          try {
+            final allLoans = [...service.loansReceived, ...service.loansGiven];
+            final loan = allLoans.firstWhere((l) => l.id == _selectedLoanId);
+            await service.addLoanPayment(
+              _selectedLoanId!,
+              transaction.amount,
+              loan.paidInstallments + 1,
+              date: transaction.date,
+              notes: 'Vinculado desde movimiento: ${transaction.title}',
+            );
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Movimiento guardado, pero error al vincular préstamo: $e'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+          }
+        } else if (_selectedFinanceModule == 'savings' && _selectedSavingsGoalId != null) {
+          try {
+            await service.addSavingsContribution(
+              _selectedSavingsGoalId!,
+              transaction.amount,
+              date: transaction.date,
+              note: 'Vinculado desde movimiento: ${transaction.title}',
+            );
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Movimiento guardado, pero error al vincular ahorro: $e'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+          }
+        }
       }
 
       if (mounted) {
@@ -516,7 +737,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             content: Text(
               widget.transaction != null
                   ? 'Movimiento actualizado'
-                  : 'Movimiento guardado',
+                  : 'Movimiento guardado${_selectedFinanceModule != null ? ' y vinculado' : ''}',
             ),
             behavior: SnackBarBehavior.floating,
           ),

@@ -1132,13 +1132,13 @@ class FinanceService extends ChangeNotifier {
   }
 
   Future<void> addSavingsContribution(String goalId, double amount,
-      {String? note}) async {
+      {String? note, DateTime? date}) async {
     try {
       await _db.insertSavingsContribution(SavingsContributionsCompanion.insert(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         savingsGoalId: goalId,
         amount: amount,
-        date: DateTime.now(),
+        date: date ?? DateTime.now(),
         note: Value(note),
       ));
     } catch (e) {
@@ -1187,6 +1187,18 @@ class FinanceService extends ChangeNotifier {
       ));
     } catch (e) {
       debugPrint('Error cancelling savings goal: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> reactivateSavingsGoal(String id) async {
+    try {
+      final goal = _savingsGoals.firstWhere((g) => g.id == id);
+      await _db.updateSavingsGoal(_toDbSavingsGoal(
+        goal.copyWith(status: models.SavingsGoalStatus.active),
+      ));
+    } catch (e) {
+      debugPrint('Error reactivating savings goal: $e');
       rethrow;
     }
   }
@@ -1250,6 +1262,22 @@ class FinanceService extends ChangeNotifier {
       await _db.sellInvestment(investmentId, soldAmount);
     } catch (e) {
       debugPrint('Error selling investment: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> reactivateInvestment(String id) async {
+    try {
+      final investment = _investments.firstWhere((i) => i.id == id);
+      await _db.updateInvestment(_toDbInvestment(
+        investment.copyWith(
+          status: models.InvestmentStatus.active,
+          soldDate: null,
+          soldAmount: null,
+        ),
+      ));
+    } catch (e) {
+      debugPrint('Error reactivating investment: $e');
       rethrow;
     }
   }
@@ -1333,15 +1361,27 @@ class FinanceService extends ChangeNotifier {
     }
   }
 
+  Future<void> reactivateLoan(String id) async {
+    try {
+      final loan = _loans.firstWhere((l) => l.id == id);
+      await _db.updateLoan(_toDbLoan(
+        loan.copyWith(status: models.LoanStatus.active),
+      ));
+    } catch (e) {
+      debugPrint('Error reactivating loan: $e');
+      rethrow;
+    }
+  }
+
   Future<void> addLoanPayment(
       String loanId, double amount, int installmentNumber,
-      {String? notes}) async {
+      {String? notes, DateTime? date}) async {
     try {
       await _db.insertLoanPayment(LoanPaymentsCompanion.insert(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         loanId: loanId,
         amount: amount,
-        date: DateTime.now(),
+        date: date ?? DateTime.now(),
         installmentNumber: installmentNumber,
         notes: Value(notes),
       ));

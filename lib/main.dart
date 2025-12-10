@@ -9,10 +9,10 @@ import 'database/app_database.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  
   // Inicializar datos de localización para español
   await initializeDateFormatting('es', null);
-
+  
   // Se configurará dinámicamente según el tema
   runApp(const MyApp());
 }
@@ -48,12 +48,12 @@ class _MyAppState extends State<MyApp> {
 
           return MaterialApp(
             key: ValueKey('app_${isDarkMode ? 'dark' : 'light'}'),
-            title: 'Brote - Finanzas',
-            debugShowCheckedModeBanner: false,
-            theme: _buildTheme(),
+        title: 'Brote - Finanzas',
+        debugShowCheckedModeBanner: false,
+        theme: _buildTheme(),
             darkTheme: _buildDarkTheme(),
             themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            home: const MainNavigation(),
+        home: const MainNavigation(),
           );
         },
       ),

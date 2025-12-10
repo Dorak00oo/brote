@@ -129,30 +129,37 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                 ),
               ),
             ),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: dayTransactions.length,
-                separatorBuilder: (_, __) => Divider(
-                  height: 1,
-                  color: Colors.grey.shade200,
-                ),
-                itemBuilder: (context, i) {
-                  final transaction = dayTransactions[i];
-                  return _buildTransactionTile(
-                    context,
-                    transaction,
-                    currencyFormat,
-                    service,
-                  );
-                },
-              ),
+            Builder(
+              builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+                    ),
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: dayTransactions.length,
+                    separatorBuilder: (_, __) => Divider(
+                      height: 1,
+                      color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+                    ),
+                    itemBuilder: (context, i) {
+                      final transaction = dayTransactions[i];
+                      return _buildTransactionTile(
+                        context,
+                        transaction,
+                        currencyFormat,
+                        service,
+                      );
+                    },
+                  ),
+                );
+              },
             ),
           ],
         );

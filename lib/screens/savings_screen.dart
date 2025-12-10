@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../services/finance_service.dart';
 import '../models/savings_goal.dart';
 import '../widgets/notification_config_dialog.dart';
+import 'savings_history_with_completed_screen.dart';
 import '../main.dart';
 
 /// Formatter personalizado para formatear números con separadores mientras se escribe
@@ -231,55 +232,99 @@ String colorToHex(Color color) {
   return '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
 }
 
-class SavingsScreen extends StatelessWidget {
+class SavingsScreen extends StatefulWidget {
   const SavingsScreen({super.key});
+
+  @override
+  State<SavingsScreen> createState() => _SavingsScreenState();
+}
+
+class _SavingsScreenState extends State<SavingsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bolsillos de Ahorro'),
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Theme.of(context).colorScheme.primary,
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: Theme.of(context).colorScheme.primary,
+          tabs: const [
+            Tab(text: 'Activas'),
+            Tab(text: 'Historial'),
+          ],
+        ),
       ),
       body: Consumer<FinanceService>(
         builder: (context, service, _) {
+          if (service.savingsGoals.isEmpty) {
+            return _buildEmptyState(context);
+          }
+
           final activeGoals = service.activeSavingsGoals;
           final completedGoals = service.savingsGoals
               .where((g) => g.status == SavingsGoalStatus.completed)
               .toList();
 
-          if (service.savingsGoals.isEmpty) {
-            return _buildEmptyState(context);
-          }
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
+          return TabBarView(
+            controller: _tabController,
             children: [
-              // Resumen
-              _buildSummaryCard(context, service),
-              const SizedBox(height: 24),
-
-              // Metas activas
-              if (activeGoals.isNotEmpty) ...[
-                Text(
-                  'Metas activas',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 12),
-                ...activeGoals
-                    .map((goal) => _buildGoalCard(context, goal, service)),
-                const SizedBox(height: 24),
-              ],
-
-              // Metas completadas
-              if (completedGoals.isNotEmpty) ...[
-                Text(
-                  'Completadas',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 12),
-                ...completedGoals
-                    .map((goal) => _buildGoalCard(context, goal, service)),
-              ],
+              // Tab Activas
+              ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildSummaryCard(context, service),
+                  const SizedBox(height: 24),
+                  if (activeGoals.isNotEmpty) ...[
+                    Text(
+                      'Metas activas',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    ...activeGoals
+                        .map((goal) => _buildGoalCard(context, goal, service)),
+                  ] else ...[
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(40),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.savings_rounded,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No hay metas activas',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 80),
+                ],
+              ),
+              // Tab Historial (incluye completadas)
+              SavingsHistoryWithCompletedScreen(completedGoals: completedGoals, service: service),
             ],
           );
         },
@@ -422,12 +467,15 @@ class SavingsScreen extends StatelessWidget {
     final color =
         isCompleted ? Theme.of(context).colorScheme.primary : goalColor;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         children: [
@@ -466,7 +514,11 @@ class SavingsScreen extends StatelessWidget {
                     ),
                     Text(
                       ' / ${currencyFormat.format(goal.targetAmount)}',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[400]
+                            : Colors.grey[600],
+                      ),
                     ),
                   ],
                 ),
@@ -476,7 +528,9 @@ class SavingsScreen extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: goal.progressPercentage / 100,
                     minHeight: 6,
-                    backgroundColor: Colors.grey.shade200,
+                    backgroundColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade700
+                        : Colors.grey.shade200,
                     valueColor: AlwaysStoppedAnimation(color),
                   ),
                 ),

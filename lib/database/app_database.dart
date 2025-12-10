@@ -427,9 +427,9 @@ class AppDatabase extends _$AppDatabase {
           // para evitar errores de "duplicate column name"
           try {
             // Intentar agregar la columna
-            await customStatement(
-              "ALTER TABLE investments ADD COLUMN return_rate_period TEXT NOT NULL DEFAULT 'yearly'",
-            );
+          await customStatement(
+            "ALTER TABLE investments ADD COLUMN return_rate_period TEXT NOT NULL DEFAULT 'yearly'",
+          );
           } catch (e) {
             // Si falla, verificar si es por columna duplicada
             final errorString = e.toString();

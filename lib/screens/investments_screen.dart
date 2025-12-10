@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../services/finance_service.dart';
 import '../models/investment.dart';
 import '../widgets/notification_config_dialog.dart';
+import 'investments_history_with_completed_screen.dart';
 import '../main.dart';
 
 /// Formateador de números con separadores de miles
@@ -170,14 +171,44 @@ InvestmentIconOption getInvestmentIconById(String? id) {
   );
 }
 
-class InvestmentsScreen extends StatelessWidget {
+class InvestmentsScreen extends StatefulWidget {
   const InvestmentsScreen({super.key});
+
+  @override
+  State<InvestmentsScreen> createState() => _InvestmentsScreenState();
+}
+
+class _InvestmentsScreenState extends State<InvestmentsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inversiones'),
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Theme.of(context).colorScheme.primary,
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: Theme.of(context).colorScheme.primary,
+          tabs: const [
+            Tab(text: 'Activas'),
+            Tab(text: 'Historial'),
+          ],
+        ),
       ),
       body: Consumer<FinanceService>(
         builder: (context, service, _) {
@@ -185,21 +216,62 @@ class InvestmentsScreen extends StatelessWidget {
             return _buildEmptyState(context);
           }
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
+          final activeInvestments = service.investments
+              .where((inv) => inv.status == InvestmentStatus.active)
+              .toList();
+          final completedInvestments = service.investments
+              .where((inv) => inv.status == InvestmentStatus.sold || 
+                             inv.status == InvestmentStatus.cancelled)
+              .toList();
+
+          return TabBarView(
+            controller: _tabController,
             children: [
-              _buildSummaryCard(context, service),
-              const SizedBox(height: 24),
-              _buildInvestmentsByType(context, service),
-              const SizedBox(height: 24),
-              Text(
-                'Mis inversiones',
-                style: Theme.of(context).textTheme.titleLarge,
+              // Tab Activas
+              ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildSummaryCard(context, service),
+                  const SizedBox(height: 24),
+                  _buildInvestmentsByType(context, service),
+                  const SizedBox(height: 24),
+                  if (activeInvestments.isNotEmpty) ...[
+                    Text(
+                      'Inversiones activas',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    ...activeInvestments
+                        .map((inv) => _buildInvestmentCard(context, inv, service)),
+                  ] else ...[
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(40),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.trending_up_rounded,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No hay inversiones activas',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 80),
+                ],
               ),
-              const SizedBox(height: 12),
-              ...service.investments
-                  .map((inv) => _buildInvestmentCard(context, inv, service)),
-              const SizedBox(height: 80),
+              // Tab Historial (incluye completadas)
+              InvestmentsHistoryWithCompletedScreen(
+                completedInvestments: completedInvestments,
+                service: service,
+              ),
             ],
           );
         },
@@ -391,48 +463,57 @@ class InvestmentsScreen extends StatelessWidget {
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Column(
-            children: byType.entries.map((entry) {
-              final percentage = (entry.value / total) * 100;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(entry.key),
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: percentage / 100,
-                          minHeight: 8,
-                          backgroundColor: Colors.grey.shade200,
-                          valueColor: AlwaysStoppedAnimation(
-                            Theme.of(context).colorScheme.investment,
+        Builder(
+          builder: (context) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+                ),
+              ),
+              child: Column(
+                children: byType.entries.map((entry) {
+                  final percentage = (entry.value / total) * 100;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: Text(entry.key),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: percentage / 100,
+                              minHeight: 8,
+                              backgroundColor: isDark
+                                  ? Colors.grey.shade700
+                                  : Colors.grey.shade200,
+                              valueColor: AlwaysStoppedAnimation(
+                                Theme.of(context).colorScheme.investment,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '${percentage.toStringAsFixed(0)}%',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '${percentage.toStringAsFixed(0)}%',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
+                  );
+                }).toList(),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -460,12 +541,15 @@ class InvestmentsScreen extends StatelessWidget {
             int.parse(investment.color!.substring(1), radix: 16) + 0xFF000000)
         : iconOption.color;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+        ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
@@ -570,14 +654,19 @@ class InvestmentsScreen extends StatelessWidget {
                   ),
                 ],
               )
-            : Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text('Vendida'),
+            : Builder(
+                builder: (context) {
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  return Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text('Vendida'),
+                  );
+                },
               ),
       ),
     );
@@ -1755,4 +1844,5 @@ class InvestmentsScreen extends StatelessWidget {
       ),
     );
   }
+
 }

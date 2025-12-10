@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../services/finance_service.dart';
 import '../models/loan.dart';
+import 'loans_history_screen.dart';
 import '../main.dart';
 
 /// Formateador de números con separadores de miles
@@ -182,7 +183,7 @@ class _LoansScreenState extends State<LoansScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -204,6 +205,7 @@ class _LoansScreenState extends State<LoansScreen>
           tabs: const [
             Tab(text: 'Debo'),
             Tab(text: 'Me deben'),
+            Tab(text: 'Historial'),
           ],
         ),
       ),
@@ -214,6 +216,7 @@ class _LoansScreenState extends State<LoansScreen>
             children: [
               _buildLoansList(context, service, LoanType.received),
               _buildLoansList(context, service, LoanType.given),
+              LoansHistoryScreen(loanType: null), // Historial de todos los préstamos
             ],
           );
         },
@@ -247,7 +250,6 @@ class _LoansScreenState extends State<LoansScreen>
     );
 
     final activeLoans = loans.where((l) => l.status == LoanStatus.active).toList();
-    final paidLoans = loans.where((l) => l.status == LoanStatus.paidOff).toList();
 
     final totalActive = activeLoans.fold<double>(0, (sum, l) => sum + l.remainingAmount);
 
@@ -296,13 +298,6 @@ class _LoansScreenState extends State<LoansScreen>
           const SizedBox(height: 12),
           ...activeLoans.map((loan) => _buildLoanCard(context, loan, service)),
           const SizedBox(height: 24),
-        ],
-
-        // Préstamos pagados
-        if (paidLoans.isNotEmpty) ...[
-          Text('Pagados', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          ...paidLoans.map((loan) => _buildLoanCard(context, loan, service)),
         ],
 
         const SizedBox(height: 80),
@@ -372,12 +367,15 @@ class _LoansScreenState extends State<LoansScreen>
         ? Theme.of(context).colorScheme.expense
         : Theme.of(context).colorScheme.income;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         children: [
@@ -427,7 +425,7 @@ class _LoansScreenState extends State<LoansScreen>
                   child: LinearProgressIndicator(
                     value: loan.paidPercentage / 100,
                     minHeight: 6,
-                    backgroundColor: Colors.grey.shade200,
+                    backgroundColor: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
                     valueColor: AlwaysStoppedAnimation(cardColor),
                   ),
                 ),
@@ -532,7 +530,9 @@ class _LoansScreenState extends State<LoansScreen>
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? iconOption.color.withOpacity(0.15)
-                                    : Colors.grey.shade100,
+                                    : (Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.grey.shade800
+                                        : Colors.grey.shade100),
                                 borderRadius: BorderRadius.circular(12),
                                 border: isSelected
                                     ? Border.all(color: iconOption.color, width: 2)
@@ -909,7 +909,9 @@ class _LoansScreenState extends State<LoansScreen>
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? iconOption.color.withOpacity(0.15)
-                                    : Colors.grey.shade100,
+                                    : (Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.grey.shade800
+                                        : Colors.grey.shade100),
                                 borderRadius: BorderRadius.circular(12),
                                 border: isSelected
                                     ? Border.all(color: iconOption.color, width: 2)
@@ -1263,7 +1265,9 @@ class _LoansScreenState extends State<LoansScreen>
                       Text(
                         'Cuota #${loan.paidInstallments + 1} de ${loan.totalInstallments}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[400]
+                              : Colors.grey[600],
                         ),
                       ),
                     ],
@@ -1275,7 +1279,9 @@ class _LoansScreenState extends State<LoansScreen>
             Text(
               'Monto sugerido: ${currencyFormat.format(loan.installmentAmount)}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[700],
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[400]
+                    : Colors.grey[700],
               ),
             ),
             const SizedBox(height: 16),
@@ -1500,13 +1506,18 @@ class _LoansScreenState extends State<LoansScreen>
                       const SizedBox(height: 20),
                       
                       // Sección de notificación
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
+                      Builder(
+                        builder: (context) {
+                          final isDark = Theme.of(context).brightness == Brightness.dark;
+                          return Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+                              ),
+                            ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -1655,13 +1666,18 @@ class _LoansScreenState extends State<LoansScreen>
                                     });
                                   }
                                 },
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.grey.shade300),
-                                  ),
+                                child: Builder(
+                                  builder: (context) {
+                                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                                    return Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).colorScheme.surface,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                                        ),
+                                      ),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
@@ -1676,22 +1692,37 @@ class _LoansScreenState extends State<LoansScreen>
                                           style: Theme.of(context).textTheme.bodyMedium,
                                         ),
                                       ),
-                                      Icon(Icons.edit_rounded, size: 18, color: Colors.grey[600]),
+                                      Icon(
+                                        Icons.edit_rounded,
+                                        size: 18,
+                                        color: Theme.of(context).brightness == Brightness.dark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
+                                      ),
                                     ],
                                   ),
+                                );
+                                  },
                                 ),
                               ),
                             ] else ...[
                               const SizedBox(height: 8),
-                              Text(
-                                'Activa las notificaciones para recibir recordatorios',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
+                              Builder(
+                                builder: (context) {
+                                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                                  return Text(
+                                    'Activa las notificaciones para recibir recordatorios',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                    ),
+                                  );
+                                },
                               ),
                             ],
                           ],
                         ),
+                      );
+                        },
                       ),
                       const SizedBox(height: 20),
                   
@@ -1713,7 +1744,9 @@ class _LoansScreenState extends State<LoansScreen>
                               decoration: BoxDecoration(
                                 color: entry.isPaid
                                     ? Colors.green.withOpacity(0.1)
-                                    : Colors.grey.shade100,
+                                    : (Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.grey.shade800
+                                        : Colors.grey.shade100),
                                 borderRadius: BorderRadius.circular(12),
                                 border: entry.isPaid
                                     ? Border.all(color: Colors.green.shade200)
@@ -1772,10 +1805,11 @@ class _LoansScreenState extends State<LoansScreen>
   }
 
   Widget _buildDetailCard(BuildContext context, String label, String value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
