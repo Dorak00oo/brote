@@ -8,6 +8,8 @@ import '../models/investment.dart' as models;
 import '../models/loan.dart' as models;
 import '../models/user_settings.dart' as models;
 import '../database/app_database.dart';
+import '../database/app_database.dart' as db;
+import '../services/notification_service.dart';
 
 class FinanceService extends ChangeNotifier {
   final AppDatabase _db;
@@ -363,7 +365,69 @@ class FinanceService extends ChangeNotifier {
       _loadUserSettings(),
     ]);
     // Procesar transacciones recurrentes
+    await processRecurringTransactions();
+  }
+
+  /// Procesar transacciones recurrentes y vincular con finanzas si corresponde
+  Future<void> processRecurringTransactions() async {
     await _db.processRecurringTransactions();
+    
+    // Obtener transacciones recurrentes activas para vincular con finanzas
+    final activeRecurring = await _db.getAllRecurringTransactions();
+    final now = DateTime.now();
+    
+    for (final recurring in activeRecurring.where((r) => r.isActive)) {
+      // Solo procesar si tiene vinculación y se procesó recientemente
+      if (recurring.linkedFinanceModule != null && 
+          recurring.lastProcessedDate != null &&
+          recurring.lastProcessedDate!.isAfter(now.subtract(const Duration(minutes: 5)))) {
+        
+        try {
+          // Buscar la transacción recién creada
+          final recentTransactions = _transactions.where((t) => 
+            t.title == recurring.title &&
+            t.amount == recurring.amount &&
+            t.date.isAfter(now.subtract(const Duration(minutes: 5)))
+          ).toList();
+          
+          if (recentTransactions.isNotEmpty) {
+            final transaction = recentTransactions.first;
+            
+            // Vincular con préstamo
+            if (recurring.linkedFinanceModule == 'loan' && recurring.linkedLoanId != null) {
+              final allLoans = [...loansReceived, ...loansGiven];
+              try {
+                final loan = allLoans.firstWhere((l) => l.id == recurring.linkedLoanId);
+                await addLoanPayment(
+                  recurring.linkedLoanId!,
+                  transaction.amount,
+                  loan.paidInstallments + 1,
+                  date: transaction.date,
+                  notes: 'Vinculado desde automático: ${recurring.title}',
+                );
+              } catch (e) {
+                debugPrint('Error al vincular préstamo: $e');
+              }
+            }
+            // Vincular con meta de ahorro
+            else if (recurring.linkedFinanceModule == 'savings' && recurring.linkedSavingsGoalId != null) {
+              try {
+                await addSavingsContribution(
+                  recurring.linkedSavingsGoalId!,
+                  transaction.amount,
+                  date: transaction.date,
+                  note: 'Vinculado desde automático: ${recurring.title}',
+                );
+              } catch (e) {
+                debugPrint('Error al vincular ahorro: $e');
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('Error al vincular transacción recurrente: $e');
+        }
+      }
+    }
   }
 
   // ========== CONVERSIÓN DE MODELOS: TRANSACCIONES ==========
@@ -1702,5 +1766,98 @@ class FinanceService extends ChangeNotifier {
     final start = userSettings.getCurrentPeriodStart();
     final end = userSettings.getCurrentPeriodEnd();
     return _db.getPeriodSummary(start, end);
+  }
+
+  // ========== TRANSACCIONES RECURRENTES (AUTOMÁTICOS) ==========
+  Stream<List<db.RecurringTransaction>> watchRecurringTransactions() {
+    return _db.watchActiveRecurringTransactions();
+  }
+
+  Future<void> saveRecurringTransaction({
+    required String id,
+    required String title,
+    required double amount,
+    required String type,
+    required String category,
+    String? source,
+    required String frequency,
+    int? dayOfMonth,
+    int? dayOfWeek,
+    required DateTime startDate,
+    DateTime? endDate,
+    String? description,
+    bool notificationsEnabled = false,
+    int? notificationHour,
+    int? notificationMinute,
+    String? linkedFinanceModule,
+    String? linkedLoanId,
+    String? linkedSavingsGoalId,
+  }) async {
+    try {
+      await _db.insertRecurringTransaction(
+        db.RecurringTransactionsCompanion.insert(
+          id: id,
+          title: title,
+          amount: amount,
+          type: type,
+          category: category,
+          source: Value(source),
+          frequency: frequency,
+          dayOfMonth: Value(dayOfMonth),
+          dayOfWeek: Value(dayOfWeek),
+          startDate: startDate,
+          endDate: Value(endDate),
+          description: Value(description),
+          isActive: const Value(true),
+          notificationsEnabled: Value(notificationsEnabled),
+          notificationHour: Value(notificationHour),
+          notificationMinute: Value(notificationMinute),
+          linkedFinanceModule: Value(linkedFinanceModule),
+          linkedLoanId: Value(linkedLoanId),
+          linkedSavingsGoalId: Value(linkedSavingsGoalId),
+        ),
+      );
+
+      // Cancelar notificación anterior si existe (para actualizaciones)
+      await NotificationService().cancelAutomaticTransactionNotification(id);
+      
+      // Programar notificación si está habilitada
+      if (notificationsEnabled && notificationHour != null && notificationMinute != null) {
+        try {
+          await NotificationService().scheduleAutomaticTransactionNotification(
+            automaticId: id,
+            title: title,
+            amount: amount,
+            isIncome: type == 'income',
+            frequency: frequency,
+            dayOfMonth: dayOfMonth,
+            dayOfWeek: dayOfWeek,
+            startDate: startDate,
+            endDate: endDate,
+            notificationHour: notificationHour,
+            notificationMinute: notificationMinute,
+          );
+        } catch (e) {
+          debugPrint('Error al programar notificación: $e');
+        }
+      }
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error saving recurring transaction: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteRecurringTransaction(String id) async {
+    try {
+      // Cancelar notificación antes de eliminar
+      await NotificationService().cancelAutomaticTransactionNotification(id);
+      await _db.deleteRecurringTransaction(id);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error deleting recurring transaction: $e');
+      rethrow;
+    }
   }
 }

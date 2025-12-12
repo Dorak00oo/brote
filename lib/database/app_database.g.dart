@@ -6393,6 +6393,46 @@ class $RecurringTransactionsTable extends RecurringTransactions
   late final GeneratedColumn<String> description = GeneratedColumn<String>(
       'description', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _notificationsEnabledMeta =
+      const VerificationMeta('notificationsEnabled');
+  @override
+  late final GeneratedColumn<bool> notificationsEnabled = GeneratedColumn<bool>(
+      'notifications_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("notifications_enabled" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _notificationHourMeta =
+      const VerificationMeta('notificationHour');
+  @override
+  late final GeneratedColumn<int> notificationHour = GeneratedColumn<int>(
+      'notification_hour', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _notificationMinuteMeta =
+      const VerificationMeta('notificationMinute');
+  @override
+  late final GeneratedColumn<int> notificationMinute = GeneratedColumn<int>(
+      'notification_minute', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _linkedFinanceModuleMeta =
+      const VerificationMeta('linkedFinanceModule');
+  @override
+  late final GeneratedColumn<String> linkedFinanceModule =
+      GeneratedColumn<String>('linked_finance_module', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _linkedLoanIdMeta =
+      const VerificationMeta('linkedLoanId');
+  @override
+  late final GeneratedColumn<String> linkedLoanId = GeneratedColumn<String>(
+      'linked_loan_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _linkedSavingsGoalIdMeta =
+      const VerificationMeta('linkedSavingsGoalId');
+  @override
+  late final GeneratedColumn<String> linkedSavingsGoalId =
+      GeneratedColumn<String>('linked_savings_goal_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -6408,7 +6448,13 @@ class $RecurringTransactionsTable extends RecurringTransactions
         endDate,
         lastProcessedDate,
         isActive,
-        description
+        description,
+        notificationsEnabled,
+        notificationHour,
+        notificationMinute,
+        linkedFinanceModule,
+        linkedLoanId,
+        linkedSavingsGoalId
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6498,6 +6544,42 @@ class $RecurringTransactionsTable extends RecurringTransactions
           description.isAcceptableOrUnknown(
               data['description']!, _descriptionMeta));
     }
+    if (data.containsKey('notifications_enabled')) {
+      context.handle(
+          _notificationsEnabledMeta,
+          notificationsEnabled.isAcceptableOrUnknown(
+              data['notifications_enabled']!, _notificationsEnabledMeta));
+    }
+    if (data.containsKey('notification_hour')) {
+      context.handle(
+          _notificationHourMeta,
+          notificationHour.isAcceptableOrUnknown(
+              data['notification_hour']!, _notificationHourMeta));
+    }
+    if (data.containsKey('notification_minute')) {
+      context.handle(
+          _notificationMinuteMeta,
+          notificationMinute.isAcceptableOrUnknown(
+              data['notification_minute']!, _notificationMinuteMeta));
+    }
+    if (data.containsKey('linked_finance_module')) {
+      context.handle(
+          _linkedFinanceModuleMeta,
+          linkedFinanceModule.isAcceptableOrUnknown(
+              data['linked_finance_module']!, _linkedFinanceModuleMeta));
+    }
+    if (data.containsKey('linked_loan_id')) {
+      context.handle(
+          _linkedLoanIdMeta,
+          linkedLoanId.isAcceptableOrUnknown(
+              data['linked_loan_id']!, _linkedLoanIdMeta));
+    }
+    if (data.containsKey('linked_savings_goal_id')) {
+      context.handle(
+          _linkedSavingsGoalIdMeta,
+          linkedSavingsGoalId.isAcceptableOrUnknown(
+              data['linked_savings_goal_id']!, _linkedSavingsGoalIdMeta));
+    }
     return context;
   }
 
@@ -6535,6 +6617,19 @@ class $RecurringTransactionsTable extends RecurringTransactions
           .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
       description: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      notificationsEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}notifications_enabled'])!,
+      notificationHour: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}notification_hour']),
+      notificationMinute: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}notification_minute']),
+      linkedFinanceModule: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}linked_finance_module']),
+      linkedLoanId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}linked_loan_id']),
+      linkedSavingsGoalId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}linked_savings_goal_id']),
     );
   }
 
@@ -6560,6 +6655,12 @@ class RecurringTransaction extends DataClass
   final DateTime? lastProcessedDate;
   final bool isActive;
   final String? description;
+  final bool notificationsEnabled;
+  final int? notificationHour;
+  final int? notificationMinute;
+  final String? linkedFinanceModule;
+  final String? linkedLoanId;
+  final String? linkedSavingsGoalId;
   const RecurringTransaction(
       {required this.id,
       required this.title,
@@ -6574,7 +6675,13 @@ class RecurringTransaction extends DataClass
       this.endDate,
       this.lastProcessedDate,
       required this.isActive,
-      this.description});
+      this.description,
+      required this.notificationsEnabled,
+      this.notificationHour,
+      this.notificationMinute,
+      this.linkedFinanceModule,
+      this.linkedLoanId,
+      this.linkedSavingsGoalId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -6603,6 +6710,22 @@ class RecurringTransaction extends DataClass
     map['is_active'] = Variable<bool>(isActive);
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
+    }
+    map['notifications_enabled'] = Variable<bool>(notificationsEnabled);
+    if (!nullToAbsent || notificationHour != null) {
+      map['notification_hour'] = Variable<int>(notificationHour);
+    }
+    if (!nullToAbsent || notificationMinute != null) {
+      map['notification_minute'] = Variable<int>(notificationMinute);
+    }
+    if (!nullToAbsent || linkedFinanceModule != null) {
+      map['linked_finance_module'] = Variable<String>(linkedFinanceModule);
+    }
+    if (!nullToAbsent || linkedLoanId != null) {
+      map['linked_loan_id'] = Variable<String>(linkedLoanId);
+    }
+    if (!nullToAbsent || linkedSavingsGoalId != null) {
+      map['linked_savings_goal_id'] = Variable<String>(linkedSavingsGoalId);
     }
     return map;
   }
@@ -6634,6 +6757,22 @@ class RecurringTransaction extends DataClass
       description: description == null && nullToAbsent
           ? const Value.absent()
           : Value(description),
+      notificationsEnabled: Value(notificationsEnabled),
+      notificationHour: notificationHour == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notificationHour),
+      notificationMinute: notificationMinute == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notificationMinute),
+      linkedFinanceModule: linkedFinanceModule == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedFinanceModule),
+      linkedLoanId: linkedLoanId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedLoanId),
+      linkedSavingsGoalId: linkedSavingsGoalId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedSavingsGoalId),
     );
   }
 
@@ -6656,6 +6795,15 @@ class RecurringTransaction extends DataClass
           serializer.fromJson<DateTime?>(json['lastProcessedDate']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       description: serializer.fromJson<String?>(json['description']),
+      notificationsEnabled:
+          serializer.fromJson<bool>(json['notificationsEnabled']),
+      notificationHour: serializer.fromJson<int?>(json['notificationHour']),
+      notificationMinute: serializer.fromJson<int?>(json['notificationMinute']),
+      linkedFinanceModule:
+          serializer.fromJson<String?>(json['linkedFinanceModule']),
+      linkedLoanId: serializer.fromJson<String?>(json['linkedLoanId']),
+      linkedSavingsGoalId:
+          serializer.fromJson<String?>(json['linkedSavingsGoalId']),
     );
   }
   @override
@@ -6676,6 +6824,12 @@ class RecurringTransaction extends DataClass
       'lastProcessedDate': serializer.toJson<DateTime?>(lastProcessedDate),
       'isActive': serializer.toJson<bool>(isActive),
       'description': serializer.toJson<String?>(description),
+      'notificationsEnabled': serializer.toJson<bool>(notificationsEnabled),
+      'notificationHour': serializer.toJson<int?>(notificationHour),
+      'notificationMinute': serializer.toJson<int?>(notificationMinute),
+      'linkedFinanceModule': serializer.toJson<String?>(linkedFinanceModule),
+      'linkedLoanId': serializer.toJson<String?>(linkedLoanId),
+      'linkedSavingsGoalId': serializer.toJson<String?>(linkedSavingsGoalId),
     };
   }
 
@@ -6693,7 +6847,13 @@ class RecurringTransaction extends DataClass
           Value<DateTime?> endDate = const Value.absent(),
           Value<DateTime?> lastProcessedDate = const Value.absent(),
           bool? isActive,
-          Value<String?> description = const Value.absent()}) =>
+          Value<String?> description = const Value.absent(),
+          bool? notificationsEnabled,
+          Value<int?> notificationHour = const Value.absent(),
+          Value<int?> notificationMinute = const Value.absent(),
+          Value<String?> linkedFinanceModule = const Value.absent(),
+          Value<String?> linkedLoanId = const Value.absent(),
+          Value<String?> linkedSavingsGoalId = const Value.absent()}) =>
       RecurringTransaction(
         id: id ?? this.id,
         title: title ?? this.title,
@@ -6711,6 +6871,21 @@ class RecurringTransaction extends DataClass
             : this.lastProcessedDate,
         isActive: isActive ?? this.isActive,
         description: description.present ? description.value : this.description,
+        notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+        notificationHour: notificationHour.present
+            ? notificationHour.value
+            : this.notificationHour,
+        notificationMinute: notificationMinute.present
+            ? notificationMinute.value
+            : this.notificationMinute,
+        linkedFinanceModule: linkedFinanceModule.present
+            ? linkedFinanceModule.value
+            : this.linkedFinanceModule,
+        linkedLoanId:
+            linkedLoanId.present ? linkedLoanId.value : this.linkedLoanId,
+        linkedSavingsGoalId: linkedSavingsGoalId.present
+            ? linkedSavingsGoalId.value
+            : this.linkedSavingsGoalId,
       );
   RecurringTransaction copyWithCompanion(RecurringTransactionsCompanion data) {
     return RecurringTransaction(
@@ -6732,6 +6907,24 @@ class RecurringTransaction extends DataClass
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       description:
           data.description.present ? data.description.value : this.description,
+      notificationsEnabled: data.notificationsEnabled.present
+          ? data.notificationsEnabled.value
+          : this.notificationsEnabled,
+      notificationHour: data.notificationHour.present
+          ? data.notificationHour.value
+          : this.notificationHour,
+      notificationMinute: data.notificationMinute.present
+          ? data.notificationMinute.value
+          : this.notificationMinute,
+      linkedFinanceModule: data.linkedFinanceModule.present
+          ? data.linkedFinanceModule.value
+          : this.linkedFinanceModule,
+      linkedLoanId: data.linkedLoanId.present
+          ? data.linkedLoanId.value
+          : this.linkedLoanId,
+      linkedSavingsGoalId: data.linkedSavingsGoalId.present
+          ? data.linkedSavingsGoalId.value
+          : this.linkedSavingsGoalId,
     );
   }
 
@@ -6751,7 +6944,13 @@ class RecurringTransaction extends DataClass
           ..write('endDate: $endDate, ')
           ..write('lastProcessedDate: $lastProcessedDate, ')
           ..write('isActive: $isActive, ')
-          ..write('description: $description')
+          ..write('description: $description, ')
+          ..write('notificationsEnabled: $notificationsEnabled, ')
+          ..write('notificationHour: $notificationHour, ')
+          ..write('notificationMinute: $notificationMinute, ')
+          ..write('linkedFinanceModule: $linkedFinanceModule, ')
+          ..write('linkedLoanId: $linkedLoanId, ')
+          ..write('linkedSavingsGoalId: $linkedSavingsGoalId')
           ..write(')'))
         .toString();
   }
@@ -6771,7 +6970,13 @@ class RecurringTransaction extends DataClass
       endDate,
       lastProcessedDate,
       isActive,
-      description);
+      description,
+      notificationsEnabled,
+      notificationHour,
+      notificationMinute,
+      linkedFinanceModule,
+      linkedLoanId,
+      linkedSavingsGoalId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -6789,7 +6994,13 @@ class RecurringTransaction extends DataClass
           other.endDate == this.endDate &&
           other.lastProcessedDate == this.lastProcessedDate &&
           other.isActive == this.isActive &&
-          other.description == this.description);
+          other.description == this.description &&
+          other.notificationsEnabled == this.notificationsEnabled &&
+          other.notificationHour == this.notificationHour &&
+          other.notificationMinute == this.notificationMinute &&
+          other.linkedFinanceModule == this.linkedFinanceModule &&
+          other.linkedLoanId == this.linkedLoanId &&
+          other.linkedSavingsGoalId == this.linkedSavingsGoalId);
 }
 
 class RecurringTransactionsCompanion
@@ -6808,6 +7019,12 @@ class RecurringTransactionsCompanion
   final Value<DateTime?> lastProcessedDate;
   final Value<bool> isActive;
   final Value<String?> description;
+  final Value<bool> notificationsEnabled;
+  final Value<int?> notificationHour;
+  final Value<int?> notificationMinute;
+  final Value<String?> linkedFinanceModule;
+  final Value<String?> linkedLoanId;
+  final Value<String?> linkedSavingsGoalId;
   final Value<int> rowid;
   const RecurringTransactionsCompanion({
     this.id = const Value.absent(),
@@ -6824,6 +7041,12 @@ class RecurringTransactionsCompanion
     this.lastProcessedDate = const Value.absent(),
     this.isActive = const Value.absent(),
     this.description = const Value.absent(),
+    this.notificationsEnabled = const Value.absent(),
+    this.notificationHour = const Value.absent(),
+    this.notificationMinute = const Value.absent(),
+    this.linkedFinanceModule = const Value.absent(),
+    this.linkedLoanId = const Value.absent(),
+    this.linkedSavingsGoalId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RecurringTransactionsCompanion.insert({
@@ -6841,6 +7064,12 @@ class RecurringTransactionsCompanion
     this.lastProcessedDate = const Value.absent(),
     this.isActive = const Value.absent(),
     this.description = const Value.absent(),
+    this.notificationsEnabled = const Value.absent(),
+    this.notificationHour = const Value.absent(),
+    this.notificationMinute = const Value.absent(),
+    this.linkedFinanceModule = const Value.absent(),
+    this.linkedLoanId = const Value.absent(),
+    this.linkedSavingsGoalId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         title = Value(title),
@@ -6864,6 +7093,12 @@ class RecurringTransactionsCompanion
     Expression<DateTime>? lastProcessedDate,
     Expression<bool>? isActive,
     Expression<String>? description,
+    Expression<bool>? notificationsEnabled,
+    Expression<int>? notificationHour,
+    Expression<int>? notificationMinute,
+    Expression<String>? linkedFinanceModule,
+    Expression<String>? linkedLoanId,
+    Expression<String>? linkedSavingsGoalId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -6881,6 +7116,15 @@ class RecurringTransactionsCompanion
       if (lastProcessedDate != null) 'last_processed_date': lastProcessedDate,
       if (isActive != null) 'is_active': isActive,
       if (description != null) 'description': description,
+      if (notificationsEnabled != null)
+        'notifications_enabled': notificationsEnabled,
+      if (notificationHour != null) 'notification_hour': notificationHour,
+      if (notificationMinute != null) 'notification_minute': notificationMinute,
+      if (linkedFinanceModule != null)
+        'linked_finance_module': linkedFinanceModule,
+      if (linkedLoanId != null) 'linked_loan_id': linkedLoanId,
+      if (linkedSavingsGoalId != null)
+        'linked_savings_goal_id': linkedSavingsGoalId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6900,6 +7144,12 @@ class RecurringTransactionsCompanion
       Value<DateTime?>? lastProcessedDate,
       Value<bool>? isActive,
       Value<String?>? description,
+      Value<bool>? notificationsEnabled,
+      Value<int?>? notificationHour,
+      Value<int?>? notificationMinute,
+      Value<String?>? linkedFinanceModule,
+      Value<String?>? linkedLoanId,
+      Value<String?>? linkedSavingsGoalId,
       Value<int>? rowid}) {
     return RecurringTransactionsCompanion(
       id: id ?? this.id,
@@ -6916,6 +7166,12 @@ class RecurringTransactionsCompanion
       lastProcessedDate: lastProcessedDate ?? this.lastProcessedDate,
       isActive: isActive ?? this.isActive,
       description: description ?? this.description,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      notificationHour: notificationHour ?? this.notificationHour,
+      notificationMinute: notificationMinute ?? this.notificationMinute,
+      linkedFinanceModule: linkedFinanceModule ?? this.linkedFinanceModule,
+      linkedLoanId: linkedLoanId ?? this.linkedLoanId,
+      linkedSavingsGoalId: linkedSavingsGoalId ?? this.linkedSavingsGoalId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6965,6 +7221,26 @@ class RecurringTransactionsCompanion
     if (description.present) {
       map['description'] = Variable<String>(description.value);
     }
+    if (notificationsEnabled.present) {
+      map['notifications_enabled'] = Variable<bool>(notificationsEnabled.value);
+    }
+    if (notificationHour.present) {
+      map['notification_hour'] = Variable<int>(notificationHour.value);
+    }
+    if (notificationMinute.present) {
+      map['notification_minute'] = Variable<int>(notificationMinute.value);
+    }
+    if (linkedFinanceModule.present) {
+      map['linked_finance_module'] =
+          Variable<String>(linkedFinanceModule.value);
+    }
+    if (linkedLoanId.present) {
+      map['linked_loan_id'] = Variable<String>(linkedLoanId.value);
+    }
+    if (linkedSavingsGoalId.present) {
+      map['linked_savings_goal_id'] =
+          Variable<String>(linkedSavingsGoalId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6988,6 +7264,12 @@ class RecurringTransactionsCompanion
           ..write('lastProcessedDate: $lastProcessedDate, ')
           ..write('isActive: $isActive, ')
           ..write('description: $description, ')
+          ..write('notificationsEnabled: $notificationsEnabled, ')
+          ..write('notificationHour: $notificationHour, ')
+          ..write('notificationMinute: $notificationMinute, ')
+          ..write('linkedFinanceModule: $linkedFinanceModule, ')
+          ..write('linkedLoanId: $linkedLoanId, ')
+          ..write('linkedSavingsGoalId: $linkedSavingsGoalId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -10769,6 +11051,12 @@ typedef $$RecurringTransactionsTableCreateCompanionBuilder
   Value<DateTime?> lastProcessedDate,
   Value<bool> isActive,
   Value<String?> description,
+  Value<bool> notificationsEnabled,
+  Value<int?> notificationHour,
+  Value<int?> notificationMinute,
+  Value<String?> linkedFinanceModule,
+  Value<String?> linkedLoanId,
+  Value<String?> linkedSavingsGoalId,
   Value<int> rowid,
 });
 typedef $$RecurringTransactionsTableUpdateCompanionBuilder
@@ -10787,6 +11075,12 @@ typedef $$RecurringTransactionsTableUpdateCompanionBuilder
   Value<DateTime?> lastProcessedDate,
   Value<bool> isActive,
   Value<String?> description,
+  Value<bool> notificationsEnabled,
+  Value<int?> notificationHour,
+  Value<int?> notificationMinute,
+  Value<String?> linkedFinanceModule,
+  Value<String?> linkedLoanId,
+  Value<String?> linkedSavingsGoalId,
   Value<int> rowid,
 });
 
@@ -10841,6 +11135,29 @@ class $$RecurringTransactionsTableFilterComposer
 
   ColumnFilters<String> get description => $composableBuilder(
       column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get notificationsEnabled => $composableBuilder(
+      column: $table.notificationsEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get notificationHour => $composableBuilder(
+      column: $table.notificationHour,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get notificationMinute => $composableBuilder(
+      column: $table.notificationMinute,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get linkedFinanceModule => $composableBuilder(
+      column: $table.linkedFinanceModule,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get linkedLoanId => $composableBuilder(
+      column: $table.linkedLoanId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get linkedSavingsGoalId => $composableBuilder(
+      column: $table.linkedSavingsGoalId,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$RecurringTransactionsTableOrderingComposer
@@ -10894,6 +11211,30 @@ class $$RecurringTransactionsTableOrderingComposer
 
   ColumnOrderings<String> get description => $composableBuilder(
       column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get notificationsEnabled => $composableBuilder(
+      column: $table.notificationsEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get notificationHour => $composableBuilder(
+      column: $table.notificationHour,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get notificationMinute => $composableBuilder(
+      column: $table.notificationMinute,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get linkedFinanceModule => $composableBuilder(
+      column: $table.linkedFinanceModule,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get linkedLoanId => $composableBuilder(
+      column: $table.linkedLoanId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get linkedSavingsGoalId => $composableBuilder(
+      column: $table.linkedSavingsGoalId,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$RecurringTransactionsTableAnnotationComposer
@@ -10946,6 +11287,24 @@ class $$RecurringTransactionsTableAnnotationComposer
 
   GeneratedColumn<String> get description => $composableBuilder(
       column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<bool> get notificationsEnabled => $composableBuilder(
+      column: $table.notificationsEnabled, builder: (column) => column);
+
+  GeneratedColumn<int> get notificationHour => $composableBuilder(
+      column: $table.notificationHour, builder: (column) => column);
+
+  GeneratedColumn<int> get notificationMinute => $composableBuilder(
+      column: $table.notificationMinute, builder: (column) => column);
+
+  GeneratedColumn<String> get linkedFinanceModule => $composableBuilder(
+      column: $table.linkedFinanceModule, builder: (column) => column);
+
+  GeneratedColumn<String> get linkedLoanId => $composableBuilder(
+      column: $table.linkedLoanId, builder: (column) => column);
+
+  GeneratedColumn<String> get linkedSavingsGoalId => $composableBuilder(
+      column: $table.linkedSavingsGoalId, builder: (column) => column);
 }
 
 class $$RecurringTransactionsTableTableManager extends RootTableManager<
@@ -10993,6 +11352,12 @@ class $$RecurringTransactionsTableTableManager extends RootTableManager<
             Value<DateTime?> lastProcessedDate = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
             Value<String?> description = const Value.absent(),
+            Value<bool> notificationsEnabled = const Value.absent(),
+            Value<int?> notificationHour = const Value.absent(),
+            Value<int?> notificationMinute = const Value.absent(),
+            Value<String?> linkedFinanceModule = const Value.absent(),
+            Value<String?> linkedLoanId = const Value.absent(),
+            Value<String?> linkedSavingsGoalId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               RecurringTransactionsCompanion(
@@ -11010,6 +11375,12 @@ class $$RecurringTransactionsTableTableManager extends RootTableManager<
             lastProcessedDate: lastProcessedDate,
             isActive: isActive,
             description: description,
+            notificationsEnabled: notificationsEnabled,
+            notificationHour: notificationHour,
+            notificationMinute: notificationMinute,
+            linkedFinanceModule: linkedFinanceModule,
+            linkedLoanId: linkedLoanId,
+            linkedSavingsGoalId: linkedSavingsGoalId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -11027,6 +11398,12 @@ class $$RecurringTransactionsTableTableManager extends RootTableManager<
             Value<DateTime?> lastProcessedDate = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
             Value<String?> description = const Value.absent(),
+            Value<bool> notificationsEnabled = const Value.absent(),
+            Value<int?> notificationHour = const Value.absent(),
+            Value<int?> notificationMinute = const Value.absent(),
+            Value<String?> linkedFinanceModule = const Value.absent(),
+            Value<String?> linkedLoanId = const Value.absent(),
+            Value<String?> linkedSavingsGoalId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               RecurringTransactionsCompanion.insert(
@@ -11044,6 +11421,12 @@ class $$RecurringTransactionsTableTableManager extends RootTableManager<
             lastProcessedDate: lastProcessedDate,
             isActive: isActive,
             description: description,
+            notificationsEnabled: notificationsEnabled,
+            notificationHour: notificationHour,
+            notificationMinute: notificationMinute,
+            linkedFinanceModule: linkedFinanceModule,
+            linkedLoanId: linkedLoanId,
+            linkedSavingsGoalId: linkedSavingsGoalId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

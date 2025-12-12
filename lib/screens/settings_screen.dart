@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../services/finance_service.dart';
 import '../models/user_settings.dart';
+import 'automatic_transactions_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -34,6 +35,16 @@ class SettingsScreen extends StatelessWidget {
                 'Balance Total',
                 [
                   _buildBalanceResetPeriodSetting(context, service),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Ingresos y pagos automáticos
+              _buildSection(
+                context,
+                'Automatización',
+                [
+                  _buildAutomaticTransactionsSetting(context, service),
                 ],
               ),
               const SizedBox(height: 24),
@@ -1280,6 +1291,44 @@ class SettingsScreen extends StatelessWidget {
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildAutomaticTransactionsSetting(
+    BuildContext context,
+    FinanceService service,
+  ) {
+    return StreamBuilder(
+      stream: service.watchRecurringTransactions(),
+      builder: (context, snapshot) {
+        final count = snapshot.data?.length ?? 0;
+        return ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.autorenew_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          title: const Text('Ingresos y pagos automáticos'),
+          subtitle: Text(
+            count == 0
+                ? 'Gestiona tus transacciones automáticas'
+                : '$count automático${count == 1 ? '' : 's'} configurado${count == 1 ? '' : 's'}',
+          ),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AutomaticTransactionsScreen(),
+            ),
+          ),
         );
       },
     );

@@ -266,6 +266,17 @@ class RecurringTransactions extends Table {
   DateTimeColumn get lastProcessedDate => dateTime().nullable()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   TextColumn get description => text().nullable()();
+  BoolColumn get notificationsEnabled =>
+      boolean().withDefault(const Constant(false))();
+  IntColumn get notificationHour =>
+      integer().nullable()(); // Hora de notificación (0-23)
+  IntColumn get notificationMinute =>
+      integer().nullable()(); // Minuto de notificación (0-59)
+  TextColumn get linkedFinanceModule =>
+      text().nullable()(); // 'loan' o 'savings'
+  TextColumn get linkedLoanId => text().nullable()(); // ID del préstamo vinculado
+  TextColumn get linkedSavingsGoalId =>
+      text().nullable()(); // ID de la meta de ahorro vinculada
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1084,31 +1095,168 @@ class AppDatabase extends _$AppDatabase {
         continue;
       }
 
-      // Verificar si toca procesar
-      if (recurring.lastProcessedDate == null ||
-          _shouldProcessRecurring(recurring, now)) {
-        // Crear la transacción
-        await insertTransaction(TransactionsCompanion.insert(
-          id: '${recurring.id}_${now.millisecondsSinceEpoch}',
-          title: recurring.title,
-          amount: recurring.amount,
-          type: recurring.type,
-          category: recurring.category,
-          date: now,
-          description: Value(
-              'Transacción recurrente: ${recurring.description ?? recurring.title}'),
-          source: Value(recurring.source),
-          isRecurring: const Value(true),
-          recurringFrequency: Value(recurring.frequency),
-        ));
+      // Calcular la fecha/hora esperada para procesar esta transacción
+      final expectedDateTime = _calculateExpectedProcessingDateTime(
+        recurring: recurring,
+        now: now,
+      );
 
-        // Actualizar fecha de último procesamiento
-        await (update(recurringTransactions)
-              ..where((r) => r.id.equals(recurring.id)))
-            .write(
-                RecurringTransactionsCompanion(lastProcessedDate: Value(now)));
+      if (expectedDateTime == null) {
+        continue; // No es momento de procesar aún
+      }
+
+      // Verificar si ya pasó la fecha/hora esperada y si toca procesar
+      // expectedDateTime ya fue verificado que no es null arriba
+      if (now.isAfter(expectedDateTime) || now.isAtSameMomentAs(expectedDateTime)) {
+        if (recurring.lastProcessedDate == null ||
+            _shouldProcessRecurring(recurring, now)) {
+          // Usar la fecha/hora esperada (no ahora) para mantener consistencia
+          final processingDate = expectedDateTime.isBefore(now) 
+              ? expectedDateTime 
+              : DateTime(
+                  now.year,
+                  now.month,
+                  now.day,
+                  expectedDateTime.hour,
+                  expectedDateTime.minute,
+                );
+
+          // Crear la transacción
+          await insertTransaction(TransactionsCompanion.insert(
+            id: '${recurring.id}_${processingDate.millisecondsSinceEpoch}',
+            title: recurring.title,
+            amount: recurring.amount,
+            type: recurring.type,
+            category: recurring.category,
+            date: processingDate,
+            description: Value(
+                'Transacción recurrente: ${recurring.description ?? recurring.title}'),
+            source: Value(recurring.source),
+            isRecurring: const Value(true),
+            recurringFrequency: Value(recurring.frequency),
+          ));
+
+          // Actualizar fecha de último procesamiento
+          await (update(recurringTransactions)
+                ..where((r) => r.id.equals(recurring.id)))
+              .write(
+                  RecurringTransactionsCompanion(lastProcessedDate: Value(processingDate)));
+        }
       }
     }
+  }
+
+  /// Calcular la fecha/hora esperada para procesar una transacción recurrente
+  DateTime? _calculateExpectedProcessingDateTime({
+    required RecurringTransaction recurring,
+    required DateTime now,
+  }) {
+    // Determinar la hora a usar: notificación si está configurada, sino 1pm (13:00)
+    final processingHour = recurring.notificationHour ?? 13;
+    final processingMinute = recurring.notificationMinute ?? 0;
+
+    // Si la fecha de inicio es en el futuro, usar esa fecha con la hora configurada
+    if (recurring.startDate.isAfter(now)) {
+      return DateTime(
+        recurring.startDate.year,
+        recurring.startDate.month,
+        recurring.startDate.day,
+        processingHour,
+        processingMinute,
+      );
+    }
+
+    // Calcular la próxima fecha según la frecuencia
+    DateTime? nextDate;
+
+    switch (recurring.frequency) {
+      case 'weekly':
+        if (recurring.dayOfWeek == null) return null;
+        // Calcular próximo día de la semana
+        final dayOfWeek = recurring.dayOfWeek!;
+        final daysUntilNext = (dayOfWeek - now.weekday + 7) % 7;
+        if (daysUntilNext == 0) {
+          // Si es hoy, verificar si ya pasó la hora
+          final todayAtTime = DateTime(
+            now.year,
+            now.month,
+            now.day,
+            processingHour,
+            processingMinute,
+          );
+          if (now.isBefore(todayAtTime)) {
+            return todayAtTime;
+          }
+          // Si ya pasó, usar la próxima semana
+          nextDate = now.add(const Duration(days: 7));
+        } else {
+          nextDate = now.add(Duration(days: daysUntilNext));
+        }
+        break;
+
+      case 'biweekly':
+        // Cada 14 días desde la fecha de inicio
+        final daysSinceStart = now.difference(recurring.startDate).inDays;
+        final periodsPassed = daysSinceStart ~/ 14;
+        nextDate = recurring.startDate.add(Duration(days: (periodsPassed + 1) * 14));
+        break;
+
+      case 'monthly':
+        if (recurring.dayOfMonth == null) return null;
+        // Próximo mes con el día especificado
+        final dayOfMonth = recurring.dayOfMonth!;
+        nextDate = DateTime(now.year, now.month, dayOfMonth, processingHour, processingMinute);
+        if (nextDate.isBefore(now) || (nextDate.day != dayOfMonth)) {
+          // Si ya pasó este mes o el día no existe, ir al siguiente mes
+          nextDate = DateTime(now.year, now.month + 1, dayOfMonth, processingHour, processingMinute);
+        }
+        break;
+
+      case 'quarterly':
+        // Cada 3 meses desde la fecha de inicio
+        final monthsSinceStart = (now.year - recurring.startDate.year) * 12 + now.month - recurring.startDate.month;
+        final quartersPassed = monthsSinceStart ~/ 3;
+        nextDate = DateTime(
+          recurring.startDate.year,
+          recurring.startDate.month + (quartersPassed + 1) * 3,
+          recurring.startDate.day,
+          processingHour,
+          processingMinute,
+        );
+        break;
+
+      case 'yearly':
+        // Cada año desde la fecha de inicio
+        nextDate = DateTime(
+          now.year + 1,
+          recurring.startDate.month,
+          recurring.startDate.day,
+          processingHour,
+          processingMinute,
+        );
+        break;
+
+      default:
+        return null;
+    }
+
+    // Asegurar que la hora y minuto sean correctos
+    // nextDate siempre tiene un valor aquí (el switch retorna null en default antes de llegar aquí)
+    final finalDate = DateTime(
+      nextDate.year,
+      nextDate.month,
+      nextDate.day,
+      processingHour,
+      processingMinute,
+    );
+
+    // Si hay fecha de fin y la próxima fecha la excede, no procesar
+    final endDate = recurring.endDate;
+    if (endDate != null && finalDate.isAfter(endDate)) {
+      return null;
+    }
+
+    return finalDate;
   }
 
   bool _shouldProcessRecurring(RecurringTransaction recurring, DateTime now) {

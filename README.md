@@ -2,6 +2,29 @@
 
 Aplicación móvil completa de gestión financiera personal desarrollada con Flutter.
 
+## 🆕 Versión 1.4.2 - Novedades
+
+### 🤖 **Sistema de Ingresos y Pagos Automáticos**
+- **Gestión Completa de Automáticos**: Nueva sección en ajustes para gestionar ingresos y pagos automáticos (como nómina, débitos automáticos del banco, etc.)
+- **Creación y Edición**: Crea y edita automáticos con toda la información necesaria:
+  - Título y monto
+  - Categoría o fuente de ingreso según el tipo
+  - Frecuencia configurable (semanal, quincenal, mensual, trimestral, anual)
+  - Día específico del mes o semana según la frecuencia
+  - Fecha de inicio y fin (opcional)
+  - Descripción opcional
+- **Vinculación con Finanzas**: Los automáticos pueden vincularse opcionalmente a:
+  - **Gastos**: Vincular a deudas (préstamos recibidos) o metas de ahorro
+  - **Ingresos**: Vincular a préstamos dados (que me deben)
+- **Notificaciones Personalizadas**: Cada automático puede tener notificaciones activadas o desactivadas individualmente, con hora personalizada
+- **Vista Organizada**: Los automáticos se muestran separados por tipo (Ingresos automáticos / Pagos automáticos) con indicadores visuales de estado y notificaciones
+- **Integración en Ajustes**: Acceso rápido desde la sección "Automatización" en ajustes, ubicada estratégicamente antes de la configuración de moneda
+
+### ✨ Otras Mejoras
+- **Interfaz Intuitiva**: Diseño consistente con el resto de la aplicación
+- **Gestión Simplificada**: Fácil creación, edición y eliminación de automáticos
+- **Feedback Visual**: Indicadores claros del estado de cada automático (activo/inactivo, notificaciones activadas)
+
 ## 🆕 Versión 1.3.2 - Novedades
 
 ### 🎯 **Corrección en Ingresos y Gastos del Home**
@@ -124,6 +147,14 @@ Aplicación móvil completa de gestión financiera personal desarrollada con Flu
 - Soporte para transacciones recurrentes
 - **Vinculación a Finanzas**: Opción de vincular transacciones a módulos financieros (ahorros, préstamos)
 - **Registro Automático**: Los pagos vinculados se registran automáticamente en el módulo correspondiente
+
+### 🤖 Ingresos y Pagos Automáticos
+- **Gestión Completa**: Crea y gestiona ingresos y pagos automáticos (nómina, débitos automáticos, etc.)
+- **Configuración Flexible**: Define frecuencia (semanal, quincenal, mensual, trimestral, anual) y días específicos
+- **Vinculación con Finanzas**: Opción de vincular automáticos a préstamos o metas de ahorro
+- **Notificaciones Personalizadas**: Activa o desactiva notificaciones para cada automático con hora personalizada
+- **Vista Organizada**: Separación clara entre ingresos automáticos y pagos automáticos
+- **Fechas de Inicio y Fin**: Configura períodos específicos para cada automático
 
 ### 🏦 Hub Financiero
 - Vista centralizada de todas las finanzas
@@ -287,7 +318,14 @@ lib/
 
 ## Historial de Versiones
 
-### Versión 1.3.2 (Actual)
+### Versión 1.4.2 (Actual)
+- 🤖 Sistema completo de ingresos y pagos automáticos
+- 🔗 Vinculación de automáticos con finanzas (préstamos y ahorros)
+- 🔔 Notificaciones personalizadas por automático
+- 📍 Sección de automatización en ajustes, ubicada estratégicamente
+- ✨ Interfaz intuitiva para gestión de automáticos
+
+### Versión 1.3.2
 - 🎯 Corrección en filtrado de ingresos y gastos del home según período configurado
 - 🔄 Sincronización automática con la configuración de balance reset period
 - ✨ Cálculo preciso de períodos diarios, semanales, mensuales y totales
