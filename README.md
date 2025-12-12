@@ -365,7 +365,6 @@ Este proyecto es de código abierto bajo la licencia MIT.
 
 ---
 
-Desarrollado con 💚 usando Flutter
-#   b r o t e 
- 
- 
+Desarrollado usando Flutter
+
+**Desarrollado por DRKDEV**
