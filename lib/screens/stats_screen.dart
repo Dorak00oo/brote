@@ -24,10 +24,51 @@ enum PeriodType {
   custom,
 }
 
+enum ChartDisplayType {
+  bars, // Barras
+  line, // Líneas
+  area, // Área
+  candlestick, // Velas
+}
+
+enum PieChartDisplayType {
+  pie, // Pastel
+  donut, // Dona
+  bar, // Barras horizontales
+}
+
 class _StatsScreenState extends State<StatsScreen> {
   PeriodType _selectedPeriod = PeriodType.month;
   DateTime? _customStartDate;
   DateTime? _customEndDate;
+  
+  ChartDisplayType _getChartDisplayType(FinanceService service) {
+    final type = service.userSettings.trendChartType;
+    switch (type) {
+      case 'line':
+        return ChartDisplayType.line;
+      case 'area':
+        return ChartDisplayType.area;
+      case 'candlestick':
+        return ChartDisplayType.candlestick;
+      default:
+        return ChartDisplayType.bars;
+    }
+  }
+  
+  PieChartDisplayType _getPieChartType(FinanceService service) {
+    // Usar el mismo tipo para ambos gráficos (ingresos y gastos)
+    // Usar incomeChartType como referencia principal
+    final type = service.userSettings.incomeChartType;
+    switch (type) {
+      case 'donut':
+        return PieChartDisplayType.donut;
+      case 'bar':
+        return PieChartDisplayType.bar;
+      default:
+        return PieChartDisplayType.pie;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -727,6 +768,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final trendData = _getTrendDataForPeriod(service);
     if (trendData.isEmpty) return const SizedBox.shrink();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final viewMode = _getChartDisplayType(service);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -740,12 +782,13 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            _getPeriodTitle(),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
+          // Título y selector de tipo de gráfico
+              Text(
+                _getPeriodTitle(),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -763,72 +806,549 @@ class _StatsScreenState extends State<StatsScreen> {
           const SizedBox(height: 20),
           SizedBox(
             height: 200,
-            child: BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceAround,
-                maxY: _getMaxValue(trendData) * 1.2,
-                barTouchData: BarTouchData(enabled: false),
-                titlesData: FlTitlesData(
-                  show: true,
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        if (value >= 0 && value < trendData.length) {
-                          final label =
-                              trendData[value.toInt()]['label'] as String;
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              label,
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          );
-                        }
-                        return const Text('');
-                      },
+            child: _buildChartByType(context, trendData, viewMode),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getPieChartTypeIcon(PieChartDisplayType type) {
+    switch (type) {
+      case PieChartDisplayType.pie:
+        return Icons.pie_chart;
+      case PieChartDisplayType.donut:
+        return Icons.donut_large;
+      case PieChartDisplayType.bar:
+        return Icons.bar_chart;
+    }
+  }
+
+  Widget _buildPieChartByType(
+    BuildContext context,
+    PieChartDisplayType displayType,
+    List<MapEntry<String, double>> sortedEntries,
+    double total,
+    Color Function(String, int) getColor,
+    Color accentColor,
+  ) {
+    switch (displayType) {
+      case PieChartDisplayType.pie:
+        return _buildPieChartView(context, sortedEntries, total, getColor, 0);
+      case PieChartDisplayType.donut:
+        return _buildPieChartView(context, sortedEntries, total, getColor, 40);
+      case PieChartDisplayType.bar:
+        return _buildBarChartView(context, sortedEntries, total, getColor, accentColor);
+    }
+  }
+
+  Widget _buildPieChartView(
+    BuildContext context,
+    List<MapEntry<String, double>> sortedEntries,
+    double total,
+    Color Function(String, int) getColor,
+    double centerSpaceRadius,
+  ) {
+    // Calcular si es pie (sin agujero) o donut (con agujero)
+    final isDonut = centerSpaceRadius > 0;
+    // Usar el mismo radio y estilo que _buildCategoryPieView
+    final sectionRadius = isDonut ? 30.0 : 40.0;
+    
+    return Row(
+      children: [
+        // Gráfico de pastel/dona
+        SizedBox(
+          width: 120,
+          height: 120,
+          child: PieChart(
+            PieChartData(
+              sectionsSpace: 2,
+              centerSpaceRadius: centerSpaceRadius,
+              sections: List.generate(
+                sortedEntries.length > 6 ? 6 : sortedEntries.length,
+                (index) {
+                  final entry = sortedEntries[index];
+                  final percentage = (entry.value / total) * 100;
+                  // Mostrar porcentaje solo en las primeras 3 categorías para consistencia
+                  final showTitle = index < 3 && percentage >= 5;
+                  return PieChartSectionData(
+                    value: entry.value,
+                    color: getColor(entry.key, index),
+                    radius: sectionRadius,
+                    showTitle: showTitle,
+                    title: '${percentage.toStringAsFixed(0)}%',
+                    titleStyle: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                  ),
-                  leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                gridData: const FlGridData(show: false),
-                barGroups: List.generate(trendData.length, (index) {
-                  final data = trendData[index];
-                  return BarChartGroupData(
-                    x: index,
-                    barRods: [
-                      BarChartRodData(
-                        toY: (data['income'] as double),
-                        color: Theme.of(context).colorScheme.income,
-                        width: trendData.length > 7 ? 8 : 12,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(4),
-                        ),
-                      ),
-                      BarChartRodData(
-                        toY: (data['expenses'] as double),
-                        color: Theme.of(context).colorScheme.expense,
-                        width: trendData.length > 7 ? 8 : 12,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(4),
-                        ),
-                      ),
-                    ],
                   );
-                }),
+                },
               ),
             ),
           ),
+        ),
+        const SizedBox(width: 16),
+        // Leyenda con todos los datos
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ...sortedEntries.asMap().entries.map((mapEntry) {
+                final index = mapEntry.key;
+                final entry = mapEntry.value;
+                final percentage = (entry.value / total) * 100;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: getColor(entry.key, index),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          entry.key,
+                          style: const TextStyle(fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${percentage.toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: getColor(entry.key, index),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBarChartView(
+    BuildContext context,
+    List<MapEntry<String, double>> sortedEntries,
+    double total,
+    Color Function(String, int) getColor,
+    Color accentColor,
+  ) {
+    return Column(
+      children: [
+        // Gráfico de barras horizontales personalizado
+        ...sortedEntries.asMap().entries.map((mapEntry) {
+          final index = mapEntry.key;
+          final entry = mapEntry.value;
+          final percentage = (entry.value / total) * 100;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        entry.key,
+                        style: const TextStyle(fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${percentage.toStringAsFixed(0)}%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: getColor(entry.key, index),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Stack(
+                  children: [
+                    Container(
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: percentage / 100,
+                      child: Container(
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: getColor(entry.key, index),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildChartByType(
+    BuildContext context,
+    List<Map<String, dynamic>> trendData,
+    ChartDisplayType displayType,
+  ) {
+    switch (displayType) {
+      case ChartDisplayType.bars:
+        return _buildBarChart(context, trendData);
+      case ChartDisplayType.line:
+        return _buildLineChart(context, trendData);
+      case ChartDisplayType.area:
+        return _buildAreaChart(context, trendData);
+      case ChartDisplayType.candlestick:
+        return _buildCandlestickChart(context, trendData);
+    }
+  }
+
+  Widget _buildBarChart(BuildContext context, List<Map<String, dynamic>> trendData) {
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: _getMaxValue(trendData) * 1.2,
+        barTouchData: BarTouchData(enabled: false),
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                if (value >= 0 && value < trendData.length) {
+                  final label = trendData[value.toInt()]['label'] as String;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      label,
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  );
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        gridData: const FlGridData(show: false),
+        barGroups: List.generate(trendData.length, (index) {
+          final data = trendData[index];
+          return BarChartGroupData(
+            x: index,
+            barRods: [
+              BarChartRodData(
+                toY: (data['income'] as double),
+                color: Theme.of(context).colorScheme.income,
+                width: trendData.length > 7 ? 8 : 12,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(4),
+                ),
+              ),
+              BarChartRodData(
+                toY: (data['expenses'] as double),
+                color: Theme.of(context).colorScheme.expense,
+                width: trendData.length > 7 ? 8 : 12,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(4),
+                ),
+              ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildLineChart(BuildContext context, List<Map<String, dynamic>> trendData) {
+    final incomeColor = Theme.of(context).colorScheme.income;
+    final expenseColor = Theme.of(context).colorScheme.expense;
+    final maxValue = _getMaxValue(trendData);
+    final maxY = maxValue * 1.2;
+    final horizontalInterval = maxY > 0 ? maxY / 5 : 1.0;
+
+    return LineChart(
+      LineChartData(
+        maxY: maxY > 0 ? maxY : 1.0,
+        lineTouchData: LineTouchData(enabled: false),
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                if (value >= 0 && value < trendData.length) {
+                  final label = trendData[value.toInt()]['label'] as String;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      label,
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  );
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: horizontalInterval,
+          getDrawingHorizontalLine: (value) {
+            return FlLine(
+              color: Colors.grey.withOpacity(0.2),
+              strokeWidth: 1,
+            );
+          },
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: List.generate(trendData.length, (index) {
+              return FlSpot(index.toDouble(), trendData[index]['income'] as double);
+            }),
+            isCurved: true,
+            color: incomeColor,
+            barWidth: 3,
+            dotData: const FlDotData(show: true),
+            belowBarData: BarAreaData(show: false),
+          ),
+          LineChartBarData(
+            spots: List.generate(trendData.length, (index) {
+              return FlSpot(index.toDouble(), trendData[index]['expenses'] as double);
+            }),
+            isCurved: true,
+            color: expenseColor,
+            barWidth: 3,
+            dotData: const FlDotData(show: true),
+            belowBarData: BarAreaData(show: false),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAreaChart(BuildContext context, List<Map<String, dynamic>> trendData) {
+    final incomeColor = Theme.of(context).colorScheme.income;
+    final expenseColor = Theme.of(context).colorScheme.expense;
+    final maxValue = _getMaxValue(trendData);
+    final maxY = maxValue * 1.2;
+    final horizontalInterval = maxY > 0 ? maxY / 5 : 1.0;
+
+    return LineChart(
+      LineChartData(
+        maxY: maxY > 0 ? maxY : 1.0,
+        minY: 0, // Asegurar que el gráfico empiece en 0
+        lineTouchData: LineTouchData(enabled: false),
+        clipData: const FlClipData.all(), // Evitar que las curvas se salgan del área
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                if (value >= 0 && value < trendData.length) {
+                  final label = trendData[value.toInt()]['label'] as String;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      label,
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  );
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: horizontalInterval,
+          getDrawingHorizontalLine: (value) {
+            return FlLine(
+              color: Colors.grey.withOpacity(0.2),
+              strokeWidth: 1,
+            );
+          },
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: List.generate(trendData.length, (index) {
+              return FlSpot(index.toDouble(), trendData[index]['income'] as double);
+            }),
+            isCurved: true,
+            curveSmoothness: 0.25, // Suavizar la curva para evitar picos extremos
+            preventCurveOverShooting: true, // Prevenir que la curva sobrepase los puntos
+            color: incomeColor,
+            barWidth: 2,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: incomeColor.withOpacity(0.3),
+              cutOffY: 0,
+              applyCutOffY: true, // Asegurar que el área no baje de 0
+            ),
+          ),
+          LineChartBarData(
+            spots: List.generate(trendData.length, (index) {
+              return FlSpot(index.toDouble(), trendData[index]['expenses'] as double);
+            }),
+            isCurved: true,
+            curveSmoothness: 0.25, // Suavizar la curva
+            preventCurveOverShooting: true, // Prevenir overshooting
+            color: expenseColor,
+            barWidth: 2,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: expenseColor.withOpacity(0.3),
+              cutOffY: 0,
+              applyCutOffY: true, // Asegurar que el área no baje de 0
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCandlestickChart(BuildContext context, List<Map<String, dynamic>> trendData) {
+    // Para velas, usamos barras pero con un estilo diferente que simula velas
+    // donde el alto es el máximo entre ingresos y gastos, y el bajo es el mínimo
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: _getMaxValue(trendData) * 1.2,
+        barTouchData: BarTouchData(enabled: false),
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                if (value >= 0 && value < trendData.length) {
+                  final label = trendData[value.toInt()]['label'] as String;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      label,
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  );
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        gridData: const FlGridData(show: false),
+        barGroups: List.generate(trendData.length, (index) {
+          final data = trendData[index];
+          final income = data['income'] as double;
+          final expenses = data['expenses'] as double;
+          final max = income > expenses ? income : expenses;
+          final min = income < expenses ? income : expenses;
+          final isIncomeHigher = income > expenses;
+          
+          return BarChartGroupData(
+            x: index,
+            barRods: [
+              // Vela principal (cuerpo)
+              BarChartRodData(
+                fromY: min,
+                toY: max,
+                color: isIncomeHigher 
+                    ? Theme.of(context).colorScheme.income
+                    : Theme.of(context).colorScheme.expense,
+                width: trendData.length > 7 ? 6 : 10,
+                borderRadius: BorderRadius.zero,
+              ),
+              // Línea superior (mecha alta)
+              BarChartRodData(
+                fromY: max,
+                toY: max * 1.05,
+                color: isIncomeHigher 
+                    ? Theme.of(context).colorScheme.income
+                    : Theme.of(context).colorScheme.expense,
+                width: 1,
+                borderRadius: BorderRadius.zero,
+              ),
+              // Línea inferior (mecha baja)
+              BarChartRodData(
+                fromY: min * 0.95,
+                toY: min,
+                color: isIncomeHigher 
+                    ? Theme.of(context).colorScheme.income
+                    : Theme.of(context).colorScheme.expense,
+                width: 1,
+                borderRadius: BorderRadius.zero,
+              ),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -856,7 +1376,7 @@ class _StatsScreenState extends State<StatsScreen> {
       if ((d['income'] as double) > max) max = d['income'] as double;
       if ((d['expenses'] as double) > max) max = d['expenses'] as double;
     }
-    return max;
+    return max > 0 ? max : 1.0; // Asegurar que nunca sea 0
   }
 
   String _getMonthName(int month) {
@@ -926,6 +1446,26 @@ class _StatsScreenState extends State<StatsScreen> {
           Theme.of(context).colorScheme.income,
           _incomeColors,
           _getIncomeColor,
+          _getPieChartType(service),
+          (type) async {
+            String typeString;
+            switch (type) {
+              case PieChartDisplayType.pie:
+                typeString = 'pie';
+                break;
+              case PieChartDisplayType.donut:
+                typeString = 'donut';
+                break;
+              case PieChartDisplayType.bar:
+                typeString = 'bar';
+                break;
+            }
+            // Actualizar ambos gráficos con el mismo tipo
+            await service.updateChartSettings(
+              incomeChartType: typeString,
+              expenseChartType: typeString,
+            );
+          },
         ),
         const SizedBox(height: 16),
         // Gráfico de Gastos
@@ -938,6 +1478,26 @@ class _StatsScreenState extends State<StatsScreen> {
           Theme.of(context).colorScheme.expense,
           _expenseColors,
           _getExpenseColor,
+          _getPieChartType(service),
+          (type) async {
+            String typeString;
+            switch (type) {
+              case PieChartDisplayType.pie:
+                typeString = 'pie';
+                break;
+              case PieChartDisplayType.donut:
+                typeString = 'donut';
+                break;
+              case PieChartDisplayType.bar:
+                typeString = 'bar';
+                break;
+            }
+            // Actualizar ambos gráficos con el mismo tipo
+            await service.updateChartSettings(
+              incomeChartType: typeString,
+              expenseChartType: typeString,
+            );
+          },
         ),
       ],
     );
@@ -1028,6 +1588,8 @@ class _StatsScreenState extends State<StatsScreen> {
     Color accentColor,
     List<Color> fallbackColors,
     Color Function(String) getColorForCategory,
+    PieChartDisplayType displayType,
+    Function(PieChartDisplayType) onTypeChanged,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (data.isEmpty || total == 0) {
@@ -1097,107 +1659,89 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Título y total
+          // Título, total y selector de tipo
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+              Expanded(
+                child: Row(
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-              ),
-              Text(
-                currencyFormat.format(total),
-                style: TextStyle(
-                  color: accentColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                    const SizedBox(width: 8),
+                    Text(
+                      currencyFormat.format(total),
+                      style: TextStyle(
+                        color: accentColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              // Selector de tipo de gráfico
+              PopupMenuButton<PieChartDisplayType>(
+                icon: Icon(
+                  _getPieChartTypeIcon(displayType),
+                  size: 20,
+                ),
+                tooltip: 'Cambiar tipo de gráfico',
+                onSelected: onTypeChanged,
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: PieChartDisplayType.pie,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.pie_chart, size: 20),
+                        const SizedBox(width: 8),
+                        const Text('Pastel'),
+                        if (displayType == PieChartDisplayType.pie)
+                          const Icon(Icons.check, size: 16),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: PieChartDisplayType.donut,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.donut_large, size: 20),
+                        const SizedBox(width: 8),
+                        const Text('Dona'),
+                        if (displayType == PieChartDisplayType.donut)
+                          const Icon(Icons.check, size: 16),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: PieChartDisplayType.bar,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.bar_chart, size: 20),
+                        const SizedBox(width: 8),
+                        const Text('Barras'),
+                        if (displayType == PieChartDisplayType.bar)
+                          const Icon(Icons.check, size: 16),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 16),
-          // Gráfico y leyenda lado a lado
-          Row(
-            children: [
-              // Gráfico de pastel
-              SizedBox(
-                width: 120,
-                height: 120,
-                child: PieChart(
-                  PieChartData(
-                    sectionsSpace: 2,
-                    centerSpaceRadius: 30,
-                    sections: List.generate(
-                      sortedEntries.length > 6 ? 6 : sortedEntries.length,
-                      (index) {
-                        final entry = sortedEntries[index];
-                        final percentage = (entry.value / total) * 100;
-                        return PieChartSectionData(
-                          value: entry.value,
-                          color: getColor(entry.key, index),
-                          radius: 30,
-                          showTitle: percentage >= 15,
-                          title: '${percentage.toStringAsFixed(0)}%',
-                          titleStyle: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Leyenda con todos los datos
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ...sortedEntries.asMap().entries.map((mapEntry) {
-                      final index = mapEntry.key;
-                      final entry = mapEntry.value;
-                      final percentage = (entry.value / total) * 100;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: getColor(entry.key, index),
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                entry.key,
-                                style: const TextStyle(fontSize: 12),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${percentage.toStringAsFixed(0)}%',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: getColor(entry.key, index),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-            ],
+          // Gráfico y leyenda según el tipo
+          _buildPieChartByType(
+            context,
+            displayType,
+            sortedEntries,
+            total,
+            getColor,
+            accentColor,
           ),
         ],
       ),
@@ -1236,35 +1780,6 @@ class _StatsScreenState extends State<StatsScreen> {
       decimalDigits: 0,
     );
 
-    // Colores de respaldo para categorías personalizadas
-    final fallbackColors = [
-      const Color(0xFFE53935), // Rojo
-      const Color(0xFFFF6F00), // Naranja
-      const Color(0xFFAD1457), // Rosa fuerte
-      const Color(0xFF1976D2), // Azul
-      const Color(0xFF7B1FA2), // Púrpura
-      const Color(0xFFFFB300), // Amarillo/Dorado
-      const Color(0xFF00838F), // Teal
-      const Color(0xFFEC407A), // Rosa
-      const Color(0xFF8D6E63), // Marrón claro
-      const Color(0xFF43A047), // Verde
-      const Color(0xFF607D8B), // Gris azulado
-      const Color(0xFF5E35B1), // Violeta
-      const Color(0xFF039BE5), // Azul claro
-      const Color(0xFFD81B60), // Magenta
-      const Color(0xFF00897B), // Verde mar
-      Colors.grey.shade400,
-    ];
-
-    // Función para obtener color específico por categoría
-    Color getColor(String categoryName, int index) {
-      final specificColor = _expenseCategoryColors[categoryName];
-      if (specificColor != null) {
-        return specificColor;
-      }
-      return fallbackColors[index % fallbackColors.length];
-    }
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1278,93 +1793,25 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Gastos por categoría',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Gastos por categoría',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              Text(
+                currencyFormat.format(total),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.expense,
                   fontWeight: FontWeight.bold,
                 ),
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 160,
-            child: Row(
-              children: [
-                Expanded(
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 40,
-                      sections: List.generate(
-                        sortedEntries.length > 6 ? 6 : sortedEntries.length,
-                        (index) {
-                          final entry = sortedEntries[index];
-                          final percentage = (entry.value / total) * 100;
-                          // Mostrar porcentaje solo en las 3 categorías más grandes
-                          final showTitle = index < 3;
-                          return PieChartSectionData(
-                            value: entry.value,
-                            color: getColor(entry.key, index),
-                            radius: 35,
-                            showTitle: showTitle,
-                            title: '${percentage.toStringAsFixed(0)}%',
-                            titleStyle: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      sortedEntries.length > 5 ? 5 : sortedEntries.length,
-                      (index) {
-                        final entry = sortedEntries[index];
-                        final percentage = (entry.value / total) * 100;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: getColor(entry.key, index),
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  entry.key,
-                                  style: const TextStyle(fontSize: 12),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Text(
-                                '${percentage.toStringAsFixed(0)}%',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 32),
+          const SizedBox(height: 16),
           ...sortedEntries.take(5).map((entry) {
             final percentage = (entry.value / total) * 100;
             return Padding(

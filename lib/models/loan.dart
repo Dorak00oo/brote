@@ -404,6 +404,7 @@ class LoanPayment {
   final DateTime date;
   final int installmentNumber;
   final String? notes;
+  final String? transactionId; // ID de la transacción vinculada
 
   LoanPayment({
     required this.id,
@@ -412,6 +413,7 @@ class LoanPayment {
     required this.date,
     required this.installmentNumber,
     this.notes,
+    this.transactionId,
   });
 
   Map<String, dynamic> toJson() {
@@ -422,6 +424,7 @@ class LoanPayment {
       'date': date.toIso8601String(),
       'installmentNumber': installmentNumber,
       'notes': notes,
+      'transactionId': transactionId,
     };
   }
 
@@ -433,6 +436,27 @@ class LoanPayment {
       date: DateTime.parse(json['date']),
       installmentNumber: json['installmentNumber'] as int,
       notes: json['notes'],
+      transactionId: json['transactionId'],
+    );
+  }
+
+  LoanPayment copyWith({
+    String? id,
+    String? loanId,
+    double? amount,
+    DateTime? date,
+    int? installmentNumber,
+    String? notes,
+    String? transactionId,
+  }) {
+    return LoanPayment(
+      id: id ?? this.id,
+      loanId: loanId ?? this.loanId,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      installmentNumber: installmentNumber ?? this.installmentNumber,
+      notes: notes ?? this.notes,
+      transactionId: transactionId ?? this.transactionId,
     );
   }
 }

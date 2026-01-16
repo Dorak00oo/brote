@@ -698,6 +698,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               loan.paidInstallments + 1,
               date: transaction.date,
               notes: 'Vinculado desde movimiento: ${transaction.title}',
+              transactionId: transaction.id, // Vincular con la transacción
             );
           } catch (e) {
             if (mounted) {
@@ -716,6 +717,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               transaction.amount,
               date: transaction.date,
               note: 'Vinculado desde movimiento: ${transaction.title}',
+              transactionId: transaction.id, // Vincular con la transacción
             );
           } catch (e) {
             if (mounted) {

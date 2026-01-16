@@ -6,6 +6,7 @@ import '../services/finance_service.dart';
 import '../models/savings_goal.dart';
 import '../widgets/notification_config_dialog.dart';
 import 'savings_history_with_completed_screen.dart';
+import 'add_transaction_screen.dart';
 import '../main.dart';
 
 /// Formatter personalizado para formatear números con separadores mientras se escribe
@@ -1388,6 +1389,157 @@ class _SavingsScreenState extends State<SavingsScreen>
     );
   }
 
+  void _showEditContributionDialog(
+    BuildContext context,
+    SavingsGoal goal,
+    SavingsContribution contribution,
+    FinanceService service,
+  ) {
+    final amountController = TextEditingController(
+      text: service.userSettings.formatNumber(contribution.amount, decimals: 0),
+    );
+    final noteController = TextEditingController(text: contribution.note ?? '');
+    DateTime selectedDate = contribution.date;
+    final settings = service.userSettings;
+    final goalColor = goal.color != null
+        ? getColorFromHex(goal.color)
+        : getSavingsIconById(goal.iconName).color;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Editar aportación',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: amountController,
+              decoration: InputDecoration(
+                labelText: 'Monto',
+                prefixIcon: const Icon(Icons.attach_money_rounded),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                NumberFormatInputFormatter(
+                  thousandsSeparator: settings.thousandsSeparator,
+                  decimalSeparator: settings.decimalSeparator,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.calendar_today),
+              title: const Text('Fecha'),
+              subtitle: Text(
+                DateFormat('d MMMM yyyy', 'es').format(selectedDate),
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: selectedDate,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime.now(),
+                );
+                if (date != null) {
+                  selectedDate = date;
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: noteController,
+              decoration: InputDecoration(
+                labelText: 'Nota (opcional)',
+                prefixIcon: const Icon(Icons.note_rounded),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: goalColor,
+                    ),
+                    onPressed: () async {
+                      final cleanValue =
+                          NumberFormatInputFormatter.removeFormatting(
+                        amountController.text,
+                        settings.thousandsSeparator,
+                        settings.decimalSeparator,
+                      );
+                      final amount = double.tryParse(cleanValue);
+                      if (amount != null && amount > 0) {
+                        try {
+                          final updatedContribution = contribution.copyWith(
+                            amount: amount,
+                            date: selectedDate,
+                            note: noteController.text.trim().isEmpty
+                                ? null
+                                : noteController.text.trim(),
+                          );
+                          await service.updateSavingsContribution(
+                            updatedContribution,
+                          );
+                          Navigator.pop(context);
+                          Navigator.pop(context); // Cerrar también el diálogo de detalles
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Aportación actualizada'),
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: const Text('Guardar'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showGoalDetails(
     BuildContext context,
     SavingsGoal goal,
@@ -1769,6 +1921,16 @@ class _SavingsScreenState extends State<SavingsScreen>
                       FutureBuilder<List<SavingsContribution>>(
                         future: service.getSavingsContributions(goal.id),
                         builder: (context, snapshot) {
+                          final currencyFormat = NumberFormat.currency(
+                            locale: 'es_MX',
+                            symbol: service.userSettings.currencySymbol,
+                            decimalDigits: 2,
+                          );
+                          final iconOption = getSavingsIconById(goal.iconName);
+                          final contributionGoalColor = goal.color != null
+                              ? getColorFromHex(goal.color)
+                              : iconOption.color;
+                          
                           if (!snapshot.hasData || snapshot.data!.isEmpty) {
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 20),
@@ -1782,22 +1944,232 @@ class _SavingsScreenState extends State<SavingsScreen>
                           }
                           return Column(
                             children: snapshot.data!.map((contribution) {
-                              return ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                leading: const CircleAvatar(
-                                  child: Icon(Icons.add_rounded),
-                                ),
-                                title: Text(
-                                  '+${currencyFormat.format(contribution.amount)}',
-                                  style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
+                              return Dismissible(
+                                key: Key(contribution.id),
+                                direction: DismissDirection.endToStart,
+                                background: Container(
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.only(right: 20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.delete,
+                                    color: Colors.white,
                                   ),
                                 ),
-                                subtitle: Text(
-                                  DateFormat('d MMM yyyy', 'es')
-                                      .format(contribution.date),
+                                confirmDismiss: (direction) async {
+                                  return await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Eliminar aportación'),
+                                      content: const Text(
+                                        '¿Estás seguro de que quieres eliminar esta aportación?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
+                                          child: const Text('Cancelar'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.red,
+                                          ),
+                                          child: const Text('Eliminar'),
+                                        ),
+                                      ],
+                                    ),
+                                  ) ?? false;
+                                },
+                                onDismissed: (direction) async {
+                                  try {
+                                    await service.deleteSavingsContribution(
+                                      contribution.id,
+                                    );
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Aportación eliminada'),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text('Error: $e'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: CircleAvatar(
+                                    backgroundColor: contribution.transactionId != null
+                                        ? Colors.blue.withOpacity(0.2)
+                                        : contributionGoalColor.withOpacity(0.2),
+                                    child: Icon(
+                                      contribution.transactionId != null
+                                          ? Icons.link
+                                          : Icons.add_rounded,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    '+${currencyFormat.format(contribution.amount)}',
+                                    style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        DateFormat('d MMM yyyy', 'es')
+                                            .format(contribution.date),
+                                      ),
+                                      if (contribution.transactionId != null)
+                                        Text(
+                                          'Vinculado a movimiento',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.blue,
+                                          ),
+                                        ),
+                                      if (contribution.note != null &&
+                                          contribution.note!.isNotEmpty)
+                                        Text(
+                                          contribution.note!,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  trailing: PopupMenuButton<String>(
+                                    onSelected: (value) async {
+                                      if (value == 'edit') {
+                                        Navigator.pop(context);
+                                        _showEditContributionDialog(
+                                          context,
+                                          goal,
+                                          contribution,
+                                          service,
+                                        );
+                                      } else if (value == 'delete') {
+                                        Navigator.pop(context);
+                                        final confirm = await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text('Eliminar aportación'),
+                                            content: const Text(
+                                              '¿Estás seguro de que quieres eliminar esta aportación?',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(context, false),
+                                                child: const Text('Cancelar'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(context, true),
+                                                style: TextButton.styleFrom(
+                                                  foregroundColor: Colors.red,
+                                                ),
+                                                child: const Text('Eliminar'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        if (confirm == true) {
+                                          try {
+                                            await service.deleteSavingsContribution(
+                                              contribution.id,
+                                            );
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                  content: Text('Aportación eliminada'),
+                                                ),
+                                              );
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text('Error: $e'),
+                                                  backgroundColor: Colors.red,
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        }
+                                      } else if (value == 'view_transaction' &&
+                                          contribution.transactionId != null) {
+                                        Navigator.pop(context);
+                                        // Navegar a la transacción
+                                        final transaction = service.transactions
+                                            .firstWhere(
+                                          (t) => t.id == contribution.transactionId,
+                                          orElse: () => throw Exception('Not found'),
+                                        );
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => AddTransactionScreen(
+                                              transaction: transaction,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'edit',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.edit, size: 18),
+                                            SizedBox(width: 8),
+                                            Text('Editar'),
+                                          ],
+                                        ),
+                                      ),
+                                      if (contribution.transactionId != null)
+                                        const PopupMenuItem(
+                                          value: 'view_transaction',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.link, size: 18),
+                                              SizedBox(width: 8),
+                                              Text('Ver movimiento'),
+                                            ],
+                                          ),
+                                        ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete, size: 18, color: Colors.red),
+                                            SizedBox(width: 8),
+                                            Text('Eliminar', style: TextStyle(color: Colors.red)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             }).toList(),

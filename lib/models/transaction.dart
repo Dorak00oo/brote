@@ -51,5 +51,27 @@ class Transaction {
       source: json['source'],
     );
   }
+
+  Transaction copyWith({
+    String? id,
+    String? title,
+    double? amount,
+    TransactionType? type,
+    String? category,
+    DateTime? date,
+    String? description,
+    String? source,
+  }) {
+    return Transaction(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      category: category ?? this.category,
+      date: date ?? this.date,
+      description: description ?? this.description,
+      source: source ?? this.source,
+    );
+  }
 }
 

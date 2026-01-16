@@ -49,6 +49,16 @@ class SettingsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
+              // Configuración de gráficos
+              _buildSection(
+                context,
+                'Gráficos',
+                [
+                  _buildChartSettings(context, service),
+                ],
+              ),
+              const SizedBox(height: 24),
+
               // Moneda
               _buildSection(
                 context,
@@ -988,8 +998,9 @@ class SettingsScreen extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
+        // Usar Consumer para escuchar cambios del servicio
+        return Consumer<FinanceService>(
+          builder: (context, service, _) {
             // Usar allExpenseCategories que ya filtra las ocultas
             final allCategories = service.allExpenseCategories;
             final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1035,7 +1046,7 @@ class SettingsScreen extends StatelessWidget {
                             await service
                                 .addCustomCategory(controller.text.trim());
                             controller.clear();
-                            setState(() {});
+                            // El Consumer se encarga de actualizar la UI
                           }
                         },
                         child: const Text('Agregar'),
@@ -1112,7 +1123,7 @@ class SettingsScreen extends StatelessWidget {
                               // Eliminar la categoría personalizada
                               await service.deleteCustomCategory(cat);
                             }
-                            setState(() {});
+                            // El Consumer se encarga de actualizar la UI
                           },
                         );
                       }).toList(),
@@ -1122,7 +1133,7 @@ class SettingsScreen extends StatelessWidget {
                   TextButton.icon(
                     onPressed: () async {
                       await service.restoreAllDefaultCategories();
-                      setState(() {});
+                      // El Consumer se encarga de actualizar la UI
                     },
                     icon: const Icon(Icons.restore_rounded, size: 18),
                     label: const Text('Restaurar predefinidas'),
@@ -1147,8 +1158,9 @@ class SettingsScreen extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
+        // Usar Consumer para escuchar cambios del servicio
+        return Consumer<FinanceService>(
+          builder: (context, service, _) {
             // Usar allIncomeSources que ya filtra las ocultas
             final allSources = service.allIncomeSources;
             final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1195,7 +1207,7 @@ class SettingsScreen extends StatelessWidget {
                             await service
                                 .addCustomIncomeSource(controller.text.trim());
                             controller.clear();
-                            setState(() {});
+                            // El Consumer se encarga de actualizar la UI
                           }
                         },
                         child: const Text('Agregar'),
@@ -1271,7 +1283,7 @@ class SettingsScreen extends StatelessWidget {
                               // Eliminar la fuente personalizada
                               await service.deleteCustomIncomeSource(source);
                             }
-                            setState(() {});
+                            // El Consumer se encarga de actualizar la UI
                           },
                         );
                       }).toList(),
@@ -1281,7 +1293,7 @@ class SettingsScreen extends StatelessWidget {
                   TextButton.icon(
                     onPressed: () async {
                       await service.restoreAllDefaultIncomeSources();
-                      setState(() {});
+                      // El Consumer se encarga de actualizar la UI
                     },
                     icon: const Icon(Icons.restore_rounded, size: 18),
                     label: const Text('Restaurar predefinidas'),
@@ -1331,6 +1343,234 @@ class SettingsScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildChartSettings(BuildContext context, FinanceService service) {
+    return Column(
+      children: [
+        // Gráfico de tendencia
+        ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.trending_up, color: Colors.blue),
+          ),
+          title: const Text('Gráfico de tendencia'),
+          subtitle: Text(_getTrendChartTypeName(service.userSettings.trendChartType)),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => _showTrendChartTypeDialog(context, service),
+        ),
+        const Divider(height: 1),
+        // Gráfico de ingresos
+        ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.pie_chart, color: Colors.green),
+          ),
+          title: const Text('Gráfico de ingresos y gastos'),
+          subtitle: Text(_getPieChartTypeName(service.userSettings.incomeChartType)),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => _showPieChartTypeDialog(context, service, 'income'),
+        ),
+      ],
+    );
+  }
+
+  String _getTrendChartTypeName(String type) {
+    switch (type) {
+      case 'line':
+        return 'Líneas';
+      case 'area':
+        return 'Área';
+      case 'candlestick':
+        return 'Velas';
+      default:
+        return 'Barras';
+    }
+  }
+
+  String _getPieChartTypeName(String type) {
+    switch (type) {
+      case 'donut':
+        return 'Dona';
+      case 'bar':
+        return 'Barras';
+      default:
+        return 'Pastel';
+    }
+  }
+
+  void _showTrendChartTypeDialog(BuildContext context, FinanceService service) {
+    String selectedType = service.userSettings.trendChartType;
+    
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Tipo de gráfico de tendencia'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                title: const Text('Barras'),
+                value: 'bars',
+                groupValue: selectedType,
+                onChanged: (value) async {
+                  if (value != null) {
+                    setState(() {
+                      selectedType = value;
+                    });
+                    await service.updateChartSettings(trendChartType: value);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Líneas'),
+                value: 'line',
+                groupValue: selectedType,
+                onChanged: (value) async {
+                  if (value != null) {
+                    setState(() {
+                      selectedType = value;
+                    });
+                    await service.updateChartSettings(trendChartType: value);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Área'),
+                value: 'area',
+                groupValue: selectedType,
+                onChanged: (value) async {
+                  if (value != null) {
+                    setState(() {
+                      selectedType = value;
+                    });
+                    await service.updateChartSettings(trendChartType: value);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Velas'),
+                value: 'candlestick',
+                groupValue: selectedType,
+                onChanged: (value) async {
+                  if (value != null) {
+                    setState(() {
+                      selectedType = value;
+                    });
+                    await service.updateChartSettings(trendChartType: value);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPieChartTypeDialog(
+    BuildContext context,
+    FinanceService service,
+    String chartType,
+  ) {
+    // Usar el mismo tipo para ambos gráficos (enlazados)
+    String selectedType = service.userSettings.incomeChartType;
+    final title = 'Tipo de gráfico de ingresos y gastos';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                title: const Text('Pastel'),
+                value: 'pie',
+                groupValue: selectedType,
+                onChanged: (value) async {
+                  if (value != null) {
+                    setState(() {
+                      selectedType = value;
+                    });
+                    // Actualizar ambos gráficos con el mismo tipo
+                    await service.updateChartSettings(
+                      incomeChartType: value,
+                      expenseChartType: value,
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Dona'),
+                value: 'donut',
+                groupValue: selectedType,
+                onChanged: (value) async {
+                  if (value != null) {
+                    setState(() {
+                      selectedType = value;
+                    });
+                    // Actualizar ambos gráficos con el mismo tipo
+                    await service.updateChartSettings(
+                      incomeChartType: value,
+                      expenseChartType: value,
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Barras'),
+                value: 'bar',
+                groupValue: selectedType,
+                onChanged: (value) async {
+                  if (value != null) {
+                    setState(() {
+                      selectedType = value;
+                    });
+                    // Actualizar ambos gráficos con el mismo tipo
+                    await service.updateChartSettings(
+                      incomeChartType: value,
+                      expenseChartType: value,
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

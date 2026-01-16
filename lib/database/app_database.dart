@@ -114,6 +114,7 @@ class SavingsContributions extends Table {
   RealColumn get amount => real()();
   DateTimeColumn get date => dateTime()();
   TextColumn get note => text().nullable()();
+  TextColumn get transactionId => text().nullable()(); // ID de la transacción vinculada
 
   @override
   Set<Column> get primaryKey => {id};
@@ -205,6 +206,7 @@ class LoanPayments extends Table {
   DateTimeColumn get date => dateTime()();
   IntColumn get installmentNumber => integer()();
   TextColumn get notes => text().nullable()();
+  TextColumn get transactionId => text().nullable()(); // ID de la transacción vinculada
 
   @override
   Set<Column> get primaryKey => {id};
@@ -237,6 +239,12 @@ class UserSettingsTable extends Table {
   IntColumn get balanceResetDayOfWeek => integer()
       .nullable()(); // Día de la semana para reinicio semanal (1=lunes, 7=domingo)
   TextColumn get theme => text().nullable()();
+  TextColumn get trendChartType => text()
+      .withDefault(const Constant('bars'))(); // Tipo de gráfico de tendencia
+  TextColumn get incomeChartType => text()
+      .withDefault(const Constant('pie'))(); // Tipo de gráfico de ingresos
+  TextColumn get expenseChartType => text()
+      .withDefault(const Constant('pie'))(); // Tipo de gráfico de gastos
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime().nullable()();
 
@@ -303,7 +311,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration {
@@ -531,6 +539,56 @@ class AppDatabase extends _$AppDatabase {
               }
               // La columna ya existe, continuar sin error
             }
+          }
+        }
+        if (from < 17) {
+          // Migración de versión 16 a 17
+          // Agregar columnas para configuración de gráficos
+          try {
+            final result = await customSelect(
+              "PRAGMA table_info(user_settings)",
+              readsFrom: {},
+            ).get();
+
+            final hasTrendColumn = result.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'trend_chart_type');
+            final hasIncomeColumn = result.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'income_chart_type');
+            final hasExpenseColumn = result.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'expense_chart_type');
+
+            if (!hasTrendColumn) {
+              await customStatement(
+                "ALTER TABLE user_settings ADD COLUMN trend_chart_type TEXT NOT NULL DEFAULT 'bars'",
+              );
+            }
+            if (!hasIncomeColumn) {
+              await customStatement(
+                "ALTER TABLE user_settings ADD COLUMN income_chart_type TEXT NOT NULL DEFAULT 'pie'",
+              );
+            }
+            if (!hasExpenseColumn) {
+              await customStatement(
+                "ALTER TABLE user_settings ADD COLUMN expense_chart_type TEXT NOT NULL DEFAULT 'pie'",
+              );
+            }
+          } catch (e) {
+            // Si falla, intentar agregar las columnas directamente
+            try {
+              await customStatement(
+                "ALTER TABLE user_settings ADD COLUMN trend_chart_type TEXT NOT NULL DEFAULT 'bars'",
+              );
+            } catch (_) {}
+            try {
+              await customStatement(
+                "ALTER TABLE user_settings ADD COLUMN income_chart_type TEXT NOT NULL DEFAULT 'pie'",
+              );
+            } catch (_) {}
+            try {
+              await customStatement(
+                "ALTER TABLE user_settings ADD COLUMN expense_chart_type TEXT NOT NULL DEFAULT 'pie'",
+              );
+            } catch (_) {}
           }
         }
       },
@@ -803,18 +861,56 @@ class AppDatabase extends _$AppDatabase {
     return result;
   }
 
-  Future<int> deleteSavingsContribution(
-      String id, String goalId, double amount) async {
+  Future<int> updateSavingsContribution(
+      SavingsContributionsCompanion contribution) async {
+    // Obtener la contribución actual para calcular la diferencia
+    final current = await (select(savingsContributions)
+          ..where((c) => c.id.equals(contribution.id.value)))
+        .getSingleOrNull();
+    
+    if (current == null) {
+      throw Exception('Contribution not found');
+    }
+    
+    final result = await (update(savingsContributions)
+          ..where((c) => c.id.equals(contribution.id.value)))
+        .write(contribution);
+
+    // Actualizar el monto de la meta si cambió el monto
+    if (contribution.amount.value != current.amount) {
+      final goal = await getSavingsGoalById(current.savingsGoalId);
+      if (goal != null) {
+        final difference = contribution.amount.value - current.amount;
+        final newAmount = goal.currentAmount + difference;
+        await (update(savingsGoals)..where((s) => s.id.equals(current.savingsGoalId)))
+            .write(SavingsGoalsCompanion(
+                currentAmount: Value(newAmount > 0 ? newAmount : 0)));
+      }
+    }
+
+    return result;
+  }
+
+  Future<int> deleteSavingsContribution(String id) async {
+    // Obtener la contribución antes de eliminarla
+    final contribution = await (select(savingsContributions)
+          ..where((c) => c.id.equals(id)))
+        .getSingleOrNull();
+    
+    if (contribution == null) {
+      throw Exception('Contribution not found');
+    }
+    
     final result = await (delete(savingsContributions)
           ..where((c) => c.id.equals(id)))
         .go();
 
     // Actualizar el monto de la meta
-    final goal = await getSavingsGoalById(goalId);
+    final goal = await getSavingsGoalById(contribution.savingsGoalId);
     if (goal != null) {
-      final newAmount = goal.currentAmount - amount;
-      await (update(savingsGoals)..where((s) => s.id.equals(goalId))).write(
-          SavingsGoalsCompanion(
+      final newAmount = goal.currentAmount - contribution.amount;
+      await (update(savingsGoals)..where((s) => s.id.equals(contribution.savingsGoalId)))
+          .write(SavingsGoalsCompanion(
               currentAmount: Value(newAmount > 0 ? newAmount : 0)));
     }
 
@@ -1003,22 +1099,75 @@ class AppDatabase extends _$AppDatabase {
     return result;
   }
 
-  Future<int> deleteLoanPayment(String id, String loanId, double amount) async {
+  Future<int> updateLoanPayment(LoanPaymentsCompanion payment) async {
+    // Obtener el pago actual para calcular la diferencia
+    final current = await (select(loanPayments)
+          ..where((p) => p.id.equals(payment.id.value)))
+        .getSingleOrNull();
+    
+    if (current == null) {
+      throw Exception('Payment not found');
+    }
+    
+    final result = await (update(loanPayments)
+          ..where((p) => p.id.equals(payment.id.value)))
+        .write(payment);
+
+    // Actualizar el préstamo si cambió el monto
+    if (payment.amount.value != current.amount) {
+      final loan = await getLoanById(current.loanId);
+      if (loan != null) {
+        final difference = payment.amount.value - current.amount;
+        final newPaidAmount = loan.paidAmount + difference;
+        
+        String newStatus = loan.status;
+        if (newPaidAmount >= (loan.installmentAmount * loan.totalInstallments)) {
+          newStatus = 'paidOff';
+        } else if (newPaidAmount < loan.paidAmount && loan.status == 'paidOff') {
+          newStatus = 'active';
+        }
+
+        await (update(loans)..where((l) => l.id.equals(current.loanId)))
+            .write(LoansCompanion(
+          paidAmount: Value(newPaidAmount > 0 ? newPaidAmount : 0),
+          status: Value(newStatus),
+        ));
+      }
+    }
+
+    return result;
+  }
+
+  Future<int> deleteLoanPayment(String id) async {
+    // Obtener el pago antes de eliminarlo
+    final payment = await (select(loanPayments)
+          ..where((p) => p.id.equals(id)))
+        .getSingleOrNull();
+    
+    if (payment == null) {
+      throw Exception('Payment not found');
+    }
+    
     final result =
         await (delete(loanPayments)..where((p) => p.id.equals(id))).go();
 
     // Actualizar el préstamo
-    final loan = await getLoanById(loanId);
+    final loan = await getLoanById(payment.loanId);
     if (loan != null) {
-      final newPaidAmount = loan.paidAmount - amount;
+      final newPaidAmount = loan.paidAmount - payment.amount;
       final newPaidInstallments = loan.paidInstallments - 1;
 
-      await (update(loans)..where((l) => l.id.equals(loanId)))
+      String newStatus = loan.status;
+      if (loan.status == 'paidOff' && newPaidAmount < (loan.installmentAmount * loan.totalInstallments)) {
+        newStatus = 'active';
+      }
+
+      await (update(loans)..where((l) => l.id.equals(payment.loanId)))
           .write(LoansCompanion(
         paidAmount: Value(newPaidAmount > 0 ? newPaidAmount : 0),
         paidInstallments:
             Value(newPaidInstallments > 0 ? newPaidInstallments : 0),
-        status: const Value('active'),
+        status: Value(newStatus),
       ));
     }
 

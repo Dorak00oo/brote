@@ -192,6 +192,7 @@ class SavingsContribution {
   final double amount;
   final DateTime date;
   final String? note;
+  final String? transactionId; // ID de la transacción vinculada
 
   SavingsContribution({
     required this.id,
@@ -199,6 +200,7 @@ class SavingsContribution {
     required this.amount,
     required this.date,
     this.note,
+    this.transactionId,
   });
 
   Map<String, dynamic> toJson() {
@@ -208,6 +210,7 @@ class SavingsContribution {
       'amount': amount,
       'date': date.toIso8601String(),
       'note': note,
+      'transactionId': transactionId,
     };
   }
 
@@ -218,6 +221,25 @@ class SavingsContribution {
       amount: (json['amount'] as num).toDouble(),
       date: DateTime.parse(json['date']),
       note: json['note'],
+      transactionId: json['transactionId'],
+    );
+  }
+
+  SavingsContribution copyWith({
+    String? id,
+    String? savingsGoalId,
+    double? amount,
+    DateTime? date,
+    String? note,
+    String? transactionId,
+  }) {
+    return SavingsContribution(
+      id: id ?? this.id,
+      savingsGoalId: savingsGoalId ?? this.savingsGoalId,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      note: note ?? this.note,
+      transactionId: transactionId ?? this.transactionId,
     );
   }
 }

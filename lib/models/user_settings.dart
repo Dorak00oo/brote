@@ -51,6 +51,9 @@ class UserSettings {
   final int? balanceResetDayOfMonth; // Día del mes para reinicio mensual (1-28)
   final int? balanceResetDayOfWeek; // Día de la semana para reinicio semanal (1=lunes, 7=domingo)
   final String? theme; // Tema de la app
+  final String trendChartType; // Tipo de gráfico de tendencia (bars, line, area, candlestick)
+  final String incomeChartType; // Tipo de gráfico de ingresos (pie, donut, bar)
+  final String expenseChartType; // Tipo de gráfico de gastos (pie, donut, bar)
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -70,6 +73,9 @@ class UserSettings {
     this.balanceResetDayOfMonth,
     this.balanceResetDayOfWeek,
     this.theme,
+    this.trendChartType = 'bars',
+    this.incomeChartType = 'pie',
+    this.expenseChartType = 'pie',
     required this.createdAt,
     this.updatedAt,
   });
@@ -91,6 +97,9 @@ class UserSettings {
       balanceResetPeriod: BalanceResetPeriod.total,
       balanceResetDayOfMonth: null,
       balanceResetDayOfWeek: null,
+      trendChartType: 'bars',
+      incomeChartType: 'pie',
+      expenseChartType: 'pie',
       createdAt: DateTime.now(),
     );
   }
@@ -217,6 +226,9 @@ class UserSettings {
       'balanceResetDayOfMonth': balanceResetDayOfMonth,
       'balanceResetDayOfWeek': balanceResetDayOfWeek,
       'theme': theme,
+      'trendChartType': trendChartType,
+      'incomeChartType': incomeChartType,
+      'expenseChartType': expenseChartType,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
@@ -251,6 +263,9 @@ class UserSettings {
       balanceResetDayOfMonth: json['balanceResetDayOfMonth'] as int?,
       balanceResetDayOfWeek: json['balanceResetDayOfWeek'] as int?,
       theme: json['theme'] as String?,
+      trendChartType: json['trendChartType'] as String? ?? 'bars',
+      incomeChartType: json['incomeChartType'] as String? ?? 'pie',
+      expenseChartType: json['expenseChartType'] as String? ?? 'pie',
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
@@ -275,6 +290,9 @@ class UserSettings {
     int? balanceResetDayOfMonth,
     int? balanceResetDayOfWeek,
     String? theme,
+    String? trendChartType,
+    String? incomeChartType,
+    String? expenseChartType,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -295,6 +313,9 @@ class UserSettings {
       balanceResetDayOfMonth: balanceResetDayOfMonth ?? this.balanceResetDayOfMonth,
       balanceResetDayOfWeek: balanceResetDayOfWeek ?? this.balanceResetDayOfWeek,
       theme: theme ?? this.theme,
+      trendChartType: trendChartType ?? this.trendChartType,
+      incomeChartType: incomeChartType ?? this.incomeChartType,
+      expenseChartType: expenseChartType ?? this.expenseChartType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

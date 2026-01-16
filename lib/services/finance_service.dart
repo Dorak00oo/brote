@@ -705,6 +705,9 @@ class FinanceService extends ChangeNotifier {
       balanceResetDayOfMonth: db.balanceResetDayOfMonth,
       balanceResetDayOfWeek: db.balanceResetDayOfWeek,
       theme: db.theme,
+      trendChartType: db.trendChartType,
+      incomeChartType: db.incomeChartType,
+      expenseChartType: db.expenseChartType,
       createdAt: db.createdAt,
       updatedAt: db.updatedAt,
     );
@@ -808,6 +811,68 @@ class FinanceService extends ChangeNotifier {
     try {
       await _db.updateTransaction(_toDbTransaction(transaction));
       await _checkBudgets(transaction);
+      
+      // Sincronizar con contribuciones/pagos vinculados
+      try {
+        // Buscar contribuciones vinculadas
+        final allGoals = _savingsGoals;
+        for (final goal in allGoals) {
+          final contributions = await getSavingsContributions(goal.id);
+          final linkedContribution = contributions.firstWhere(
+            (c) => c.transactionId == transaction.id,
+            orElse: () => throw Exception('Not found'),
+          );
+          
+          // Actualizar la contribución
+          final updatedContribution = linkedContribution.copyWith(
+            amount: transaction.amount,
+            date: transaction.date,
+            note: transaction.description,
+          );
+          await _db.updateSavingsContribution(SavingsContributionsCompanion(
+            id: Value(updatedContribution.id),
+            savingsGoalId: Value(updatedContribution.savingsGoalId),
+            amount: Value(updatedContribution.amount),
+            date: Value(updatedContribution.date),
+            note: Value(updatedContribution.note),
+            transactionId: Value(updatedContribution.transactionId),
+          ));
+          break; // Solo puede haber una contribución vinculada
+        }
+      } catch (_) {
+        // No hay contribución vinculada, continuar
+      }
+      
+      try {
+        // Buscar pagos vinculados
+        final allLoans = [...loansReceived, ...loansGiven];
+        for (final loan in allLoans) {
+          final payments = await getLoanPayments(loan.id);
+          final linkedPayment = payments.firstWhere(
+            (p) => p.transactionId == transaction.id,
+            orElse: () => throw Exception('Not found'),
+          );
+          
+          // Actualizar el pago
+          final updatedPayment = linkedPayment.copyWith(
+            amount: transaction.amount,
+            date: transaction.date,
+            notes: transaction.description,
+          );
+          await _db.updateLoanPayment(LoanPaymentsCompanion(
+            id: Value(updatedPayment.id),
+            loanId: Value(updatedPayment.loanId),
+            amount: Value(updatedPayment.amount),
+            date: Value(updatedPayment.date),
+            installmentNumber: Value(updatedPayment.installmentNumber),
+            notes: Value(updatedPayment.notes),
+            transactionId: Value(updatedPayment.transactionId),
+          ));
+          break; // Solo puede haber un pago vinculado
+        }
+      } catch (_) {
+        // No hay pago vinculado, continuar
+      }
     } catch (e) {
       debugPrint('Error updating transaction: $e');
       rethrow;
@@ -817,6 +882,42 @@ class FinanceService extends ChangeNotifier {
   Future<void> deleteTransaction(String id) async {
     try {
       final transaction = _transactions.firstWhere((t) => t.id == id);
+      
+      // Sincronizar con contribuciones/pagos vinculados
+      try {
+        // Buscar y eliminar contribuciones vinculadas
+        final allGoals = _savingsGoals;
+        for (final goal in allGoals) {
+          final contributions = await getSavingsContributions(goal.id);
+          final linkedContribution = contributions.firstWhere(
+            (c) => c.transactionId == transaction.id,
+            orElse: () => throw Exception('Not found'),
+          );
+          
+          await _db.deleteSavingsContribution(linkedContribution.id);
+          break;
+        }
+      } catch (_) {
+        // No hay contribución vinculada, continuar
+      }
+      
+      try {
+        // Buscar y eliminar pagos vinculados
+        final allLoans = [...loansReceived, ...loansGiven];
+        for (final loan in allLoans) {
+          final payments = await getLoanPayments(loan.id);
+          final linkedPayment = payments.firstWhere(
+            (p) => p.transactionId == transaction.id,
+            orElse: () => throw Exception('Not found'),
+          );
+          
+          await _db.deleteLoanPayment(linkedPayment.id);
+          break;
+        }
+      } catch (_) {
+        // No hay pago vinculado, continuar
+      }
+      
       await _db.deleteTransaction(id);
       await _checkBudgets(transaction, isDelete: true);
     } catch (e) {
@@ -973,6 +1074,8 @@ class FinanceService extends ChangeNotifier {
     if (!_customCategories.contains(category)) {
       try {
         await _db.insertCustomCategory(category);
+        _customCategories.add(category);
+        notifyListeners();
       } catch (e) {
         debugPrint('Error adding category: $e');
         rethrow;
@@ -982,7 +1085,12 @@ class FinanceService extends ChangeNotifier {
 
   Future<void> deleteCustomCategory(String category) async {
     try {
-      await _db.deleteCustomCategory(category);
+      final result = await _db.deleteCustomCategory(category);
+      if (result > 0) {
+        _customCategories.remove(category);
+        notifyListeners();
+      }
+      debugPrint('deleteCustomCategory result: $result for category: $category');
     } catch (e) {
       debugPrint('Error deleting category: $e');
       rethrow;
@@ -1004,6 +1112,8 @@ class FinanceService extends ChangeNotifier {
     if (!_customIncomeSources.contains(source)) {
       try {
         await _db.insertCustomIncomeSource(source);
+        _customIncomeSources.add(source);
+        notifyListeners();
       } catch (e) {
         debugPrint('Error adding income source: $e');
         rethrow;
@@ -1013,7 +1123,12 @@ class FinanceService extends ChangeNotifier {
 
   Future<void> deleteCustomIncomeSource(String source) async {
     try {
-      await _db.deleteCustomIncomeSource(source);
+      final result = await _db.deleteCustomIncomeSource(source);
+      if (result > 0) {
+        _customIncomeSources.remove(source);
+        notifyListeners();
+      }
+      debugPrint('deleteCustomIncomeSource result: $result for source: $source');
     } catch (e) {
       debugPrint('Error deleting income source: $e');
       rethrow;
@@ -1300,7 +1415,7 @@ class FinanceService extends ChangeNotifier {
   }
 
   Future<void> addSavingsContribution(String goalId, double amount,
-      {String? note, DateTime? date}) async {
+      {String? note, DateTime? date, String? transactionId}) async {
     try {
       await _db.insertSavingsContribution(SavingsContributionsCompanion.insert(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -1308,6 +1423,7 @@ class FinanceService extends ChangeNotifier {
         amount: amount,
         date: date ?? DateTime.now(),
         note: Value(note),
+        transactionId: Value(transactionId),
       ));
     } catch (e) {
       debugPrint('Error adding savings contribution: $e');
@@ -1326,6 +1442,7 @@ class FinanceService extends ChangeNotifier {
                 amount: c.amount,
                 date: c.date,
                 note: c.note,
+                transactionId: c.transactionId,
               ))
           .toList();
     } catch (e) {
@@ -1543,7 +1660,7 @@ class FinanceService extends ChangeNotifier {
 
   Future<void> addLoanPayment(
       String loanId, double amount, int installmentNumber,
-      {String? notes, DateTime? date}) async {
+      {String? notes, DateTime? date, String? transactionId}) async {
     try {
       await _db.insertLoanPayment(LoanPaymentsCompanion.insert(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -1552,6 +1669,7 @@ class FinanceService extends ChangeNotifier {
         date: date ?? DateTime.now(),
         installmentNumber: installmentNumber,
         notes: Value(notes),
+        transactionId: Value(transactionId),
       ));
     } catch (e) {
       debugPrint('Error adding loan payment: $e');
@@ -1570,10 +1688,152 @@ class FinanceService extends ChangeNotifier {
                 date: p.date,
                 installmentNumber: p.installmentNumber,
                 notes: p.notes,
+                transactionId: p.transactionId,
               ))
           .toList();
     } catch (e) {
       debugPrint('Error getting loan payments: $e');
+      rethrow;
+    }
+  }
+
+  // Editar y eliminar contribuciones de ahorro
+  Future<void> updateSavingsContribution(models.SavingsContribution contribution) async {
+    try {
+      await _db.updateSavingsContribution(SavingsContributionsCompanion(
+        id: Value(contribution.id),
+        savingsGoalId: Value(contribution.savingsGoalId),
+        amount: Value(contribution.amount),
+        date: Value(contribution.date),
+        note: Value(contribution.note),
+        transactionId: Value(contribution.transactionId),
+      ));
+      
+      // Si hay una transacción vinculada, actualizarla también
+      if (contribution.transactionId != null) {
+        try {
+          final transaction = transactions.firstWhere(
+            (t) => t.id == contribution.transactionId,
+            orElse: () => throw Exception('Transaction not found'),
+          );
+          final updatedTransaction = transaction.copyWith(
+            amount: contribution.amount,
+            date: contribution.date,
+            description: contribution.note,
+          );
+          await updateTransaction(updatedTransaction);
+        } catch (e) {
+          debugPrint('Error updating linked transaction: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error updating savings contribution: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteSavingsContribution(String contributionId) async {
+    try {
+      // Obtener la contribución para verificar si tiene transacción vinculada
+      final allGoals = _savingsGoals;
+      models.SavingsContribution? contribution;
+      for (final goal in allGoals) {
+        final contributions = await getSavingsContributions(goal.id);
+        try {
+          contribution = contributions.firstWhere((c) => c.id == contributionId);
+          break;
+        } catch (_) {
+          continue;
+        }
+      }
+      
+      if (contribution == null) {
+        throw Exception('Contribution not found');
+      }
+      
+      // Si hay una transacción vinculada, eliminarla también
+      if (contribution.transactionId != null) {
+        try {
+          await deleteTransaction(contribution.transactionId!);
+        } catch (e) {
+          debugPrint('Error deleting linked transaction: $e');
+        }
+      }
+      
+      await _db.deleteSavingsContribution(contributionId);
+    } catch (e) {
+      debugPrint('Error deleting savings contribution: $e');
+      rethrow;
+    }
+  }
+
+  // Editar y eliminar pagos de préstamos
+  Future<void> updateLoanPayment(models.LoanPayment payment) async {
+    try {
+      await _db.updateLoanPayment(LoanPaymentsCompanion(
+        id: Value(payment.id),
+        loanId: Value(payment.loanId),
+        amount: Value(payment.amount),
+        date: Value(payment.date),
+        installmentNumber: Value(payment.installmentNumber),
+        notes: Value(payment.notes),
+        transactionId: Value(payment.transactionId),
+      ));
+      
+      // Si hay una transacción vinculada, actualizarla también
+      if (payment.transactionId != null) {
+        try {
+          final transaction = transactions.firstWhere(
+            (t) => t.id == payment.transactionId,
+            orElse: () => throw Exception('Transaction not found'),
+          );
+          final updatedTransaction = transaction.copyWith(
+            amount: payment.amount,
+            date: payment.date,
+            description: payment.notes,
+          );
+          await updateTransaction(updatedTransaction);
+        } catch (e) {
+          debugPrint('Error updating linked transaction: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error updating loan payment: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteLoanPayment(String paymentId) async {
+    try {
+      // Obtener el pago para verificar si tiene transacción vinculada
+      final allLoans = [...loansReceived, ...loansGiven];
+      models.LoanPayment? payment;
+      for (final loan in allLoans) {
+        final payments = await getLoanPayments(loan.id);
+        try {
+          payment = payments.firstWhere((p) => p.id == paymentId);
+          break;
+        } catch (_) {
+          continue;
+        }
+      }
+      
+      if (payment == null) {
+        throw Exception('Payment not found');
+      }
+      
+      // Si hay una transacción vinculada, eliminarla también
+      if (payment.transactionId != null) {
+        try {
+          await deleteTransaction(payment.transactionId!);
+        } catch (e) {
+          debugPrint('Error deleting linked transaction: $e');
+        }
+      }
+      
+      await _db.deleteLoanPayment(paymentId);
+    } catch (e) {
+      debugPrint('Error deleting loan payment: $e');
       rethrow;
     }
   }
@@ -1757,6 +2017,71 @@ class FinanceService extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error updating theme: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateChartSettings({
+    String? trendChartType,
+    String? incomeChartType,
+    String? expenseChartType,
+  }) async {
+    try {
+      // Asegurar que tenemos la configuración actual
+      if (_userSettings == null) {
+        await _loadUserSettings();
+      }
+      
+      if (_userSettings == null) {
+        debugPrint('Error: No se pudo cargar la configuración del usuario');
+        return;
+      }
+      
+      // Preparar los valores a actualizar (usar valores actuales si no se proporcionan)
+      final currentTrend = trendChartType ?? _userSettings!.trendChartType;
+      final currentIncome = incomeChartType ?? _userSettings!.incomeChartType;
+      final currentExpense = expenseChartType ?? _userSettings!.expenseChartType;
+      
+      // Actualizar en la base de datos - incluir todos los valores, no solo los que cambian
+      // Esto asegura que la actualización funcione correctamente
+      final companion = UserSettingsTableCompanion(
+        trendChartType: Value(currentTrend),
+        incomeChartType: Value(currentIncome),
+        expenseChartType: Value(currentExpense),
+      );
+      
+      final result = await _db.updateUserSettings(companion);
+      debugPrint('updateUserSettings result: $result');
+      
+      // Actualizar en memoria inmediatamente para respuesta instantánea
+      _userSettings = _userSettings!.copyWith(
+        trendChartType: currentTrend,
+        incomeChartType: currentIncome,
+        expenseChartType: currentExpense,
+        updatedAt: DateTime.now(),
+      );
+      notifyListeners();
+      
+      // Forzar recarga desde la base de datos para verificar que los cambios se guardaron
+      await Future.delayed(const Duration(milliseconds: 100));
+      final dbSettings = await _db.getUserSettings();
+      if (dbSettings != null) {
+        final dbSettingsModel = _fromDbUserSettings(dbSettings);
+        if (dbSettingsModel.trendChartType != currentTrend || 
+            dbSettingsModel.incomeChartType != currentIncome ||
+            dbSettingsModel.expenseChartType != currentExpense) {
+          debugPrint('ADVERTENCIA: Los cambios no se guardaron correctamente en la base de datos');
+          debugPrint('Esperado: trend=$currentTrend, income=$currentIncome, expense=$currentExpense');
+          debugPrint('Obtenido: trend=${dbSettingsModel.trendChartType}, income=${dbSettingsModel.incomeChartType}, expense=${dbSettingsModel.expenseChartType}');
+        } else {
+          debugPrint('Configuración de gráficos actualizada correctamente: trend=$currentTrend, income=$currentIncome, expense=$currentExpense');
+        }
+        // Sincronizar con lo que está en la base de datos
+        _userSettings = dbSettingsModel;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error updating chart settings: $e');
       rethrow;
     }
   }

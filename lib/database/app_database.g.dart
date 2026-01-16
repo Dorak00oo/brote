@@ -2599,8 +2599,15 @@ class $SavingsContributionsTable extends SavingsContributions
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
       'note', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _transactionIdMeta =
+      const VerificationMeta('transactionId');
   @override
-  List<GeneratedColumn> get $columns => [id, savingsGoalId, amount, date, note];
+  late final GeneratedColumn<String> transactionId = GeneratedColumn<String>(
+      'transaction_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, savingsGoalId, amount, date, note, transactionId];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2641,6 +2648,12 @@ class $SavingsContributionsTable extends SavingsContributions
       context.handle(
           _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
+    if (data.containsKey('transaction_id')) {
+      context.handle(
+          _transactionIdMeta,
+          transactionId.isAcceptableOrUnknown(
+              data['transaction_id']!, _transactionIdMeta));
+    }
     return context;
   }
 
@@ -2660,6 +2673,8 @@ class $SavingsContributionsTable extends SavingsContributions
           .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
       note: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}note']),
+      transactionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}transaction_id']),
     );
   }
 
@@ -2676,12 +2691,14 @@ class SavingsContribution extends DataClass
   final double amount;
   final DateTime date;
   final String? note;
+  final String? transactionId;
   const SavingsContribution(
       {required this.id,
       required this.savingsGoalId,
       required this.amount,
       required this.date,
-      this.note});
+      this.note,
+      this.transactionId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2691,6 +2708,9 @@ class SavingsContribution extends DataClass
     map['date'] = Variable<DateTime>(date);
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
+    }
+    if (!nullToAbsent || transactionId != null) {
+      map['transaction_id'] = Variable<String>(transactionId);
     }
     return map;
   }
@@ -2702,6 +2722,9 @@ class SavingsContribution extends DataClass
       amount: Value(amount),
       date: Value(date),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      transactionId: transactionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transactionId),
     );
   }
 
@@ -2714,6 +2737,7 @@ class SavingsContribution extends DataClass
       amount: serializer.fromJson<double>(json['amount']),
       date: serializer.fromJson<DateTime>(json['date']),
       note: serializer.fromJson<String?>(json['note']),
+      transactionId: serializer.fromJson<String?>(json['transactionId']),
     );
   }
   @override
@@ -2725,6 +2749,7 @@ class SavingsContribution extends DataClass
       'amount': serializer.toJson<double>(amount),
       'date': serializer.toJson<DateTime>(date),
       'note': serializer.toJson<String?>(note),
+      'transactionId': serializer.toJson<String?>(transactionId),
     };
   }
 
@@ -2733,13 +2758,16 @@ class SavingsContribution extends DataClass
           String? savingsGoalId,
           double? amount,
           DateTime? date,
-          Value<String?> note = const Value.absent()}) =>
+          Value<String?> note = const Value.absent(),
+          Value<String?> transactionId = const Value.absent()}) =>
       SavingsContribution(
         id: id ?? this.id,
         savingsGoalId: savingsGoalId ?? this.savingsGoalId,
         amount: amount ?? this.amount,
         date: date ?? this.date,
         note: note.present ? note.value : this.note,
+        transactionId:
+            transactionId.present ? transactionId.value : this.transactionId,
       );
   SavingsContribution copyWithCompanion(SavingsContributionsCompanion data) {
     return SavingsContribution(
@@ -2750,6 +2778,9 @@ class SavingsContribution extends DataClass
       amount: data.amount.present ? data.amount.value : this.amount,
       date: data.date.present ? data.date.value : this.date,
       note: data.note.present ? data.note.value : this.note,
+      transactionId: data.transactionId.present
+          ? data.transactionId.value
+          : this.transactionId,
     );
   }
 
@@ -2760,13 +2791,15 @@ class SavingsContribution extends DataClass
           ..write('savingsGoalId: $savingsGoalId, ')
           ..write('amount: $amount, ')
           ..write('date: $date, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('transactionId: $transactionId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, savingsGoalId, amount, date, note);
+  int get hashCode =>
+      Object.hash(id, savingsGoalId, amount, date, note, transactionId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2775,7 +2808,8 @@ class SavingsContribution extends DataClass
           other.savingsGoalId == this.savingsGoalId &&
           other.amount == this.amount &&
           other.date == this.date &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.transactionId == this.transactionId);
 }
 
 class SavingsContributionsCompanion
@@ -2785,6 +2819,7 @@ class SavingsContributionsCompanion
   final Value<double> amount;
   final Value<DateTime> date;
   final Value<String?> note;
+  final Value<String?> transactionId;
   final Value<int> rowid;
   const SavingsContributionsCompanion({
     this.id = const Value.absent(),
@@ -2792,6 +2827,7 @@ class SavingsContributionsCompanion
     this.amount = const Value.absent(),
     this.date = const Value.absent(),
     this.note = const Value.absent(),
+    this.transactionId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SavingsContributionsCompanion.insert({
@@ -2800,6 +2836,7 @@ class SavingsContributionsCompanion
     required double amount,
     required DateTime date,
     this.note = const Value.absent(),
+    this.transactionId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         savingsGoalId = Value(savingsGoalId),
@@ -2811,6 +2848,7 @@ class SavingsContributionsCompanion
     Expression<double>? amount,
     Expression<DateTime>? date,
     Expression<String>? note,
+    Expression<String>? transactionId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2819,6 +2857,7 @@ class SavingsContributionsCompanion
       if (amount != null) 'amount': amount,
       if (date != null) 'date': date,
       if (note != null) 'note': note,
+      if (transactionId != null) 'transaction_id': transactionId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2829,6 +2868,7 @@ class SavingsContributionsCompanion
       Value<double>? amount,
       Value<DateTime>? date,
       Value<String?>? note,
+      Value<String?>? transactionId,
       Value<int>? rowid}) {
     return SavingsContributionsCompanion(
       id: id ?? this.id,
@@ -2836,6 +2876,7 @@ class SavingsContributionsCompanion
       amount: amount ?? this.amount,
       date: date ?? this.date,
       note: note ?? this.note,
+      transactionId: transactionId ?? this.transactionId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2858,6 +2899,9 @@ class SavingsContributionsCompanion
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (transactionId.present) {
+      map['transaction_id'] = Variable<String>(transactionId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2872,6 +2916,7 @@ class SavingsContributionsCompanion
           ..write('amount: $amount, ')
           ..write('date: $date, ')
           ..write('note: $note, ')
+          ..write('transactionId: $transactionId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5113,9 +5158,15 @@ class $LoanPaymentsTable extends LoanPayments
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
       'notes', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _transactionIdMeta =
+      const VerificationMeta('transactionId');
+  @override
+  late final GeneratedColumn<String> transactionId = GeneratedColumn<String>(
+      'transaction_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, loanId, amount, date, installmentNumber, notes];
+      [id, loanId, amount, date, installmentNumber, notes, transactionId];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5161,6 +5212,12 @@ class $LoanPaymentsTable extends LoanPayments
       context.handle(
           _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
     }
+    if (data.containsKey('transaction_id')) {
+      context.handle(
+          _transactionIdMeta,
+          transactionId.isAcceptableOrUnknown(
+              data['transaction_id']!, _transactionIdMeta));
+    }
     return context;
   }
 
@@ -5182,6 +5239,8 @@ class $LoanPaymentsTable extends LoanPayments
           DriftSqlType.int, data['${effectivePrefix}installment_number'])!,
       notes: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notes']),
+      transactionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}transaction_id']),
     );
   }
 
@@ -5198,13 +5257,15 @@ class LoanPayment extends DataClass implements Insertable<LoanPayment> {
   final DateTime date;
   final int installmentNumber;
   final String? notes;
+  final String? transactionId;
   const LoanPayment(
       {required this.id,
       required this.loanId,
       required this.amount,
       required this.date,
       required this.installmentNumber,
-      this.notes});
+      this.notes,
+      this.transactionId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5215,6 +5276,9 @@ class LoanPayment extends DataClass implements Insertable<LoanPayment> {
     map['installment_number'] = Variable<int>(installmentNumber);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || transactionId != null) {
+      map['transaction_id'] = Variable<String>(transactionId);
     }
     return map;
   }
@@ -5228,6 +5292,9 @@ class LoanPayment extends DataClass implements Insertable<LoanPayment> {
       installmentNumber: Value(installmentNumber),
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
+      transactionId: transactionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transactionId),
     );
   }
 
@@ -5241,6 +5308,7 @@ class LoanPayment extends DataClass implements Insertable<LoanPayment> {
       date: serializer.fromJson<DateTime>(json['date']),
       installmentNumber: serializer.fromJson<int>(json['installmentNumber']),
       notes: serializer.fromJson<String?>(json['notes']),
+      transactionId: serializer.fromJson<String?>(json['transactionId']),
     );
   }
   @override
@@ -5253,6 +5321,7 @@ class LoanPayment extends DataClass implements Insertable<LoanPayment> {
       'date': serializer.toJson<DateTime>(date),
       'installmentNumber': serializer.toJson<int>(installmentNumber),
       'notes': serializer.toJson<String?>(notes),
+      'transactionId': serializer.toJson<String?>(transactionId),
     };
   }
 
@@ -5262,7 +5331,8 @@ class LoanPayment extends DataClass implements Insertable<LoanPayment> {
           double? amount,
           DateTime? date,
           int? installmentNumber,
-          Value<String?> notes = const Value.absent()}) =>
+          Value<String?> notes = const Value.absent(),
+          Value<String?> transactionId = const Value.absent()}) =>
       LoanPayment(
         id: id ?? this.id,
         loanId: loanId ?? this.loanId,
@@ -5270,6 +5340,8 @@ class LoanPayment extends DataClass implements Insertable<LoanPayment> {
         date: date ?? this.date,
         installmentNumber: installmentNumber ?? this.installmentNumber,
         notes: notes.present ? notes.value : this.notes,
+        transactionId:
+            transactionId.present ? transactionId.value : this.transactionId,
       );
   LoanPayment copyWithCompanion(LoanPaymentsCompanion data) {
     return LoanPayment(
@@ -5281,6 +5353,9 @@ class LoanPayment extends DataClass implements Insertable<LoanPayment> {
           ? data.installmentNumber.value
           : this.installmentNumber,
       notes: data.notes.present ? data.notes.value : this.notes,
+      transactionId: data.transactionId.present
+          ? data.transactionId.value
+          : this.transactionId,
     );
   }
 
@@ -5292,14 +5367,15 @@ class LoanPayment extends DataClass implements Insertable<LoanPayment> {
           ..write('amount: $amount, ')
           ..write('date: $date, ')
           ..write('installmentNumber: $installmentNumber, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('transactionId: $transactionId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, loanId, amount, date, installmentNumber, notes);
+  int get hashCode => Object.hash(
+      id, loanId, amount, date, installmentNumber, notes, transactionId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5309,7 +5385,8 @@ class LoanPayment extends DataClass implements Insertable<LoanPayment> {
           other.amount == this.amount &&
           other.date == this.date &&
           other.installmentNumber == this.installmentNumber &&
-          other.notes == this.notes);
+          other.notes == this.notes &&
+          other.transactionId == this.transactionId);
 }
 
 class LoanPaymentsCompanion extends UpdateCompanion<LoanPayment> {
@@ -5319,6 +5396,7 @@ class LoanPaymentsCompanion extends UpdateCompanion<LoanPayment> {
   final Value<DateTime> date;
   final Value<int> installmentNumber;
   final Value<String?> notes;
+  final Value<String?> transactionId;
   final Value<int> rowid;
   const LoanPaymentsCompanion({
     this.id = const Value.absent(),
@@ -5327,6 +5405,7 @@ class LoanPaymentsCompanion extends UpdateCompanion<LoanPayment> {
     this.date = const Value.absent(),
     this.installmentNumber = const Value.absent(),
     this.notes = const Value.absent(),
+    this.transactionId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   LoanPaymentsCompanion.insert({
@@ -5336,6 +5415,7 @@ class LoanPaymentsCompanion extends UpdateCompanion<LoanPayment> {
     required DateTime date,
     required int installmentNumber,
     this.notes = const Value.absent(),
+    this.transactionId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         loanId = Value(loanId),
@@ -5349,6 +5429,7 @@ class LoanPaymentsCompanion extends UpdateCompanion<LoanPayment> {
     Expression<DateTime>? date,
     Expression<int>? installmentNumber,
     Expression<String>? notes,
+    Expression<String>? transactionId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5358,6 +5439,7 @@ class LoanPaymentsCompanion extends UpdateCompanion<LoanPayment> {
       if (date != null) 'date': date,
       if (installmentNumber != null) 'installment_number': installmentNumber,
       if (notes != null) 'notes': notes,
+      if (transactionId != null) 'transaction_id': transactionId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5369,6 +5451,7 @@ class LoanPaymentsCompanion extends UpdateCompanion<LoanPayment> {
       Value<DateTime>? date,
       Value<int>? installmentNumber,
       Value<String?>? notes,
+      Value<String?>? transactionId,
       Value<int>? rowid}) {
     return LoanPaymentsCompanion(
       id: id ?? this.id,
@@ -5377,6 +5460,7 @@ class LoanPaymentsCompanion extends UpdateCompanion<LoanPayment> {
       date: date ?? this.date,
       installmentNumber: installmentNumber ?? this.installmentNumber,
       notes: notes ?? this.notes,
+      transactionId: transactionId ?? this.transactionId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5402,6 +5486,9 @@ class LoanPaymentsCompanion extends UpdateCompanion<LoanPayment> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (transactionId.present) {
+      map['transaction_id'] = Variable<String>(transactionId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5417,6 +5504,7 @@ class LoanPaymentsCompanion extends UpdateCompanion<LoanPayment> {
           ..write('date: $date, ')
           ..write('installmentNumber: $installmentNumber, ')
           ..write('notes: $notes, ')
+          ..write('transactionId: $transactionId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5549,6 +5637,30 @@ class $UserSettingsTableTable extends UserSettingsTable
   late final GeneratedColumn<String> theme = GeneratedColumn<String>(
       'theme', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _trendChartTypeMeta =
+      const VerificationMeta('trendChartType');
+  @override
+  late final GeneratedColumn<String> trendChartType = GeneratedColumn<String>(
+      'trend_chart_type', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('bars'));
+  static const VerificationMeta _incomeChartTypeMeta =
+      const VerificationMeta('incomeChartType');
+  @override
+  late final GeneratedColumn<String> incomeChartType = GeneratedColumn<String>(
+      'income_chart_type', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('pie'));
+  static const VerificationMeta _expenseChartTypeMeta =
+      const VerificationMeta('expenseChartType');
+  @override
+  late final GeneratedColumn<String> expenseChartType = GeneratedColumn<String>(
+      'expense_chart_type', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('pie'));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -5578,6 +5690,9 @@ class $UserSettingsTableTable extends UserSettingsTable
         balanceResetDayOfMonth,
         balanceResetDayOfWeek,
         theme,
+        trendChartType,
+        incomeChartType,
+        expenseChartType,
         createdAt,
         updatedAt
       ];
@@ -5680,6 +5795,24 @@ class $UserSettingsTableTable extends UserSettingsTable
       context.handle(
           _themeMeta, theme.isAcceptableOrUnknown(data['theme']!, _themeMeta));
     }
+    if (data.containsKey('trend_chart_type')) {
+      context.handle(
+          _trendChartTypeMeta,
+          trendChartType.isAcceptableOrUnknown(
+              data['trend_chart_type']!, _trendChartTypeMeta));
+    }
+    if (data.containsKey('income_chart_type')) {
+      context.handle(
+          _incomeChartTypeMeta,
+          incomeChartType.isAcceptableOrUnknown(
+              data['income_chart_type']!, _incomeChartTypeMeta));
+    }
+    if (data.containsKey('expense_chart_type')) {
+      context.handle(
+          _expenseChartTypeMeta,
+          expenseChartType.isAcceptableOrUnknown(
+              data['expense_chart_type']!, _expenseChartTypeMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -5732,6 +5865,12 @@ class $UserSettingsTableTable extends UserSettingsTable
           data['${effectivePrefix}balance_reset_day_of_week']),
       theme: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}theme']),
+      trendChartType: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}trend_chart_type'])!,
+      incomeChartType: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}income_chart_type'])!,
+      expenseChartType: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}expense_chart_type'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -5762,6 +5901,9 @@ class UserSettingsTableData extends DataClass
   final int? balanceResetDayOfMonth;
   final int? balanceResetDayOfWeek;
   final String? theme;
+  final String trendChartType;
+  final String incomeChartType;
+  final String expenseChartType;
   final DateTime createdAt;
   final DateTime? updatedAt;
   const UserSettingsTableData(
@@ -5780,6 +5922,9 @@ class UserSettingsTableData extends DataClass
       this.balanceResetDayOfMonth,
       this.balanceResetDayOfWeek,
       this.theme,
+      required this.trendChartType,
+      required this.incomeChartType,
+      required this.expenseChartType,
       required this.createdAt,
       this.updatedAt});
   @override
@@ -5807,6 +5952,9 @@ class UserSettingsTableData extends DataClass
     if (!nullToAbsent || theme != null) {
       map['theme'] = Variable<String>(theme);
     }
+    map['trend_chart_type'] = Variable<String>(trendChartType);
+    map['income_chart_type'] = Variable<String>(incomeChartType);
+    map['expense_chart_type'] = Variable<String>(expenseChartType);
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || updatedAt != null) {
       map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -5836,6 +5984,9 @@ class UserSettingsTableData extends DataClass
           : Value(balanceResetDayOfWeek),
       theme:
           theme == null && nullToAbsent ? const Value.absent() : Value(theme),
+      trendChartType: Value(trendChartType),
+      incomeChartType: Value(incomeChartType),
+      expenseChartType: Value(expenseChartType),
       createdAt: Value(createdAt),
       updatedAt: updatedAt == null && nullToAbsent
           ? const Value.absent()
@@ -5871,6 +6022,9 @@ class UserSettingsTableData extends DataClass
       balanceResetDayOfWeek:
           serializer.fromJson<int?>(json['balanceResetDayOfWeek']),
       theme: serializer.fromJson<String?>(json['theme']),
+      trendChartType: serializer.fromJson<String>(json['trendChartType']),
+      incomeChartType: serializer.fromJson<String>(json['incomeChartType']),
+      expenseChartType: serializer.fromJson<String>(json['expenseChartType']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
@@ -5896,6 +6050,9 @@ class UserSettingsTableData extends DataClass
       'balanceResetDayOfMonth': serializer.toJson<int?>(balanceResetDayOfMonth),
       'balanceResetDayOfWeek': serializer.toJson<int?>(balanceResetDayOfWeek),
       'theme': serializer.toJson<String?>(theme),
+      'trendChartType': serializer.toJson<String>(trendChartType),
+      'incomeChartType': serializer.toJson<String>(incomeChartType),
+      'expenseChartType': serializer.toJson<String>(expenseChartType),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
@@ -5917,6 +6074,9 @@ class UserSettingsTableData extends DataClass
           Value<int?> balanceResetDayOfMonth = const Value.absent(),
           Value<int?> balanceResetDayOfWeek = const Value.absent(),
           Value<String?> theme = const Value.absent(),
+          String? trendChartType,
+          String? incomeChartType,
+          String? expenseChartType,
           DateTime? createdAt,
           Value<DateTime?> updatedAt = const Value.absent()}) =>
       UserSettingsTableData(
@@ -5941,6 +6101,9 @@ class UserSettingsTableData extends DataClass
             ? balanceResetDayOfWeek.value
             : this.balanceResetDayOfWeek,
         theme: theme.present ? theme.value : this.theme,
+        trendChartType: trendChartType ?? this.trendChartType,
+        incomeChartType: incomeChartType ?? this.incomeChartType,
+        expenseChartType: expenseChartType ?? this.expenseChartType,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
       );
@@ -5985,6 +6148,15 @@ class UserSettingsTableData extends DataClass
           ? data.balanceResetDayOfWeek.value
           : this.balanceResetDayOfWeek,
       theme: data.theme.present ? data.theme.value : this.theme,
+      trendChartType: data.trendChartType.present
+          ? data.trendChartType.value
+          : this.trendChartType,
+      incomeChartType: data.incomeChartType.present
+          ? data.incomeChartType.value
+          : this.incomeChartType,
+      expenseChartType: data.expenseChartType.present
+          ? data.expenseChartType.value
+          : this.expenseChartType,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -6008,6 +6180,9 @@ class UserSettingsTableData extends DataClass
           ..write('balanceResetDayOfMonth: $balanceResetDayOfMonth, ')
           ..write('balanceResetDayOfWeek: $balanceResetDayOfWeek, ')
           ..write('theme: $theme, ')
+          ..write('trendChartType: $trendChartType, ')
+          ..write('incomeChartType: $incomeChartType, ')
+          ..write('expenseChartType: $expenseChartType, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -6031,6 +6206,9 @@ class UserSettingsTableData extends DataClass
       balanceResetDayOfMonth,
       balanceResetDayOfWeek,
       theme,
+      trendChartType,
+      incomeChartType,
+      expenseChartType,
       createdAt,
       updatedAt);
   @override
@@ -6053,6 +6231,9 @@ class UserSettingsTableData extends DataClass
           other.balanceResetDayOfMonth == this.balanceResetDayOfMonth &&
           other.balanceResetDayOfWeek == this.balanceResetDayOfWeek &&
           other.theme == this.theme &&
+          other.trendChartType == this.trendChartType &&
+          other.incomeChartType == this.incomeChartType &&
+          other.expenseChartType == this.expenseChartType &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -6074,6 +6255,9 @@ class UserSettingsTableCompanion
   final Value<int?> balanceResetDayOfMonth;
   final Value<int?> balanceResetDayOfWeek;
   final Value<String?> theme;
+  final Value<String> trendChartType;
+  final Value<String> incomeChartType;
+  final Value<String> expenseChartType;
   final Value<DateTime> createdAt;
   final Value<DateTime?> updatedAt;
   final Value<int> rowid;
@@ -6093,6 +6277,9 @@ class UserSettingsTableCompanion
     this.balanceResetDayOfMonth = const Value.absent(),
     this.balanceResetDayOfWeek = const Value.absent(),
     this.theme = const Value.absent(),
+    this.trendChartType = const Value.absent(),
+    this.incomeChartType = const Value.absent(),
+    this.expenseChartType = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -6113,6 +6300,9 @@ class UserSettingsTableCompanion
     this.balanceResetDayOfMonth = const Value.absent(),
     this.balanceResetDayOfWeek = const Value.absent(),
     this.theme = const Value.absent(),
+    this.trendChartType = const Value.absent(),
+    this.incomeChartType = const Value.absent(),
+    this.expenseChartType = const Value.absent(),
     required DateTime createdAt,
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -6134,6 +6324,9 @@ class UserSettingsTableCompanion
     Expression<int>? balanceResetDayOfMonth,
     Expression<int>? balanceResetDayOfWeek,
     Expression<String>? theme,
+    Expression<String>? trendChartType,
+    Expression<String>? incomeChartType,
+    Expression<String>? expenseChartType,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -6162,6 +6355,9 @@ class UserSettingsTableCompanion
       if (balanceResetDayOfWeek != null)
         'balance_reset_day_of_week': balanceResetDayOfWeek,
       if (theme != null) 'theme': theme,
+      if (trendChartType != null) 'trend_chart_type': trendChartType,
+      if (incomeChartType != null) 'income_chart_type': incomeChartType,
+      if (expenseChartType != null) 'expense_chart_type': expenseChartType,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -6184,6 +6380,9 @@ class UserSettingsTableCompanion
       Value<int?>? balanceResetDayOfMonth,
       Value<int?>? balanceResetDayOfWeek,
       Value<String?>? theme,
+      Value<String>? trendChartType,
+      Value<String>? incomeChartType,
+      Value<String>? expenseChartType,
       Value<DateTime>? createdAt,
       Value<DateTime?>? updatedAt,
       Value<int>? rowid}) {
@@ -6207,6 +6406,9 @@ class UserSettingsTableCompanion
       balanceResetDayOfWeek:
           balanceResetDayOfWeek ?? this.balanceResetDayOfWeek,
       theme: theme ?? this.theme,
+      trendChartType: trendChartType ?? this.trendChartType,
+      incomeChartType: incomeChartType ?? this.incomeChartType,
+      expenseChartType: expenseChartType ?? this.expenseChartType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -6266,6 +6468,15 @@ class UserSettingsTableCompanion
     if (theme.present) {
       map['theme'] = Variable<String>(theme.value);
     }
+    if (trendChartType.present) {
+      map['trend_chart_type'] = Variable<String>(trendChartType.value);
+    }
+    if (incomeChartType.present) {
+      map['income_chart_type'] = Variable<String>(incomeChartType.value);
+    }
+    if (expenseChartType.present) {
+      map['expense_chart_type'] = Variable<String>(expenseChartType.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -6296,6 +6507,9 @@ class UserSettingsTableCompanion
           ..write('balanceResetDayOfMonth: $balanceResetDayOfMonth, ')
           ..write('balanceResetDayOfWeek: $balanceResetDayOfWeek, ')
           ..write('theme: $theme, ')
+          ..write('trendChartType: $trendChartType, ')
+          ..write('incomeChartType: $incomeChartType, ')
+          ..write('expenseChartType: $expenseChartType, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -8823,6 +9037,7 @@ typedef $$SavingsContributionsTableCreateCompanionBuilder
   required double amount,
   required DateTime date,
   Value<String?> note,
+  Value<String?> transactionId,
   Value<int> rowid,
 });
 typedef $$SavingsContributionsTableUpdateCompanionBuilder
@@ -8832,6 +9047,7 @@ typedef $$SavingsContributionsTableUpdateCompanionBuilder
   Value<double> amount,
   Value<DateTime> date,
   Value<String?> note,
+  Value<String?> transactionId,
   Value<int> rowid,
 });
 
@@ -8877,6 +9093,9 @@ class $$SavingsContributionsTableFilterComposer
   ColumnFilters<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get transactionId => $composableBuilder(
+      column: $table.transactionId, builder: (column) => ColumnFilters(column));
+
   $$SavingsGoalsTableFilterComposer get savingsGoalId {
     final $$SavingsGoalsTableFilterComposer composer = $composerBuilder(
         composer: this,
@@ -8919,6 +9138,10 @@ class $$SavingsContributionsTableOrderingComposer
   ColumnOrderings<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get transactionId => $composableBuilder(
+      column: $table.transactionId,
+      builder: (column) => ColumnOrderings(column));
+
   $$SavingsGoalsTableOrderingComposer get savingsGoalId {
     final $$SavingsGoalsTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -8960,6 +9183,9 @@ class $$SavingsContributionsTableAnnotationComposer
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get transactionId => $composableBuilder(
+      column: $table.transactionId, builder: (column) => column);
 
   $$SavingsGoalsTableAnnotationComposer get savingsGoalId {
     final $$SavingsGoalsTableAnnotationComposer composer = $composerBuilder(
@@ -9013,6 +9239,7 @@ class $$SavingsContributionsTableTableManager extends RootTableManager<
             Value<double> amount = const Value.absent(),
             Value<DateTime> date = const Value.absent(),
             Value<String?> note = const Value.absent(),
+            Value<String?> transactionId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SavingsContributionsCompanion(
@@ -9021,6 +9248,7 @@ class $$SavingsContributionsTableTableManager extends RootTableManager<
             amount: amount,
             date: date,
             note: note,
+            transactionId: transactionId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -9029,6 +9257,7 @@ class $$SavingsContributionsTableTableManager extends RootTableManager<
             required double amount,
             required DateTime date,
             Value<String?> note = const Value.absent(),
+            Value<String?> transactionId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SavingsContributionsCompanion.insert(
@@ -9037,6 +9266,7 @@ class $$SavingsContributionsTableTableManager extends RootTableManager<
             amount: amount,
             date: date,
             note: note,
+            transactionId: transactionId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -10372,6 +10602,7 @@ typedef $$LoanPaymentsTableCreateCompanionBuilder = LoanPaymentsCompanion
   required DateTime date,
   required int installmentNumber,
   Value<String?> notes,
+  Value<String?> transactionId,
   Value<int> rowid,
 });
 typedef $$LoanPaymentsTableUpdateCompanionBuilder = LoanPaymentsCompanion
@@ -10382,6 +10613,7 @@ typedef $$LoanPaymentsTableUpdateCompanionBuilder = LoanPaymentsCompanion
   Value<DateTime> date,
   Value<int> installmentNumber,
   Value<String?> notes,
+  Value<String?> transactionId,
   Value<int> rowid,
 });
 
@@ -10429,6 +10661,9 @@ class $$LoanPaymentsTableFilterComposer
   ColumnFilters<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get transactionId => $composableBuilder(
+      column: $table.transactionId, builder: (column) => ColumnFilters(column));
+
   $$LoansTableFilterComposer get loanId {
     final $$LoansTableFilterComposer composer = $composerBuilder(
         composer: this,
@@ -10475,6 +10710,10 @@ class $$LoanPaymentsTableOrderingComposer
   ColumnOrderings<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get transactionId => $composableBuilder(
+      column: $table.transactionId,
+      builder: (column) => ColumnOrderings(column));
+
   $$LoansTableOrderingComposer get loanId {
     final $$LoansTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -10519,6 +10758,9 @@ class $$LoanPaymentsTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get transactionId => $composableBuilder(
+      column: $table.transactionId, builder: (column) => column);
 
   $$LoansTableAnnotationComposer get loanId {
     final $$LoansTableAnnotationComposer composer = $composerBuilder(
@@ -10570,6 +10812,7 @@ class $$LoanPaymentsTableTableManager extends RootTableManager<
             Value<DateTime> date = const Value.absent(),
             Value<int> installmentNumber = const Value.absent(),
             Value<String?> notes = const Value.absent(),
+            Value<String?> transactionId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               LoanPaymentsCompanion(
@@ -10579,6 +10822,7 @@ class $$LoanPaymentsTableTableManager extends RootTableManager<
             date: date,
             installmentNumber: installmentNumber,
             notes: notes,
+            transactionId: transactionId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -10588,6 +10832,7 @@ class $$LoanPaymentsTableTableManager extends RootTableManager<
             required DateTime date,
             required int installmentNumber,
             Value<String?> notes = const Value.absent(),
+            Value<String?> transactionId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               LoanPaymentsCompanion.insert(
@@ -10597,6 +10842,7 @@ class $$LoanPaymentsTableTableManager extends RootTableManager<
             date: date,
             installmentNumber: installmentNumber,
             notes: notes,
+            transactionId: transactionId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -10672,6 +10918,9 @@ typedef $$UserSettingsTableTableCreateCompanionBuilder
   Value<int?> balanceResetDayOfMonth,
   Value<int?> balanceResetDayOfWeek,
   Value<String?> theme,
+  Value<String> trendChartType,
+  Value<String> incomeChartType,
+  Value<String> expenseChartType,
   required DateTime createdAt,
   Value<DateTime?> updatedAt,
   Value<int> rowid,
@@ -10693,6 +10942,9 @@ typedef $$UserSettingsTableTableUpdateCompanionBuilder
   Value<int?> balanceResetDayOfMonth,
   Value<int?> balanceResetDayOfWeek,
   Value<String?> theme,
+  Value<String> trendChartType,
+  Value<String> incomeChartType,
+  Value<String> expenseChartType,
   Value<DateTime> createdAt,
   Value<DateTime?> updatedAt,
   Value<int> rowid,
@@ -10762,6 +11014,18 @@ class $$UserSettingsTableTableFilterComposer
 
   ColumnFilters<String> get theme => $composableBuilder(
       column: $table.theme, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get trendChartType => $composableBuilder(
+      column: $table.trendChartType,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get incomeChartType => $composableBuilder(
+      column: $table.incomeChartType,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get expenseChartType => $composableBuilder(
+      column: $table.expenseChartType,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -10836,6 +11100,18 @@ class $$UserSettingsTableTableOrderingComposer
   ColumnOrderings<String> get theme => $composableBuilder(
       column: $table.theme, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get trendChartType => $composableBuilder(
+      column: $table.trendChartType,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get incomeChartType => $composableBuilder(
+      column: $table.incomeChartType,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get expenseChartType => $composableBuilder(
+      column: $table.expenseChartType,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -10897,6 +11173,15 @@ class $$UserSettingsTableTableAnnotationComposer
   GeneratedColumn<String> get theme =>
       $composableBuilder(column: $table.theme, builder: (column) => column);
 
+  GeneratedColumn<String> get trendChartType => $composableBuilder(
+      column: $table.trendChartType, builder: (column) => column);
+
+  GeneratedColumn<String> get incomeChartType => $composableBuilder(
+      column: $table.incomeChartType, builder: (column) => column);
+
+  GeneratedColumn<String> get expenseChartType => $composableBuilder(
+      column: $table.expenseChartType, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -10948,6 +11233,9 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             Value<int?> balanceResetDayOfMonth = const Value.absent(),
             Value<int?> balanceResetDayOfWeek = const Value.absent(),
             Value<String?> theme = const Value.absent(),
+            Value<String> trendChartType = const Value.absent(),
+            Value<String> incomeChartType = const Value.absent(),
+            Value<String> expenseChartType = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> updatedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -10968,6 +11256,9 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             balanceResetDayOfMonth: balanceResetDayOfMonth,
             balanceResetDayOfWeek: balanceResetDayOfWeek,
             theme: theme,
+            trendChartType: trendChartType,
+            incomeChartType: incomeChartType,
+            expenseChartType: expenseChartType,
             createdAt: createdAt,
             updatedAt: updatedAt,
             rowid: rowid,
@@ -10988,6 +11279,9 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             Value<int?> balanceResetDayOfMonth = const Value.absent(),
             Value<int?> balanceResetDayOfWeek = const Value.absent(),
             Value<String?> theme = const Value.absent(),
+            Value<String> trendChartType = const Value.absent(),
+            Value<String> incomeChartType = const Value.absent(),
+            Value<String> expenseChartType = const Value.absent(),
             required DateTime createdAt,
             Value<DateTime?> updatedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -11008,6 +11302,9 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             balanceResetDayOfMonth: balanceResetDayOfMonth,
             balanceResetDayOfWeek: balanceResetDayOfWeek,
             theme: theme,
+            trendChartType: trendChartType,
+            incomeChartType: incomeChartType,
+            expenseChartType: expenseChartType,
             createdAt: createdAt,
             updatedAt: updatedAt,
             rowid: rowid,

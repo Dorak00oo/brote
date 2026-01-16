@@ -2,6 +2,48 @@
 
 Aplicación móvil completa de gestión financiera personal desarrollada con Flutter.
 
+## 🆕 Versión 1.5.3 - Novedades
+
+### 🐛 **Corrección de Bug en Categorías**
+- **Eliminación de Categorías Personalizadas**: Corregido el problema donde algunas categorías personalizadas no se podían eliminar en ciertos dispositivos
+- **Actualización de Memoria**: Las listas de categorías y fuentes de ingreso ahora se actualizan correctamente en memoria después de agregar o eliminar
+- **UI Reactiva**: Los modales de gestión de categorías ahora responden automáticamente a los cambios del servicio usando Consumer
+- **Notificación de Cambios**: El sistema ahora notifica correctamente a todos los widgets cuando hay cambios en categorías
+
+## 🆕 Versión 1.5.2 - Novedades
+
+### 📊 **Personalización de Gráficos en Estadísticas**
+- **Gráfico de Tendencia Personalizable**: Configura el tipo de visualización del gráfico de tendencia:
+  - Barras
+  - Líneas
+  - Área
+  - Velas (Candlestick)
+- **Gráficos Circulares Personalizables**: Configura el tipo de visualización para gráficos de ingresos y gastos:
+  - Pastel (Pie)
+  - Dona (Donut)
+  - Barras horizontales
+- **Configuración Persistente**: Los ajustes de gráficos se guardan en la base de datos
+- **Sincronización de Gráficos**: Los gráficos de ingresos y gastos usan el mismo tipo de visualización
+
+### 🔗 **Enlaces Bidireccionales en Finanzas**
+- **Contribuciones Editables**: Las aportaciones a metas de ahorro ahora se pueden editar o eliminar
+- **Pagos de Préstamos Editables**: Los pagos de préstamos ahora se pueden editar o eliminar
+- **Vinculación con Movimientos**: Si una aportación/pago fue creada desde un movimiento, quedan enlazados:
+  - Editar el movimiento actualiza la aportación/pago
+  - Eliminar el movimiento elimina la aportación/pago
+  - Editar la aportación/pago actualiza el movimiento correspondiente
+- **Navegación Rápida**: Opción de "Ver movimiento" para navegar directamente al movimiento vinculado
+
+### 📈 **Mejoras en Gráfico de Área**
+- **Curvas Suavizadas**: Mejor renderizado de curvas para evitar picos extremos
+- **Límites de Visualización**: El gráfico ya no muestra valores negativos ni sobrepasa los límites
+- **Prevención de Overshooting**: Las curvas ya no sobrepasan los puntos de datos
+
+### 🧹 **Simplificación de Estadísticas**
+- **Eliminación de Duplicados**: Removida la sección redundante "Gastos por categoría" que duplicaba información
+- **Vista más Limpia**: Ahora solo hay 2 gráficos circulares principales (Ingresos y Gastos)
+- **Barras de Detalle**: Las secciones de detalle muestran solo barras de progreso sin gráficos duplicados
+
 ## 🆕 Versión 1.4.2 - Novedades
 
 ### 🤖 **Sistema de Ingresos y Pagos Automáticos**
@@ -318,7 +360,20 @@ lib/
 
 ## Historial de Versiones
 
-### Versión 1.4.2 (Actual)
+### Versión 1.5.3 (Actual)
+- 🐛 Corrección del bug de eliminación de categorías personalizadas
+- 🔄 Actualización correcta de listas en memoria
+- 📱 UI reactiva con Consumer en modales de gestión
+
+### Versión 1.5.2
+- 📊 Personalización de gráficos de tendencia (barras, líneas, área, velas)
+- 🥧 Personalización de gráficos circulares (pastel, dona, barras)
+- 🔗 Enlaces bidireccionales entre movimientos y finanzas
+- ✏️ Aportaciones y pagos editables/eliminables
+- 📈 Mejoras en renderizado del gráfico de área
+- 🧹 Simplificación de estadísticas eliminando duplicados
+
+### Versión 1.4.2
 - 🤖 Sistema completo de ingresos y pagos automáticos
 - 🔗 Vinculación de automáticos con finanzas (préstamos y ahorros)
 - 🔔 Notificaciones personalizadas por automático
