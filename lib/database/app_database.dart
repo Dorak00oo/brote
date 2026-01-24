@@ -19,6 +19,16 @@ class Transactions extends Table {
   BoolColumn get isRecurring => boolean().withDefault(const Constant(false))();
   TextColumn get recurringFrequency =>
       text().nullable()(); // weekly, monthly, yearly
+  
+  // Campos de tipo de pago
+  TextColumn get paymentType => text().nullable()(); // 'full', 'partial', 'installment'
+  IntColumn get installmentNumber => integer().nullable()(); // Número de cuota
+  IntColumn get totalInstallments => integer().nullable()(); // Total de cuotas
+  
+  // Campos de método de pago/cobro
+  TextColumn get paymentMethod => text().nullable()(); // 'cash', 'transfer'
+  TextColumn get sourceBank => text().nullable()(); // Banco de origen
+  TextColumn get destinationAccount => text().nullable()(); // Cuenta destino
 
   @override
   Set<Column> get primaryKey => {id};
@@ -81,6 +91,18 @@ class HiddenDefaultCategories extends Table {
 
   @override
   Set<Column> get primaryKey => {name};
+}
+
+// ========== TABLA DE CUENTAS/BANCOS DEL USUARIO ==========
+class UserAccounts extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()(); // Nombre del banco/alcancía/bolsillo
+  TextColumn get type => text()(); // 'bank', 'piggybank', 'pocket'
+  TextColumn get bankName => text().nullable()(); // Nombre del banco si es tipo bank
+  TextColumn get accountNumber => text().nullable()(); // Número de cuenta (opcional)
+  
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 // ========== TABLA DE METAS DE AHORRO ==========
@@ -245,6 +267,8 @@ class UserSettingsTable extends Table {
       .withDefault(const Constant('pie'))(); // Tipo de gráfico de ingresos
   TextColumn get expenseChartType => text()
       .withDefault(const Constant('pie'))(); // Tipo de gráfico de gastos
+  TextColumn get colorPalette => text()
+      .withDefault(const Constant('green'))(); // Paleta de colores (green, purple, pink, blue)
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime().nullable()();
 
@@ -306,12 +330,13 @@ class RecurringTransactions extends Table {
   LoanPayments,
   UserSettingsTable,
   RecurringTransactions,
+  UserAccounts,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration {
@@ -587,6 +612,168 @@ class AppDatabase extends _$AppDatabase {
             try {
               await customStatement(
                 "ALTER TABLE user_settings ADD COLUMN expense_chart_type TEXT NOT NULL DEFAULT 'pie'",
+              );
+            } catch (_) {}
+          }
+        }
+        if (from < 18) {
+          // Migración de versión 17 a 18
+          // Agregar columna transaction_id a savings_contributions y loan_payments
+          // para enlaces bidireccionales con movimientos
+          try {
+            final contributionsInfo = await customSelect(
+              "PRAGMA table_info(savings_contributions)",
+              readsFrom: {},
+            ).get();
+
+            final hasTransactionId = contributionsInfo.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'transaction_id');
+
+            if (!hasTransactionId) {
+              await customStatement(
+                "ALTER TABLE savings_contributions ADD COLUMN transaction_id TEXT",
+              );
+            }
+          } catch (e) {
+            try {
+              await customStatement(
+                "ALTER TABLE savings_contributions ADD COLUMN transaction_id TEXT",
+              );
+            } catch (_) {}
+          }
+
+          try {
+            final paymentsInfo = await customSelect(
+              "PRAGMA table_info(loan_payments)",
+              readsFrom: {},
+            ).get();
+
+            final hasTransactionId = paymentsInfo.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'transaction_id');
+
+            if (!hasTransactionId) {
+              await customStatement(
+                "ALTER TABLE loan_payments ADD COLUMN transaction_id TEXT",
+              );
+            }
+          } catch (e) {
+            try {
+              await customStatement(
+                "ALTER TABLE loan_payments ADD COLUMN transaction_id TEXT",
+              );
+            } catch (_) {}
+          }
+        }
+        if (from < 19) {
+          // Migración de versión 18 a 19
+          // Crear tabla de cuentas de usuario
+          await m.createTable(userAccounts);
+          
+          // Agregar campos de tipo de pago y método a transactions
+          try {
+            final transactionsInfo = await customSelect(
+              "PRAGMA table_info(transactions)",
+              readsFrom: {},
+            ).get();
+
+            final hasPaymentType = transactionsInfo.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'payment_type');
+            final hasInstallmentNumber = transactionsInfo.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'installment_number');
+            final hasTotalInstallments = transactionsInfo.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'total_installments');
+            final hasPaymentMethod = transactionsInfo.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'payment_method');
+            final hasSourceBank = transactionsInfo.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'source_bank');
+            final hasDestinationAccount = transactionsInfo.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'destination_account');
+
+            if (!hasPaymentType) {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN payment_type TEXT",
+              );
+            }
+            if (!hasInstallmentNumber) {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN installment_number INTEGER",
+              );
+            }
+            if (!hasTotalInstallments) {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN total_installments INTEGER",
+              );
+            }
+            if (!hasPaymentMethod) {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN payment_method TEXT",
+              );
+            }
+            if (!hasSourceBank) {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN source_bank TEXT",
+              );
+            }
+            if (!hasDestinationAccount) {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN destination_account TEXT",
+              );
+            }
+          } catch (e) {
+            // Intentar agregar las columnas directamente
+            try {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN payment_type TEXT",
+              );
+            } catch (_) {}
+            try {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN installment_number INTEGER",
+              );
+            } catch (_) {}
+            try {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN total_installments INTEGER",
+              );
+            } catch (_) {}
+            try {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN payment_method TEXT",
+              );
+            } catch (_) {}
+            try {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN source_bank TEXT",
+              );
+            } catch (_) {}
+            try {
+              await customStatement(
+                "ALTER TABLE transactions ADD COLUMN destination_account TEXT",
+              );
+            } catch (_) {}
+          }
+        }
+        if (from < 20) {
+          // Migración de versión 19 a 20
+          // Agregar columna de paleta de colores
+          try {
+            final settingsInfo = await customSelect(
+              "PRAGMA table_info(user_settings)",
+              readsFrom: {},
+            ).get();
+
+            final hasColorPalette = settingsInfo.any(
+                (row) => row.data['name']?.toString().toLowerCase() == 'color_palette');
+
+            if (!hasColorPalette) {
+              await customStatement(
+                "ALTER TABLE user_settings ADD COLUMN color_palette TEXT NOT NULL DEFAULT 'green'",
+              );
+            }
+          } catch (e) {
+            try {
+              await customStatement(
+                "ALTER TABLE user_settings ADD COLUMN color_palette TEXT NOT NULL DEFAULT 'green'",
               );
             } catch (_) {}
           }
@@ -1497,6 +1684,24 @@ class AppDatabase extends _$AppDatabase {
       bySource[source] = (bySource[source] ?? 0) + t.amount;
     }
     return bySource;
+  }
+
+  // ========== CUENTAS DE USUARIO ==========
+  Future<List<UserAccount>> getAllUserAccounts() => select(userAccounts).get();
+
+  Stream<List<UserAccount>> watchAllUserAccounts() =>
+      select(userAccounts).watch();
+
+  Future<List<UserAccount>> getUserAccountsByType(String type) {
+    return (select(userAccounts)..where((a) => a.type.equals(type))).get();
+  }
+
+  Future<int> insertUserAccount(UserAccountsCompanion account) {
+    return into(userAccounts).insert(account, mode: InsertMode.replace);
+  }
+
+  Future<int> deleteUserAccount(String id) {
+    return (delete(userAccounts)..where((a) => a.id.equals(id))).go();
   }
 }
 

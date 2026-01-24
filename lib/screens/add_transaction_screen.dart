@@ -26,6 +26,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _installmentNumberController = TextEditingController();
+  final _totalInstallmentsController = TextEditingController();
   final _amountFocusNode = FocusNode();
 
   late bool _isIncome;
@@ -38,6 +40,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? _selectedFinanceModule; // 'loan' o 'savings'
   String? _selectedLoanId; // Para vincular a préstamo
   String? _selectedSavingsGoalId; // Para vincular a meta de ahorro
+  
+  // Tipo de pago (opcional)
+  PaymentType? _selectedPaymentType;
+  
+  // Método de pago/cobro (opcional)
+  PaymentMethod? _selectedPaymentMethod;
+  String? _selectedSourceBank;
+  String? _selectedDestinationAccount;
 
   @override
   void initState() {
@@ -51,6 +61,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _selectedCategory = t.category;
       _selectedSource = t.source;
       _selectedDate = t.date;
+      // Cargar tipo de pago si existe
+      _selectedPaymentType = t.paymentType;
+      if (t.installmentNumber != null) {
+        _installmentNumberController.text = t.installmentNumber.toString();
+      }
+      if (t.totalInstallments != null) {
+        _totalInstallmentsController.text = t.totalInstallments.toString();
+      }
+      // Cargar método de pago si existe
+      _selectedPaymentMethod = t.paymentMethod;
+      _selectedSourceBank = t.sourceBank;
+      _selectedDestinationAccount = t.destinationAccount;
     } else {
       _isIncome = widget.initialIsIncome ?? true;
     }
@@ -61,6 +83,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     _titleController.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
+    _installmentNumberController.dispose();
+    _totalInstallmentsController.dispose();
     _amountFocusNode.dispose();
     super.dispose();
   }
@@ -135,6 +159,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
             ),
+            const SizedBox(height: 24),
+            
+            // Tipo de pago (opcional)
+            _buildPaymentTypeSelector(),
+            
+            // Si es ingreso, mostrar método de pago
+            if (_isIncome) ...[
+              const SizedBox(height: 16),
+              _buildPaymentMethodSelector(service),
+            ],
             const SizedBox(height: 24),
 
             // Opciones opcionales de vinculación
@@ -467,26 +501,95 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Widget _buildSourceDropdown(FinanceService service) {
-    return DropdownButtonFormField<String>(
-      value: _selectedSource,
-      decoration: const InputDecoration(
-        labelText: 'Fuente de ingreso',
-        prefixIcon: Icon(Icons.account_balance_wallet_rounded),
-      ),
-      items: service.allIncomeSources
-          .map((source) => DropdownMenuItem(
-                value: source,
-                child: Text(source),
-              ))
-          .toList(),
-      onChanged: (value) => setState(() => _selectedSource = value),
-      validator: (value) {
-        if (value == null) {
-          return 'Selecciona una fuente';
-        }
-        return null;
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<String>(
+          value: _selectedSource,
+          decoration: const InputDecoration(
+            labelText: 'Fuente de ingreso',
+            prefixIcon: Icon(Icons.account_balance_wallet_rounded),
+          ),
+          items: [
+            ...service.allIncomeSources.map((source) => DropdownMenuItem(
+                  value: source,
+                  child: Text(source),
+                )),
+            // Opción para agregar nueva fuente
+            const DropdownMenuItem<String>(
+              value: '__add_new__',
+              child: Row(
+                children: [
+                  Icon(Icons.add_circle_outline, size: 20, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text('Agregar nueva fuente...', 
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ),
+          ],
+          onChanged: (value) {
+            if (value == '__add_new__') {
+              _showAddNewSourceDialog(service);
+            } else {
+              setState(() => _selectedSource = value);
+            }
+          },
+          validator: (value) {
+            if (value == null || value == '__add_new__') {
+              return 'Selecciona una fuente';
+            }
+            return null;
+          },
+        ),
+      ],
     );
+  }
+
+  Future<void> _showAddNewSourceDialog(FinanceService service) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Nueva fuente de ingreso'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(
+            labelText: 'Nombre de la fuente',
+            hintText: 'Ej: Ventas, Comisiones...',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.pop(context, controller.text.trim());
+              }
+            },
+            child: const Text('Agregar'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      await service.addCustomIncomeSource(result);
+      if (mounted) {
+        setState(() => _selectedSource = result);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Fuente "$result" agregada'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildDatePicker(BuildContext context) {
@@ -513,6 +616,347 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildPaymentTypeSelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Tipo de pago (opcional)',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: isDark ? Colors.grey[400] : Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _buildPaymentTypeChip(null, 'Sin especificar', Icons.remove_circle_outline),
+            _buildPaymentTypeChip(PaymentType.full, 'Pago entero', Icons.check_circle_outline),
+            _buildPaymentTypeChip(PaymentType.partial, 'Abono', Icons.pie_chart_outline),
+            _buildPaymentTypeChip(PaymentType.installment, 'Cuota', Icons.format_list_numbered),
+          ],
+        ),
+        // Si es cuota, mostrar campos adicionales
+        if (_selectedPaymentType == PaymentType.installment) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _installmentNumberController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(
+                    labelText: 'Cuota #',
+                    hintText: 'Ej: 3',
+                    prefixIcon: Icon(Icons.tag),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text('de', style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _totalInstallmentsController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(
+                    labelText: 'Total cuotas',
+                    hintText: 'Ej: 12',
+                    prefixIcon: Icon(Icons.grid_view),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPaymentTypeChip(PaymentType? type, String label, IconData icon) {
+    final isSelected = _selectedPaymentType == type;
+    final color = Theme.of(context).colorScheme.primary;
+    
+    return FilterChip(
+      selected: isSelected,
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: isSelected ? Colors.white : color),
+          const SizedBox(width: 4),
+          Text(label),
+        ],
+      ),
+      selectedColor: color,
+      checkmarkColor: Colors.white,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : null,
+      ),
+      onSelected: (selected) {
+        setState(() {
+          _selectedPaymentType = selected ? type : null;
+          if (!selected || type != PaymentType.installment) {
+            _installmentNumberController.clear();
+            _totalInstallmentsController.clear();
+          }
+        });
+      },
+    );
+  }
+
+  Widget _buildPaymentMethodSelector(FinanceService service) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Método de cobro (opcional)',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: isDark ? Colors.grey[400] : Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _buildPaymentMethodChip(null, 'Sin especificar', Icons.remove_circle_outline),
+            _buildPaymentMethodChip(PaymentMethod.cash, 'Efectivo', Icons.payments_outlined),
+            _buildPaymentMethodChip(PaymentMethod.transfer, 'Transferencia', Icons.swap_horiz),
+          ],
+        ),
+        // Si es transferencia, mostrar campos adicionales
+        if (_selectedPaymentMethod == PaymentMethod.transfer) ...[
+          const SizedBox(height: 12),
+          TextFormField(
+            initialValue: _selectedSourceBank,
+            decoration: const InputDecoration(
+              labelText: 'Banco de origen (quien envió)',
+              hintText: 'Ej: Bancolombia, Nequi...',
+              prefixIcon: Icon(Icons.account_balance),
+            ),
+            textCapitalization: TextCapitalization.words,
+            onChanged: (value) => _selectedSourceBank = value.isEmpty ? null : value,
+          ),
+          const SizedBox(height: 12),
+          _buildDestinationAccountField(service),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPaymentMethodChip(PaymentMethod? method, String label, IconData icon) {
+    final isSelected = _selectedPaymentMethod == method;
+    final color = Theme.of(context).colorScheme.secondary;
+    
+    return FilterChip(
+      selected: isSelected,
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: isSelected ? Colors.white : color),
+          const SizedBox(width: 4),
+          Text(label),
+        ],
+      ),
+      selectedColor: color,
+      checkmarkColor: Colors.white,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : null,
+      ),
+      onSelected: (selected) {
+        setState(() {
+          _selectedPaymentMethod = selected ? method : null;
+          if (!selected || method != PaymentMethod.transfer) {
+            _selectedSourceBank = null;
+            _selectedDestinationAccount = null;
+          }
+        });
+      },
+    );
+  }
+
+  Widget _buildDestinationAccountField(FinanceService service) {
+    // Opciones predefinidas de destino
+    final destinationOptions = [
+      'Cuenta bancaria',
+      'Alcancía',
+      'Bolsillo',
+      'Efectivo',
+      'Otro',
+    ];
+    
+    // Determinar el valor actual del dropdown
+    String? dropdownValue;
+    String? customValue;
+    String? bankName;
+    
+    if (_selectedDestinationAccount != null) {
+      if (_selectedDestinationAccount!.startsWith('Cuenta bancaria:')) {
+        dropdownValue = 'Cuenta bancaria';
+        bankName = _selectedDestinationAccount!.replaceFirst('Cuenta bancaria: ', '');
+      } else if (destinationOptions.contains(_selectedDestinationAccount)) {
+        dropdownValue = _selectedDestinationAccount;
+      } else {
+        // Es un valor personalizado
+        dropdownValue = 'Otro';
+        customValue = _selectedDestinationAccount;
+      }
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<String>(
+          value: dropdownValue,
+          decoration: const InputDecoration(
+            labelText: 'Destino del dinero',
+            hintText: 'Selecciona dónde llegó',
+            prefixIcon: Icon(Icons.account_balance_wallet),
+          ),
+          items: destinationOptions.map((dest) => DropdownMenuItem(
+            value: dest,
+            child: Row(
+              children: [
+                Icon(_getDestinationIcon(dest), size: 20),
+                const SizedBox(width: 8),
+                Text(dest),
+              ],
+            ),
+          )).toList(),
+          onChanged: (value) {
+            if (value == 'Otro') {
+              _showCustomDestinationDialog();
+            } else {
+              setState(() {
+                _selectedDestinationAccount = value;
+              });
+            }
+          },
+        ),
+        // Si seleccionó cuenta bancaria, pedir el nombre del banco
+        if (dropdownValue == 'Cuenta bancaria') ...[
+          const SizedBox(height: 12),
+          TextFormField(
+            initialValue: bankName,
+            decoration: const InputDecoration(
+              labelText: 'Nombre del banco',
+              hintText: 'Ej: Bancolombia, BBVA...',
+              prefixIcon: Icon(Icons.account_balance),
+            ),
+            textCapitalization: TextCapitalization.words,
+            onChanged: (value) {
+              // Guardamos el nombre del banco en destinationAccount con prefijo
+              if (value.isNotEmpty) {
+                _selectedDestinationAccount = 'Cuenta bancaria: $value';
+              } else {
+                _selectedDestinationAccount = 'Cuenta bancaria';
+              }
+            },
+          ),
+        ],
+        // Si seleccionó "Otro" y hay un valor personalizado, mostrarlo
+        if (dropdownValue == 'Otro' && customValue != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.edit_note,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    customValue,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 18),
+                  onPressed: () => _showCustomDestinationDialog(initialValue: customValue),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  IconData _getDestinationIcon(String destination) {
+    switch (destination) {
+      case 'Cuenta bancaria':
+        return Icons.account_balance;
+      case 'Alcancía':
+        return Icons.savings;
+      case 'Bolsillo':
+        return Icons.wallet;
+      case 'Efectivo':
+        return Icons.payments;
+      default:
+        return Icons.more_horiz;
+    }
+  }
+
+  Future<void> _showCustomDestinationDialog({String? initialValue}) async {
+    final controller = TextEditingController(text: initialValue);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(initialValue != null ? 'Editar destino' : 'Destino personalizado'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(
+            labelText: 'Nombre del destino',
+            hintText: 'Ej: Caja fuerte, Inversión...',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.pop(context, controller.text.trim());
+              }
+            },
+            child: Text(initialValue != null ? 'Guardar' : 'Agregar'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      setState(() => _selectedDestinationAccount = result);
+    }
   }
 
   Widget _buildFinanceModuleSelector(FinanceService service) {
@@ -668,6 +1112,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Parsear número de cuota si aplica
+      int? installmentNumber;
+      int? totalInstallments;
+      if (_selectedPaymentType == PaymentType.installment) {
+        installmentNumber = int.tryParse(_installmentNumberController.text);
+        totalInstallments = int.tryParse(_totalInstallmentsController.text);
+      }
+      
       final transaction = Transaction(
         id: widget.transaction?.id ??
             DateTime.now().millisecondsSinceEpoch.toString(),
@@ -680,6 +1132,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ? null
             : _descriptionController.text.trim(),
         source: _isIncome ? _selectedSource : null,
+        // Nuevos campos opcionales
+        paymentType: _selectedPaymentType,
+        installmentNumber: installmentNumber,
+        totalInstallments: totalInstallments,
+        paymentMethod: _selectedPaymentMethod,
+        sourceBank: _selectedSourceBank,
+        destinationAccount: _selectedDestinationAccount,
       );
 
       if (widget.transaction != null) {

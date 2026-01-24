@@ -2,6 +2,101 @@
 
 Aplicación móvil completa de gestión financiera personal desarrollada con Flutter.
 
+## 🆕 Versión 1.7.5 - Novedades
+
+### 🎨 **Paletas de Colores Personalizables**
+- **4 Paletas Disponibles**:
+  - 🟢 **Verde** (Fresca y Natural) - Predefinida
+  - 🔵 **Azul** (Moderna y Limpia)
+  - 🟣 **Morado** (Elegante y Sofisticada)
+  - 🩷 **Rosado** (Dulce y Cálida)
+- **Nueva sección "Apariencia" en Ajustes**:
+  - Switch de Modo Oscuro
+  - Selector visual de paletas de colores
+- **Modal de selección de paleta**:
+  - Switch integrado de modo oscuro
+  - Vista previa de colores de cada paleta
+  - Indicador visual de paleta seleccionada
+- **Cambio sin interrupciones**: Al cambiar tema o paleta te quedas en la misma página
+
+### 💾 **Copia de Seguridad Accesible**
+- **Opciones visibles en Ajustes**: Exportar e Importar datos ahora aparecen directamente en la sección "Copia de seguridad"
+- **Menú Avanzado simplificado**: Solo contiene el campo de código de activación (acceso: 3 toques en versión)
+
+### 🏠 **Mejoras en Home**
+- **Interfaz más limpia**: Eliminado el botón de cambio de tema del Home
+- **Tema centralizado**: Ahora el tema se cambia únicamente desde Ajustes > Apariencia
+
+## 🆕 Versión 1.6.6 - Novedades
+
+### 💳 **Tipo de Pago en Movimientos**
+- **Selección Opcional**: Al agregar un movimiento puedes especificar el tipo de pago:
+  - **Sin especificar**: Comportamiento por defecto
+  - **Pago entero**: Para pagos completos
+  - **Abono**: Para pagos parciales
+  - **Cuota**: Para pagos en cuotas con número de cuota y total de cuotas
+- **Número de Cuota**: Si seleccionas "Cuota", puedes indicar "Cuota X de Y"
+
+### 💰 **Método de Cobro para Ingresos**
+- **Tipo de Ingreso**: Selecciona si el ingreso fue en:
+  - **Efectivo**: Dinero en efectivo
+  - **Transferencia**: Dinero recibido por transferencia bancaria
+- **Detalles de Transferencia**: Si seleccionas transferencia:
+  - **Banco de origen**: De dónde provino la transferencia
+  - **Destino del dinero**: Dónde llegó el dinero:
+    - Cuenta bancaria (con nombre del banco)
+    - Alcancía
+    - Bolsillo
+    - Efectivo
+    - Destino personalizado
+
+### ➕ **Agregar Fuente de Ingreso Rápida**
+- **Nueva opción en el dropdown**: Al final de la lista de fuentes de ingreso aparece "Agregar nueva fuente..."
+- **Creación instantánea**: Agrega una nueva fuente de ingreso sin salir de la pantalla de agregar movimiento
+- **Selección automática**: Después de crear la fuente, se selecciona automáticamente
+
+### 🗄️ **Base de Datos Mejorada**
+- Nueva tabla para cuentas de usuario (bancos, alcancías, bolsillos)
+- Migración automática para usuarios existentes
+- Nuevos campos en transacciones totalmente opcionales
+
+## 🆕 Versión 1.6.5 - Novedades
+
+### 💾 **Sistema Completo de Backup y Restauración**
+- **Menú Avanzado Secreto**: Toca 3 veces en la versión de la app en Ajustes para acceder
+- **Exportar Copia de Seguridad Completa**: 
+  - Guarda automáticamente en la carpeta **Descargas**
+  - Formato JSON con TODOS los datos de la app
+  - Incluye: transacciones, presupuestos, alertas, categorías personalizadas
+  - Incluye: metas de ahorro con contribuciones, inversiones con historial
+  - Incluye: préstamos con pagos, transacciones automáticas, configuración
+  - Muestra diálogo de confirmación con la ruta del archivo guardado
+  - Opción de compartir el backup después de guardarlo
+
+- **Importar y Restaurar Datos**:
+  - Selecciona cualquier archivo `.json` de backup
+  - Muestra información del backup antes de importar (fecha, cantidad de datos)
+  - Vista previa: movimientos, metas de ahorro, inversiones, préstamos
+  - Confirmación antes de reemplazar los datos existentes
+  - Indicador de progreso durante la importación
+  - Resumen de datos importados al finalizar
+
+- **Campo de Código de Activación**: Para funciones especiales futuras
+
+### 🔍 **Mejoras en Filtros de Movimientos**
+- **Selección Múltiple**: Selecciona varias categorías y fuentes de ingreso simultáneamente
+- **Fuentes de Ingreso Incluidas**: Los filtros ahora muestran categorías de gasto Y fuentes de ingreso
+- **Modal Arrastrable**: El panel de filtros es scrollable y arrastrable
+- **Contador Visual**: Badge que muestra cuántos filtros están activos
+- **FilterChips**: Chips con check para indicar selección múltiple
+
+## 🆕 Versión 1.5.4 - Novedades
+
+### 🐛 **Corrección de Migración de Base de Datos**
+- **Enlaces Bidireccionales**: Corregido el error "no such column: transaction_id" al editar movimientos vinculados a ahorros o préstamos
+- **Migración Automática**: La base de datos ahora se actualiza correctamente para soportar enlaces bidireccionales entre movimientos y finanzas
+- **Compatibilidad**: La migración detecta si las columnas ya existen antes de intentar crearlas
+
 ## 🆕 Versión 1.5.3 - Novedades
 
 ### 🐛 **Corrección de Bug en Categorías**
@@ -360,7 +455,26 @@ lib/
 
 ## Historial de Versiones
 
-### Versión 1.5.3 (Actual)
+### Versión 1.6.5 (Actual)
+- 💾 Sistema completo de backup y restauración
+- 📂 Exportación automática a carpeta Descargas
+- 📥 Importación con vista previa de datos
+- 🔐 Menú avanzado secreto (3 toques en versión)
+- 🔢 Campo para códigos de activación
+- 🔍 Filtros múltiples en movimientos
+- 📋 Fuentes de ingreso en filtros
+- 🎨 FilterChips con selección múltiple
+
+### Versión 1.5.5
+- 🔐 Menú avanzado secreto inicial
+- 💾 Exportar/importar datos básico
+
+### Versión 1.5.4
+- 🐛 Corrección del error "no such column: transaction_id" en edición de movimientos
+- 🔄 Migración automática para enlaces bidireccionales
+- ✅ Compatibilidad mejorada con bases de datos existentes
+
+### Versión 1.5.3
 - 🐛 Corrección del bug de eliminación de categorías personalizadas
 - 🔄 Actualización correcta de listas en memoria
 - 📱 UI reactiva con Consumer en modales de gestión

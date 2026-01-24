@@ -1,12 +1,26 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
 import '../services/finance_service.dart';
 import '../models/user_settings.dart';
 import 'automatic_transactions_screen.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  int _versionTapCount = 0;
+  DateTime? _lastTapTime;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +59,16 @@ class SettingsScreen extends StatelessWidget {
                 'Automatización',
                 [
                   _buildAutomaticTransactionsSetting(context, service),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Apariencia
+              _buildSection(
+                context,
+                'Apariencia',
+                [
+                  _buildAppearanceSettings(context, service),
                 ],
               ),
               const SizedBox(height: 24),
@@ -134,6 +158,16 @@ class SettingsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
+              // Copia de seguridad
+              _buildSection(
+                context,
+                'Copia de seguridad',
+                [
+                  _buildBackupOptions(context, service),
+                ],
+              ),
+              const SizedBox(height: 24),
+
               // Información
               _buildSection(
                 context,
@@ -183,8 +217,514 @@ class SettingsScreen extends StatelessWidget {
           ),
           title: const Text('Versión'),
           subtitle: Text(version),
+          onTap: () => _handleVersionTap(context),
         );
       },
+    );
+  }
+
+  void _handleVersionTap(BuildContext context) {
+    final now = DateTime.now();
+    
+    // Si pasó más de 2 segundos desde el último toque, reiniciar contador
+    if (_lastTapTime != null && now.difference(_lastTapTime!).inSeconds > 2) {
+      _versionTapCount = 0;
+    }
+    
+    _lastTapTime = now;
+    _versionTapCount++;
+    
+    if (_versionTapCount >= 3) {
+      _versionTapCount = 0;
+      _showDeveloperMenu(context);
+    }
+  }
+
+  Widget _buildBackupOptions(BuildContext context, FinanceService service) {
+    return Column(
+      children: [
+        // Exportar datos
+        ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.upload_rounded,
+              color: Colors.green,
+            ),
+          ),
+          title: const Text('Exportar todos los datos'),
+          subtitle: const Text('Crear copia de seguridad completa'),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => _exportAllData(context, service),
+        ),
+        
+        const Divider(indent: 72),
+        
+        // Importar datos
+        ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.download_rounded,
+              color: Colors.blue,
+            ),
+          ),
+          title: const Text('Importar datos'),
+          subtitle: const Text('Restaurar copia de seguridad'),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => _importData(context, service),
+        ),
+      ],
+    );
+  }
+
+  void _showDeveloperMenu(BuildContext context) {
+    final codeController = TextEditingController();
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.developer_mode_rounded,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Menú Avanzado',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              // Campo de código
+              Text(
+                'Código de activación',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: codeController,
+                      decoration: InputDecoration(
+                        hintText: 'Ingresa un código',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      final code = codeController.text.trim();
+                      if (code.isNotEmpty) {
+                        Navigator.pop(context);
+                        _processCode(context, code);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                    ),
+                    child: const Text('Activar'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _exportAllData(BuildContext context, FinanceService service) async {
+    try {
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+      
+      // Exportar datos
+      final data = await service.exportAllData();
+      final jsonString = const JsonEncoder.withIndent('  ').convert(data);
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final fileName = 'brote_backup_$timestamp.json';
+      
+      // Guardar en carpeta de Descargas
+      final downloadsDir = Directory('/storage/emulated/0/Download');
+      if (!await downloadsDir.exists()) {
+        await downloadsDir.create(recursive: true);
+      }
+      
+      final file = File('${downloadsDir.path}/$fileName');
+      await file.writeAsString(jsonString);
+      
+      // Cerrar indicador de carga
+      if (context.mounted) Navigator.pop(context);
+      
+      // Mostrar diálogo de éxito
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            icon: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.green,
+                size: 48,
+              ),
+            ),
+            title: const Text('¡Guardado!'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'La copia de seguridad se guardó en:',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.folder_rounded, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Descargas/$fileName',
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Aceptar'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Share.shareXFiles(
+                    [XFile(file.path)],
+                    subject: 'Brote - Copia de seguridad',
+                    text: 'Copia de seguridad de Brote',
+                  );
+                },
+                icon: const Icon(Icons.share_rounded, size: 18),
+                label: const Text('Compartir'),
+              ),
+            ],
+          ),
+        );
+      }
+      
+    } catch (e) {
+      if (context.mounted) {
+        // Intentar cerrar indicador si hay error
+        try {
+          Navigator.pop(context);
+        } catch (_) {}
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al exportar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _importData(BuildContext context, FinanceService service) async {
+    // Capturar referencias antes de la operación asíncrona
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
+    FilePickerResult? result;
+    
+    try {
+      // Seleccionar archivo
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        withData: true,
+      );
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Error al seleccionar archivo: $e'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    
+    if (result == null || result.files.isEmpty) return;
+    
+    // Verificar que sea un archivo JSON
+    final fileName = result.files.single.name.toLowerCase();
+    if (!fileName.endsWith('.json')) {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('Por favor selecciona un archivo .json'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+    
+    try {
+      debugPrint('=== IMPORTACIÓN: Iniciando lectura del archivo ===');
+      final fileBytes = result.files.single.bytes;
+      final filePath = result.files.single.path;
+      debugPrint('Bytes: ${fileBytes?.length ?? 0}, Path: $filePath');
+      
+      String jsonString;
+      
+      if (fileBytes != null && fileBytes.isNotEmpty) {
+        debugPrint('Leyendo desde bytes...');
+        jsonString = utf8.decode(fileBytes);
+        debugPrint('JSON leído: ${jsonString.length} caracteres');
+      } else if (filePath != null) {
+        debugPrint('Leyendo desde path: $filePath');
+        final file = File(filePath);
+        if (await file.exists()) {
+          jsonString = await file.readAsString();
+          debugPrint('JSON leído desde archivo: ${jsonString.length} caracteres');
+        } else {
+          throw Exception('El archivo no existe en: $filePath');
+        }
+      } else {
+        throw Exception('No hay bytes ni path disponible');
+      }
+      
+      if (jsonString.isEmpty) {
+        throw Exception('El archivo está vacío');
+      }
+      
+      debugPrint('Parseando JSON...');
+      final data = jsonDecode(jsonString) as Map<String, dynamic>;
+      debugPrint('JSON parseado correctamente. Keys: ${data.keys.toList()}');
+      
+      // Verificar que tenga la estructura esperada
+      if (!data.containsKey('version') && !data.containsKey('transactions')) {
+        throw Exception('El archivo no parece ser una copia de seguridad válida de Brote');
+      }
+      
+      // Mostrar información del backup
+      final exportDate = data['exportDate'] as String?;
+      final transactionCount = (data['transactions'] as List?)?.length ?? 0;
+      final savingsCount = (data['savingsGoals'] as List?)?.length ?? 0;
+      final loansCount = (data['loans'] as List?)?.length ?? 0;
+      final investmentsCount = (data['investments'] as List?)?.length ?? 0;
+      
+      debugPrint('Datos encontrados: $transactionCount transacciones, $savingsCount ahorros, $loansCount préstamos, $investmentsCount inversiones');
+      
+      // Mostrar confirmación con detalles usando el contexto del navigator
+      if (!mounted) {
+        debugPrint('Widget no está montado, abortando');
+        return;
+      }
+      
+      debugPrint('Mostrando diálogo de confirmación...');
+      final confirm = await showDialog<bool>(
+        context: navigator.context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('¿Importar datos?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Esta acción reemplazará TODOS los datos existentes.\n',
+              ),
+              if (exportDate != null)
+                Text('📅 Fecha del backup: ${exportDate.substring(0, 10)}'),
+              const SizedBox(height: 8),
+              Text('📊 Movimientos: $transactionCount'),
+              Text('🐷 Metas de ahorro: $savingsCount'),
+              Text('📈 Inversiones: $investmentsCount'),
+              Text('💳 Préstamos: $loansCount'),
+              const SizedBox(height: 12),
+              const Text(
+                '¿Deseas continuar?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Importar'),
+            ),
+          ],
+        ),
+      );
+      
+      debugPrint('Usuario confirmó: $confirm');
+      if (confirm != true) {
+        debugPrint('Usuario canceló la importación');
+        return;
+      }
+      
+      debugPrint('Mostrando indicador de carga...');
+      // Mostrar indicador de carga
+      if (mounted) {
+        showDialog(
+          context: navigator.context,
+          barrierDismissible: false,
+          builder: (ctx) => const AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Importando datos...'),
+              ],
+            ),
+          ),
+        );
+      }
+      
+      debugPrint('Limpiando datos actuales...');
+      // Limpiar datos actuales
+      await service.clearAllData();
+      debugPrint('Datos limpiados');
+      
+      debugPrint('Importando nuevos datos...');
+      // Importar nuevos datos
+      await service.importAllData(data);
+      debugPrint('Datos importados correctamente');
+      
+      // Cerrar indicador y mostrar éxito
+      if (mounted) {
+        debugPrint('Mostrando diálogo de éxito...');
+        navigator.pop(); // Cerrar indicador de carga
+        showDialog(
+          context: navigator.context,
+          builder: (dialogContext) => AlertDialog(
+            icon: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.green,
+                size: 48,
+              ),
+            ),
+            title: const Text('¡Importación exitosa!'),
+            content: Text(
+              'Se importaron:\n'
+              '• $transactionCount movimientos\n'
+              '• $savingsCount metas de ahorro\n'
+              '• $investmentsCount inversiones\n'
+              '• $loansCount préstamos',
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Aceptar'),
+              ),
+            ],
+          ),
+        );
+      }
+      
+    } catch (e, stackTrace) {
+      debugPrint('Error importing: $e');
+      debugPrint('Stack: $stackTrace');
+      
+      if (mounted) {
+        // Intentar cerrar el diálogo si está abierto
+        try {
+          navigator.pop();
+        } catch (_) {}
+        
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text('Error al importar: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  void _processCode(BuildContext context, String code) {
+    // Aquí puedes agregar lógica para procesar códigos especiales
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Código "$code" procesado'),
+      ),
     );
   }
 
@@ -1344,6 +1884,295 @@ class SettingsScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  Widget _buildAppearanceSettings(BuildContext context, FinanceService service) {
+    final isDark = service.userSettings.theme == 'dark';
+    final currentPalette = service.userSettings.colorPalette;
+    
+    return Column(
+      children: [
+        // Modo oscuro
+        SwitchListTile(
+          secondary: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          title: const Text('Modo Oscuro'),
+          subtitle: Text(isDark ? 'Activado' : 'Desactivado'),
+          value: isDark,
+          onChanged: (value) {
+            service.updateTheme(value ? 'dark' : 'light');
+          },
+        ),
+        const Divider(indent: 72),
+        // Paleta de colores
+        ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.palette_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          title: const Text('Paleta de Colores'),
+          subtitle: Text(currentPalette.displayName),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => _showColorPaletteDialog(context, service),
+        ),
+      ],
+    );
+  }
+
+  void _showColorPaletteDialog(BuildContext context, FinanceService service) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final currentPalette = service.userSettings.colorPalette;
+            final darkMode = service.userSettings.theme == 'dark';
+            
+            return Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Paleta de Colores',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Switch de modo oscuro
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.dark_mode_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 12),
+                            const Text('Modo Oscuro'),
+                          ],
+                        ),
+                        Switch(
+                          value: darkMode,
+                          onChanged: (value) {
+                            service.updateTheme(value ? 'dark' : 'light');
+                            setModalState(() {});
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Opciones de paleta
+                  _buildPaletteOption(
+                    context,
+                    service,
+                    ColorPalette.green,
+                    currentPalette,
+                    setModalState,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildPaletteOption(
+                    context,
+                    service,
+                    ColorPalette.blue,
+                    currentPalette,
+                    setModalState,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildPaletteOption(
+                    context,
+                    service,
+                    ColorPalette.purple,
+                    currentPalette,
+                    setModalState,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildPaletteOption(
+                    context,
+                    service,
+                    ColorPalette.pink,
+                    currentPalette,
+                    setModalState,
+                  ),
+                  const SizedBox(height: 16),
+                  // Botón cerrar
+                  Center(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Cerrar',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPaletteOption(
+    BuildContext context,
+    FinanceService service,
+    ColorPalette palette,
+    ColorPalette currentPalette,
+    StateSetter setModalState,
+  ) {
+    final isSelected = palette == currentPalette;
+    final colors = _getPaletteColors(palette);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return GestureDetector(
+      onTap: () {
+        service.updateColorPalette(palette);
+        setModalState(() {});
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected 
+                ? colors['primary']! 
+                : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Icono de color
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: colors['primary'],
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Textos
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    palette.displayName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : const Color(0xFF1B1B1F),
+                    ),
+                  ),
+                  Text(
+                    palette.colorName,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Muestra de colores
+            Row(
+              children: [
+                _buildColorDot(colors['primary']!, isSelected),
+                const SizedBox(width: 4),
+                _buildColorDot(colors['secondary']!, isSelected),
+                const SizedBox(width: 4),
+                _buildColorDot(colors['tertiary']!, isSelected),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildColorDot(Color color, bool isSelected) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isDark ? Colors.white24 : Colors.black12,
+          width: 1,
+        ),
+      ),
+    );
+  }
+
+  Map<String, Color> _getPaletteColors(ColorPalette palette) {
+    switch (palette) {
+      case ColorPalette.green:
+        return {
+          'primary': const Color(0xFF2D6A4F),
+          'secondary': const Color(0xFF40916C),
+          'tertiary': const Color(0xFF74C69D),
+        };
+      case ColorPalette.purple:
+        return {
+          'primary': const Color(0xFF6B21A8),
+          'secondary': const Color(0xFF7C3AED),
+          'tertiary': const Color(0xFFA78BFA),
+        };
+      case ColorPalette.pink:
+        return {
+          'primary': const Color(0xFFBE185D),
+          'secondary': const Color(0xFFDB2777),
+          'tertiary': const Color(0xFFF472B6),
+        };
+      case ColorPalette.blue:
+        return {
+          'primary': const Color(0xFF1D4ED8),
+          'secondary': const Color(0xFF2563EB),
+          'tertiary': const Color(0xFF60A5FA),
+        };
+    }
   }
 
   Widget _buildChartSettings(BuildContext context, FinanceService service) {

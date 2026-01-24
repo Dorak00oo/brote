@@ -6,6 +6,42 @@ enum BalanceResetPeriod {
   total, // Total (sin reinicio)
 }
 
+/// Paleta de colores de la app
+enum ColorPalette {
+  green, // Verde (predefinido)
+  purple, // Morado
+  pink, // Rosado
+  blue, // Azul
+}
+
+extension ColorPaletteExtension on ColorPalette {
+  String get displayName {
+    switch (this) {
+      case ColorPalette.green:
+        return 'Fresca y Natural';
+      case ColorPalette.purple:
+        return 'Elegante y Sofisticada';
+      case ColorPalette.pink:
+        return 'Dulce y Cálida';
+      case ColorPalette.blue:
+        return 'Moderna y Limpia';
+    }
+  }
+
+  String get colorName {
+    switch (this) {
+      case ColorPalette.green:
+        return 'Verde';
+      case ColorPalette.purple:
+        return 'Morado';
+      case ColorPalette.pink:
+        return 'Rosado';
+      case ColorPalette.blue:
+        return 'Azul';
+    }
+  }
+}
+
 extension BalanceResetPeriodExtension on BalanceResetPeriod {
   String get displayName {
     switch (this) {
@@ -50,7 +86,8 @@ class UserSettings {
   final BalanceResetPeriod balanceResetPeriod; // Período de reinicio del balance
   final int? balanceResetDayOfMonth; // Día del mes para reinicio mensual (1-28)
   final int? balanceResetDayOfWeek; // Día de la semana para reinicio semanal (1=lunes, 7=domingo)
-  final String? theme; // Tema de la app
+  final String? theme; // Tema de la app (light/dark)
+  final ColorPalette colorPalette; // Paleta de colores
   final String trendChartType; // Tipo de gráfico de tendencia (bars, line, area, candlestick)
   final String incomeChartType; // Tipo de gráfico de ingresos (pie, donut, bar)
   final String expenseChartType; // Tipo de gráfico de gastos (pie, donut, bar)
@@ -73,6 +110,7 @@ class UserSettings {
     this.balanceResetDayOfMonth,
     this.balanceResetDayOfWeek,
     this.theme,
+    this.colorPalette = ColorPalette.green,
     this.trendChartType = 'bars',
     this.incomeChartType = 'pie',
     this.expenseChartType = 'pie',
@@ -97,6 +135,7 @@ class UserSettings {
       balanceResetPeriod: BalanceResetPeriod.total,
       balanceResetDayOfMonth: null,
       balanceResetDayOfWeek: null,
+      colorPalette: ColorPalette.green,
       trendChartType: 'bars',
       incomeChartType: 'pie',
       expenseChartType: 'pie',
@@ -226,6 +265,7 @@ class UserSettings {
       'balanceResetDayOfMonth': balanceResetDayOfMonth,
       'balanceResetDayOfWeek': balanceResetDayOfWeek,
       'theme': theme,
+      'colorPalette': colorPalette.name,
       'trendChartType': trendChartType,
       'incomeChartType': incomeChartType,
       'expenseChartType': expenseChartType,
@@ -247,6 +287,18 @@ class UserSettings {
       }
     }
     
+    ColorPalette palette = ColorPalette.green;
+    if (json['colorPalette'] != null) {
+      try {
+        palette = ColorPalette.values.firstWhere(
+          (e) => e.name == json['colorPalette'],
+          orElse: () => ColorPalette.green,
+        );
+      } catch (_) {
+        palette = ColorPalette.green;
+      }
+    }
+    
     return UserSettings(
       id: json['id'],
       monthStartDay: json['monthStartDay'] as int? ?? 1,
@@ -263,6 +315,7 @@ class UserSettings {
       balanceResetDayOfMonth: json['balanceResetDayOfMonth'] as int?,
       balanceResetDayOfWeek: json['balanceResetDayOfWeek'] as int?,
       theme: json['theme'] as String?,
+      colorPalette: palette,
       trendChartType: json['trendChartType'] as String? ?? 'bars',
       incomeChartType: json['incomeChartType'] as String? ?? 'pie',
       expenseChartType: json['expenseChartType'] as String? ?? 'pie',
@@ -290,6 +343,7 @@ class UserSettings {
     int? balanceResetDayOfMonth,
     int? balanceResetDayOfWeek,
     String? theme,
+    ColorPalette? colorPalette,
     String? trendChartType,
     String? incomeChartType,
     String? expenseChartType,
@@ -313,6 +367,7 @@ class UserSettings {
       balanceResetDayOfMonth: balanceResetDayOfMonth ?? this.balanceResetDayOfMonth,
       balanceResetDayOfWeek: balanceResetDayOfWeek ?? this.balanceResetDayOfWeek,
       theme: theme ?? this.theme,
+      colorPalette: colorPalette ?? this.colorPalette,
       trendChartType: trendChartType ?? this.trendChartType,
       incomeChartType: incomeChartType ?? this.incomeChartType,
       expenseChartType: expenseChartType ?? this.expenseChartType,

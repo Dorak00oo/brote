@@ -86,28 +86,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          GestureDetector(
-            onTap: () async {
-              final currentTheme = service.userSettings.theme;
-              final newTheme = (currentTheme == null || currentTheme == 'light')
-                  ? 'dark'
-                  : 'light';
-              await service.updateTheme(newTheme);
-            },
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                (service.userSettings.theme == 'dark')
-                    ? Icons.light_mode_rounded
-                    : Icons.dark_mode_rounded,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          ),
         ],
       ),
     );

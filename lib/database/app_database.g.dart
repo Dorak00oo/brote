@@ -67,6 +67,42 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<String> recurringFrequency =
       GeneratedColumn<String>('recurring_frequency', aliasedName, true,
           type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _paymentTypeMeta =
+      const VerificationMeta('paymentType');
+  @override
+  late final GeneratedColumn<String> paymentType = GeneratedColumn<String>(
+      'payment_type', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _installmentNumberMeta =
+      const VerificationMeta('installmentNumber');
+  @override
+  late final GeneratedColumn<int> installmentNumber = GeneratedColumn<int>(
+      'installment_number', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _totalInstallmentsMeta =
+      const VerificationMeta('totalInstallments');
+  @override
+  late final GeneratedColumn<int> totalInstallments = GeneratedColumn<int>(
+      'total_installments', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _paymentMethodMeta =
+      const VerificationMeta('paymentMethod');
+  @override
+  late final GeneratedColumn<String> paymentMethod = GeneratedColumn<String>(
+      'payment_method', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _sourceBankMeta =
+      const VerificationMeta('sourceBank');
+  @override
+  late final GeneratedColumn<String> sourceBank = GeneratedColumn<String>(
+      'source_bank', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _destinationAccountMeta =
+      const VerificationMeta('destinationAccount');
+  @override
+  late final GeneratedColumn<String> destinationAccount =
+      GeneratedColumn<String>('destination_account', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -78,7 +114,13 @@ class $TransactionsTable extends Transactions
         description,
         source,
         isRecurring,
-        recurringFrequency
+        recurringFrequency,
+        paymentType,
+        installmentNumber,
+        totalInstallments,
+        paymentMethod,
+        sourceBank,
+        destinationAccount
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -147,6 +189,42 @@ class $TransactionsTable extends Transactions
           recurringFrequency.isAcceptableOrUnknown(
               data['recurring_frequency']!, _recurringFrequencyMeta));
     }
+    if (data.containsKey('payment_type')) {
+      context.handle(
+          _paymentTypeMeta,
+          paymentType.isAcceptableOrUnknown(
+              data['payment_type']!, _paymentTypeMeta));
+    }
+    if (data.containsKey('installment_number')) {
+      context.handle(
+          _installmentNumberMeta,
+          installmentNumber.isAcceptableOrUnknown(
+              data['installment_number']!, _installmentNumberMeta));
+    }
+    if (data.containsKey('total_installments')) {
+      context.handle(
+          _totalInstallmentsMeta,
+          totalInstallments.isAcceptableOrUnknown(
+              data['total_installments']!, _totalInstallmentsMeta));
+    }
+    if (data.containsKey('payment_method')) {
+      context.handle(
+          _paymentMethodMeta,
+          paymentMethod.isAcceptableOrUnknown(
+              data['payment_method']!, _paymentMethodMeta));
+    }
+    if (data.containsKey('source_bank')) {
+      context.handle(
+          _sourceBankMeta,
+          sourceBank.isAcceptableOrUnknown(
+              data['source_bank']!, _sourceBankMeta));
+    }
+    if (data.containsKey('destination_account')) {
+      context.handle(
+          _destinationAccountMeta,
+          destinationAccount.isAcceptableOrUnknown(
+              data['destination_account']!, _destinationAccountMeta));
+    }
     return context;
   }
 
@@ -176,6 +254,18 @@ class $TransactionsTable extends Transactions
           .read(DriftSqlType.bool, data['${effectivePrefix}is_recurring'])!,
       recurringFrequency: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}recurring_frequency']),
+      paymentType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payment_type']),
+      installmentNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}installment_number']),
+      totalInstallments: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_installments']),
+      paymentMethod: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payment_method']),
+      sourceBank: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source_bank']),
+      destinationAccount: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}destination_account']),
     );
   }
 
@@ -196,6 +286,12 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final String? source;
   final bool isRecurring;
   final String? recurringFrequency;
+  final String? paymentType;
+  final int? installmentNumber;
+  final int? totalInstallments;
+  final String? paymentMethod;
+  final String? sourceBank;
+  final String? destinationAccount;
   const Transaction(
       {required this.id,
       required this.title,
@@ -206,7 +302,13 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       this.description,
       this.source,
       required this.isRecurring,
-      this.recurringFrequency});
+      this.recurringFrequency,
+      this.paymentType,
+      this.installmentNumber,
+      this.totalInstallments,
+      this.paymentMethod,
+      this.sourceBank,
+      this.destinationAccount});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -225,6 +327,24 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     map['is_recurring'] = Variable<bool>(isRecurring);
     if (!nullToAbsent || recurringFrequency != null) {
       map['recurring_frequency'] = Variable<String>(recurringFrequency);
+    }
+    if (!nullToAbsent || paymentType != null) {
+      map['payment_type'] = Variable<String>(paymentType);
+    }
+    if (!nullToAbsent || installmentNumber != null) {
+      map['installment_number'] = Variable<int>(installmentNumber);
+    }
+    if (!nullToAbsent || totalInstallments != null) {
+      map['total_installments'] = Variable<int>(totalInstallments);
+    }
+    if (!nullToAbsent || paymentMethod != null) {
+      map['payment_method'] = Variable<String>(paymentMethod);
+    }
+    if (!nullToAbsent || sourceBank != null) {
+      map['source_bank'] = Variable<String>(sourceBank);
+    }
+    if (!nullToAbsent || destinationAccount != null) {
+      map['destination_account'] = Variable<String>(destinationAccount);
     }
     return map;
   }
@@ -246,6 +366,24 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       recurringFrequency: recurringFrequency == null && nullToAbsent
           ? const Value.absent()
           : Value(recurringFrequency),
+      paymentType: paymentType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentType),
+      installmentNumber: installmentNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(installmentNumber),
+      totalInstallments: totalInstallments == null && nullToAbsent
+          ? const Value.absent()
+          : Value(totalInstallments),
+      paymentMethod: paymentMethod == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentMethod),
+      sourceBank: sourceBank == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceBank),
+      destinationAccount: destinationAccount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(destinationAccount),
     );
   }
 
@@ -264,6 +402,13 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       isRecurring: serializer.fromJson<bool>(json['isRecurring']),
       recurringFrequency:
           serializer.fromJson<String?>(json['recurringFrequency']),
+      paymentType: serializer.fromJson<String?>(json['paymentType']),
+      installmentNumber: serializer.fromJson<int?>(json['installmentNumber']),
+      totalInstallments: serializer.fromJson<int?>(json['totalInstallments']),
+      paymentMethod: serializer.fromJson<String?>(json['paymentMethod']),
+      sourceBank: serializer.fromJson<String?>(json['sourceBank']),
+      destinationAccount:
+          serializer.fromJson<String?>(json['destinationAccount']),
     );
   }
   @override
@@ -280,6 +425,12 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'source': serializer.toJson<String?>(source),
       'isRecurring': serializer.toJson<bool>(isRecurring),
       'recurringFrequency': serializer.toJson<String?>(recurringFrequency),
+      'paymentType': serializer.toJson<String?>(paymentType),
+      'installmentNumber': serializer.toJson<int?>(installmentNumber),
+      'totalInstallments': serializer.toJson<int?>(totalInstallments),
+      'paymentMethod': serializer.toJson<String?>(paymentMethod),
+      'sourceBank': serializer.toJson<String?>(sourceBank),
+      'destinationAccount': serializer.toJson<String?>(destinationAccount),
     };
   }
 
@@ -293,7 +444,13 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           Value<String?> description = const Value.absent(),
           Value<String?> source = const Value.absent(),
           bool? isRecurring,
-          Value<String?> recurringFrequency = const Value.absent()}) =>
+          Value<String?> recurringFrequency = const Value.absent(),
+          Value<String?> paymentType = const Value.absent(),
+          Value<int?> installmentNumber = const Value.absent(),
+          Value<int?> totalInstallments = const Value.absent(),
+          Value<String?> paymentMethod = const Value.absent(),
+          Value<String?> sourceBank = const Value.absent(),
+          Value<String?> destinationAccount = const Value.absent()}) =>
       Transaction(
         id: id ?? this.id,
         title: title ?? this.title,
@@ -307,6 +464,19 @@ class Transaction extends DataClass implements Insertable<Transaction> {
         recurringFrequency: recurringFrequency.present
             ? recurringFrequency.value
             : this.recurringFrequency,
+        paymentType: paymentType.present ? paymentType.value : this.paymentType,
+        installmentNumber: installmentNumber.present
+            ? installmentNumber.value
+            : this.installmentNumber,
+        totalInstallments: totalInstallments.present
+            ? totalInstallments.value
+            : this.totalInstallments,
+        paymentMethod:
+            paymentMethod.present ? paymentMethod.value : this.paymentMethod,
+        sourceBank: sourceBank.present ? sourceBank.value : this.sourceBank,
+        destinationAccount: destinationAccount.present
+            ? destinationAccount.value
+            : this.destinationAccount,
       );
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
@@ -324,6 +494,22 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       recurringFrequency: data.recurringFrequency.present
           ? data.recurringFrequency.value
           : this.recurringFrequency,
+      paymentType:
+          data.paymentType.present ? data.paymentType.value : this.paymentType,
+      installmentNumber: data.installmentNumber.present
+          ? data.installmentNumber.value
+          : this.installmentNumber,
+      totalInstallments: data.totalInstallments.present
+          ? data.totalInstallments.value
+          : this.totalInstallments,
+      paymentMethod: data.paymentMethod.present
+          ? data.paymentMethod.value
+          : this.paymentMethod,
+      sourceBank:
+          data.sourceBank.present ? data.sourceBank.value : this.sourceBank,
+      destinationAccount: data.destinationAccount.present
+          ? data.destinationAccount.value
+          : this.destinationAccount,
     );
   }
 
@@ -339,14 +525,35 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           ..write('description: $description, ')
           ..write('source: $source, ')
           ..write('isRecurring: $isRecurring, ')
-          ..write('recurringFrequency: $recurringFrequency')
+          ..write('recurringFrequency: $recurringFrequency, ')
+          ..write('paymentType: $paymentType, ')
+          ..write('installmentNumber: $installmentNumber, ')
+          ..write('totalInstallments: $totalInstallments, ')
+          ..write('paymentMethod: $paymentMethod, ')
+          ..write('sourceBank: $sourceBank, ')
+          ..write('destinationAccount: $destinationAccount')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, title, amount, type, category, date,
-      description, source, isRecurring, recurringFrequency);
+  int get hashCode => Object.hash(
+      id,
+      title,
+      amount,
+      type,
+      category,
+      date,
+      description,
+      source,
+      isRecurring,
+      recurringFrequency,
+      paymentType,
+      installmentNumber,
+      totalInstallments,
+      paymentMethod,
+      sourceBank,
+      destinationAccount);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -360,7 +567,13 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           other.description == this.description &&
           other.source == this.source &&
           other.isRecurring == this.isRecurring &&
-          other.recurringFrequency == this.recurringFrequency);
+          other.recurringFrequency == this.recurringFrequency &&
+          other.paymentType == this.paymentType &&
+          other.installmentNumber == this.installmentNumber &&
+          other.totalInstallments == this.totalInstallments &&
+          other.paymentMethod == this.paymentMethod &&
+          other.sourceBank == this.sourceBank &&
+          other.destinationAccount == this.destinationAccount);
 }
 
 class TransactionsCompanion extends UpdateCompanion<Transaction> {
@@ -374,6 +587,12 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<String?> source;
   final Value<bool> isRecurring;
   final Value<String?> recurringFrequency;
+  final Value<String?> paymentType;
+  final Value<int?> installmentNumber;
+  final Value<int?> totalInstallments;
+  final Value<String?> paymentMethod;
+  final Value<String?> sourceBank;
+  final Value<String?> destinationAccount;
   final Value<int> rowid;
   const TransactionsCompanion({
     this.id = const Value.absent(),
@@ -386,6 +605,12 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.source = const Value.absent(),
     this.isRecurring = const Value.absent(),
     this.recurringFrequency = const Value.absent(),
+    this.paymentType = const Value.absent(),
+    this.installmentNumber = const Value.absent(),
+    this.totalInstallments = const Value.absent(),
+    this.paymentMethod = const Value.absent(),
+    this.sourceBank = const Value.absent(),
+    this.destinationAccount = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TransactionsCompanion.insert({
@@ -399,6 +624,12 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.source = const Value.absent(),
     this.isRecurring = const Value.absent(),
     this.recurringFrequency = const Value.absent(),
+    this.paymentType = const Value.absent(),
+    this.installmentNumber = const Value.absent(),
+    this.totalInstallments = const Value.absent(),
+    this.paymentMethod = const Value.absent(),
+    this.sourceBank = const Value.absent(),
+    this.destinationAccount = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         title = Value(title),
@@ -417,6 +648,12 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<String>? source,
     Expression<bool>? isRecurring,
     Expression<String>? recurringFrequency,
+    Expression<String>? paymentType,
+    Expression<int>? installmentNumber,
+    Expression<int>? totalInstallments,
+    Expression<String>? paymentMethod,
+    Expression<String>? sourceBank,
+    Expression<String>? destinationAccount,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -430,6 +667,12 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       if (source != null) 'source': source,
       if (isRecurring != null) 'is_recurring': isRecurring,
       if (recurringFrequency != null) 'recurring_frequency': recurringFrequency,
+      if (paymentType != null) 'payment_type': paymentType,
+      if (installmentNumber != null) 'installment_number': installmentNumber,
+      if (totalInstallments != null) 'total_installments': totalInstallments,
+      if (paymentMethod != null) 'payment_method': paymentMethod,
+      if (sourceBank != null) 'source_bank': sourceBank,
+      if (destinationAccount != null) 'destination_account': destinationAccount,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -445,6 +688,12 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       Value<String?>? source,
       Value<bool>? isRecurring,
       Value<String?>? recurringFrequency,
+      Value<String?>? paymentType,
+      Value<int?>? installmentNumber,
+      Value<int?>? totalInstallments,
+      Value<String?>? paymentMethod,
+      Value<String?>? sourceBank,
+      Value<String?>? destinationAccount,
       Value<int>? rowid}) {
     return TransactionsCompanion(
       id: id ?? this.id,
@@ -457,6 +706,12 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       source: source ?? this.source,
       isRecurring: isRecurring ?? this.isRecurring,
       recurringFrequency: recurringFrequency ?? this.recurringFrequency,
+      paymentType: paymentType ?? this.paymentType,
+      installmentNumber: installmentNumber ?? this.installmentNumber,
+      totalInstallments: totalInstallments ?? this.totalInstallments,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      sourceBank: sourceBank ?? this.sourceBank,
+      destinationAccount: destinationAccount ?? this.destinationAccount,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -494,6 +749,24 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (recurringFrequency.present) {
       map['recurring_frequency'] = Variable<String>(recurringFrequency.value);
     }
+    if (paymentType.present) {
+      map['payment_type'] = Variable<String>(paymentType.value);
+    }
+    if (installmentNumber.present) {
+      map['installment_number'] = Variable<int>(installmentNumber.value);
+    }
+    if (totalInstallments.present) {
+      map['total_installments'] = Variable<int>(totalInstallments.value);
+    }
+    if (paymentMethod.present) {
+      map['payment_method'] = Variable<String>(paymentMethod.value);
+    }
+    if (sourceBank.present) {
+      map['source_bank'] = Variable<String>(sourceBank.value);
+    }
+    if (destinationAccount.present) {
+      map['destination_account'] = Variable<String>(destinationAccount.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -513,6 +786,12 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
           ..write('source: $source, ')
           ..write('isRecurring: $isRecurring, ')
           ..write('recurringFrequency: $recurringFrequency, ')
+          ..write('paymentType: $paymentType, ')
+          ..write('installmentNumber: $installmentNumber, ')
+          ..write('totalInstallments: $totalInstallments, ')
+          ..write('paymentMethod: $paymentMethod, ')
+          ..write('sourceBank: $sourceBank, ')
+          ..write('destinationAccount: $destinationAccount, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5661,6 +5940,14 @@ class $UserSettingsTableTable extends UserSettingsTable
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('pie'));
+  static const VerificationMeta _colorPaletteMeta =
+      const VerificationMeta('colorPalette');
+  @override
+  late final GeneratedColumn<String> colorPalette = GeneratedColumn<String>(
+      'color_palette', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('green'));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -5693,6 +5980,7 @@ class $UserSettingsTableTable extends UserSettingsTable
         trendChartType,
         incomeChartType,
         expenseChartType,
+        colorPalette,
         createdAt,
         updatedAt
       ];
@@ -5813,6 +6101,12 @@ class $UserSettingsTableTable extends UserSettingsTable
           expenseChartType.isAcceptableOrUnknown(
               data['expense_chart_type']!, _expenseChartTypeMeta));
     }
+    if (data.containsKey('color_palette')) {
+      context.handle(
+          _colorPaletteMeta,
+          colorPalette.isAcceptableOrUnknown(
+              data['color_palette']!, _colorPaletteMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -5871,6 +6165,8 @@ class $UserSettingsTableTable extends UserSettingsTable
           DriftSqlType.string, data['${effectivePrefix}income_chart_type'])!,
       expenseChartType: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}expense_chart_type'])!,
+      colorPalette: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}color_palette'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -5904,6 +6200,7 @@ class UserSettingsTableData extends DataClass
   final String trendChartType;
   final String incomeChartType;
   final String expenseChartType;
+  final String colorPalette;
   final DateTime createdAt;
   final DateTime? updatedAt;
   const UserSettingsTableData(
@@ -5925,6 +6222,7 @@ class UserSettingsTableData extends DataClass
       required this.trendChartType,
       required this.incomeChartType,
       required this.expenseChartType,
+      required this.colorPalette,
       required this.createdAt,
       this.updatedAt});
   @override
@@ -5955,6 +6253,7 @@ class UserSettingsTableData extends DataClass
     map['trend_chart_type'] = Variable<String>(trendChartType);
     map['income_chart_type'] = Variable<String>(incomeChartType);
     map['expense_chart_type'] = Variable<String>(expenseChartType);
+    map['color_palette'] = Variable<String>(colorPalette);
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || updatedAt != null) {
       map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -5987,6 +6286,7 @@ class UserSettingsTableData extends DataClass
       trendChartType: Value(trendChartType),
       incomeChartType: Value(incomeChartType),
       expenseChartType: Value(expenseChartType),
+      colorPalette: Value(colorPalette),
       createdAt: Value(createdAt),
       updatedAt: updatedAt == null && nullToAbsent
           ? const Value.absent()
@@ -6025,6 +6325,7 @@ class UserSettingsTableData extends DataClass
       trendChartType: serializer.fromJson<String>(json['trendChartType']),
       incomeChartType: serializer.fromJson<String>(json['incomeChartType']),
       expenseChartType: serializer.fromJson<String>(json['expenseChartType']),
+      colorPalette: serializer.fromJson<String>(json['colorPalette']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
@@ -6053,6 +6354,7 @@ class UserSettingsTableData extends DataClass
       'trendChartType': serializer.toJson<String>(trendChartType),
       'incomeChartType': serializer.toJson<String>(incomeChartType),
       'expenseChartType': serializer.toJson<String>(expenseChartType),
+      'colorPalette': serializer.toJson<String>(colorPalette),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
@@ -6077,6 +6379,7 @@ class UserSettingsTableData extends DataClass
           String? trendChartType,
           String? incomeChartType,
           String? expenseChartType,
+          String? colorPalette,
           DateTime? createdAt,
           Value<DateTime?> updatedAt = const Value.absent()}) =>
       UserSettingsTableData(
@@ -6104,6 +6407,7 @@ class UserSettingsTableData extends DataClass
         trendChartType: trendChartType ?? this.trendChartType,
         incomeChartType: incomeChartType ?? this.incomeChartType,
         expenseChartType: expenseChartType ?? this.expenseChartType,
+        colorPalette: colorPalette ?? this.colorPalette,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
       );
@@ -6157,6 +6461,9 @@ class UserSettingsTableData extends DataClass
       expenseChartType: data.expenseChartType.present
           ? data.expenseChartType.value
           : this.expenseChartType,
+      colorPalette: data.colorPalette.present
+          ? data.colorPalette.value
+          : this.colorPalette,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -6183,6 +6490,7 @@ class UserSettingsTableData extends DataClass
           ..write('trendChartType: $trendChartType, ')
           ..write('incomeChartType: $incomeChartType, ')
           ..write('expenseChartType: $expenseChartType, ')
+          ..write('colorPalette: $colorPalette, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -6190,27 +6498,29 @@ class UserSettingsTableData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-      id,
-      monthStartDay,
-      currency,
-      currencySymbol,
-      thousandsSeparator,
-      decimalSeparator,
-      notificationsEnabled,
-      budgetAlertsEnabled,
-      loanRemindersEnabled,
-      savingsRemindersEnabled,
-      notificationPermissionAsked,
-      balanceResetPeriod,
-      balanceResetDayOfMonth,
-      balanceResetDayOfWeek,
-      theme,
-      trendChartType,
-      incomeChartType,
-      expenseChartType,
-      createdAt,
-      updatedAt);
+  int get hashCode => Object.hashAll([
+        id,
+        monthStartDay,
+        currency,
+        currencySymbol,
+        thousandsSeparator,
+        decimalSeparator,
+        notificationsEnabled,
+        budgetAlertsEnabled,
+        loanRemindersEnabled,
+        savingsRemindersEnabled,
+        notificationPermissionAsked,
+        balanceResetPeriod,
+        balanceResetDayOfMonth,
+        balanceResetDayOfWeek,
+        theme,
+        trendChartType,
+        incomeChartType,
+        expenseChartType,
+        colorPalette,
+        createdAt,
+        updatedAt
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -6234,6 +6544,7 @@ class UserSettingsTableData extends DataClass
           other.trendChartType == this.trendChartType &&
           other.incomeChartType == this.incomeChartType &&
           other.expenseChartType == this.expenseChartType &&
+          other.colorPalette == this.colorPalette &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -6258,6 +6569,7 @@ class UserSettingsTableCompanion
   final Value<String> trendChartType;
   final Value<String> incomeChartType;
   final Value<String> expenseChartType;
+  final Value<String> colorPalette;
   final Value<DateTime> createdAt;
   final Value<DateTime?> updatedAt;
   final Value<int> rowid;
@@ -6280,6 +6592,7 @@ class UserSettingsTableCompanion
     this.trendChartType = const Value.absent(),
     this.incomeChartType = const Value.absent(),
     this.expenseChartType = const Value.absent(),
+    this.colorPalette = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -6303,6 +6616,7 @@ class UserSettingsTableCompanion
     this.trendChartType = const Value.absent(),
     this.incomeChartType = const Value.absent(),
     this.expenseChartType = const Value.absent(),
+    this.colorPalette = const Value.absent(),
     required DateTime createdAt,
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -6327,6 +6641,7 @@ class UserSettingsTableCompanion
     Expression<String>? trendChartType,
     Expression<String>? incomeChartType,
     Expression<String>? expenseChartType,
+    Expression<String>? colorPalette,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -6358,6 +6673,7 @@ class UserSettingsTableCompanion
       if (trendChartType != null) 'trend_chart_type': trendChartType,
       if (incomeChartType != null) 'income_chart_type': incomeChartType,
       if (expenseChartType != null) 'expense_chart_type': expenseChartType,
+      if (colorPalette != null) 'color_palette': colorPalette,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -6383,6 +6699,7 @@ class UserSettingsTableCompanion
       Value<String>? trendChartType,
       Value<String>? incomeChartType,
       Value<String>? expenseChartType,
+      Value<String>? colorPalette,
       Value<DateTime>? createdAt,
       Value<DateTime?>? updatedAt,
       Value<int>? rowid}) {
@@ -6409,6 +6726,7 @@ class UserSettingsTableCompanion
       trendChartType: trendChartType ?? this.trendChartType,
       incomeChartType: incomeChartType ?? this.incomeChartType,
       expenseChartType: expenseChartType ?? this.expenseChartType,
+      colorPalette: colorPalette ?? this.colorPalette,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -6477,6 +6795,9 @@ class UserSettingsTableCompanion
     if (expenseChartType.present) {
       map['expense_chart_type'] = Variable<String>(expenseChartType.value);
     }
+    if (colorPalette.present) {
+      map['color_palette'] = Variable<String>(colorPalette.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -6510,6 +6831,7 @@ class UserSettingsTableCompanion
           ..write('trendChartType: $trendChartType, ')
           ..write('incomeChartType: $incomeChartType, ')
           ..write('expenseChartType: $expenseChartType, ')
+          ..write('colorPalette: $colorPalette, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -7490,6 +7812,320 @@ class RecurringTransactionsCompanion
   }
 }
 
+class $UserAccountsTable extends UserAccounts
+    with TableInfo<$UserAccountsTable, UserAccount> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserAccountsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _bankNameMeta =
+      const VerificationMeta('bankName');
+  @override
+  late final GeneratedColumn<String> bankName = GeneratedColumn<String>(
+      'bank_name', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _accountNumberMeta =
+      const VerificationMeta('accountNumber');
+  @override
+  late final GeneratedColumn<String> accountNumber = GeneratedColumn<String>(
+      'account_number', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, type, bankName, accountNumber];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_accounts';
+  @override
+  VerificationContext validateIntegrity(Insertable<UserAccount> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('bank_name')) {
+      context.handle(_bankNameMeta,
+          bankName.isAcceptableOrUnknown(data['bank_name']!, _bankNameMeta));
+    }
+    if (data.containsKey('account_number')) {
+      context.handle(
+          _accountNumberMeta,
+          accountNumber.isAcceptableOrUnknown(
+              data['account_number']!, _accountNumberMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserAccount map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserAccount(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      bankName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}bank_name']),
+      accountNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}account_number']),
+    );
+  }
+
+  @override
+  $UserAccountsTable createAlias(String alias) {
+    return $UserAccountsTable(attachedDatabase, alias);
+  }
+}
+
+class UserAccount extends DataClass implements Insertable<UserAccount> {
+  final String id;
+  final String name;
+  final String type;
+  final String? bankName;
+  final String? accountNumber;
+  const UserAccount(
+      {required this.id,
+      required this.name,
+      required this.type,
+      this.bankName,
+      this.accountNumber});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['type'] = Variable<String>(type);
+    if (!nullToAbsent || bankName != null) {
+      map['bank_name'] = Variable<String>(bankName);
+    }
+    if (!nullToAbsent || accountNumber != null) {
+      map['account_number'] = Variable<String>(accountNumber);
+    }
+    return map;
+  }
+
+  UserAccountsCompanion toCompanion(bool nullToAbsent) {
+    return UserAccountsCompanion(
+      id: Value(id),
+      name: Value(name),
+      type: Value(type),
+      bankName: bankName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bankName),
+      accountNumber: accountNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountNumber),
+    );
+  }
+
+  factory UserAccount.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserAccount(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      type: serializer.fromJson<String>(json['type']),
+      bankName: serializer.fromJson<String?>(json['bankName']),
+      accountNumber: serializer.fromJson<String?>(json['accountNumber']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'type': serializer.toJson<String>(type),
+      'bankName': serializer.toJson<String?>(bankName),
+      'accountNumber': serializer.toJson<String?>(accountNumber),
+    };
+  }
+
+  UserAccount copyWith(
+          {String? id,
+          String? name,
+          String? type,
+          Value<String?> bankName = const Value.absent(),
+          Value<String?> accountNumber = const Value.absent()}) =>
+      UserAccount(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        type: type ?? this.type,
+        bankName: bankName.present ? bankName.value : this.bankName,
+        accountNumber:
+            accountNumber.present ? accountNumber.value : this.accountNumber,
+      );
+  UserAccount copyWithCompanion(UserAccountsCompanion data) {
+    return UserAccount(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      type: data.type.present ? data.type.value : this.type,
+      bankName: data.bankName.present ? data.bankName.value : this.bankName,
+      accountNumber: data.accountNumber.present
+          ? data.accountNumber.value
+          : this.accountNumber,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserAccount(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('bankName: $bankName, ')
+          ..write('accountNumber: $accountNumber')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, type, bankName, accountNumber);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserAccount &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.type == this.type &&
+          other.bankName == this.bankName &&
+          other.accountNumber == this.accountNumber);
+}
+
+class UserAccountsCompanion extends UpdateCompanion<UserAccount> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> type;
+  final Value<String?> bankName;
+  final Value<String?> accountNumber;
+  final Value<int> rowid;
+  const UserAccountsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.type = const Value.absent(),
+    this.bankName = const Value.absent(),
+    this.accountNumber = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserAccountsCompanion.insert({
+    required String id,
+    required String name,
+    required String type,
+    this.bankName = const Value.absent(),
+    this.accountNumber = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name),
+        type = Value(type);
+  static Insertable<UserAccount> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? type,
+    Expression<String>? bankName,
+    Expression<String>? accountNumber,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (type != null) 'type': type,
+      if (bankName != null) 'bank_name': bankName,
+      if (accountNumber != null) 'account_number': accountNumber,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserAccountsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? name,
+      Value<String>? type,
+      Value<String?>? bankName,
+      Value<String?>? accountNumber,
+      Value<int>? rowid}) {
+    return UserAccountsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      bankName: bankName ?? this.bankName,
+      accountNumber: accountNumber ?? this.accountNumber,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (bankName.present) {
+      map['bank_name'] = Variable<String>(bankName.value);
+    }
+    if (accountNumber.present) {
+      map['account_number'] = Variable<String>(accountNumber.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserAccountsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('bankName: $bankName, ')
+          ..write('accountNumber: $accountNumber, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7516,6 +8152,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $UserSettingsTableTable(this);
   late final $RecurringTransactionsTable recurringTransactions =
       $RecurringTransactionsTable(this);
+  late final $UserAccountsTable userAccounts = $UserAccountsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -7535,7 +8172,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         loans,
         loanPayments,
         userSettingsTable,
-        recurringTransactions
+        recurringTransactions,
+        userAccounts
       ];
 }
 
@@ -7551,6 +8189,12 @@ typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
   Value<String?> source,
   Value<bool> isRecurring,
   Value<String?> recurringFrequency,
+  Value<String?> paymentType,
+  Value<int?> installmentNumber,
+  Value<int?> totalInstallments,
+  Value<String?> paymentMethod,
+  Value<String?> sourceBank,
+  Value<String?> destinationAccount,
   Value<int> rowid,
 });
 typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
@@ -7565,6 +8209,12 @@ typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
   Value<String?> source,
   Value<bool> isRecurring,
   Value<String?> recurringFrequency,
+  Value<String?> paymentType,
+  Value<int?> installmentNumber,
+  Value<int?> totalInstallments,
+  Value<String?> paymentMethod,
+  Value<String?> sourceBank,
+  Value<String?> destinationAccount,
   Value<int> rowid,
 });
 
@@ -7607,6 +8257,27 @@ class $$TransactionsTableFilterComposer
   ColumnFilters<String> get recurringFrequency => $composableBuilder(
       column: $table.recurringFrequency,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get paymentType => $composableBuilder(
+      column: $table.paymentType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get installmentNumber => $composableBuilder(
+      column: $table.installmentNumber,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalInstallments => $composableBuilder(
+      column: $table.totalInstallments,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get paymentMethod => $composableBuilder(
+      column: $table.paymentMethod, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sourceBank => $composableBuilder(
+      column: $table.sourceBank, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get destinationAccount => $composableBuilder(
+      column: $table.destinationAccount,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$TransactionsTableOrderingComposer
@@ -7648,6 +8319,28 @@ class $$TransactionsTableOrderingComposer
   ColumnOrderings<String> get recurringFrequency => $composableBuilder(
       column: $table.recurringFrequency,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get paymentType => $composableBuilder(
+      column: $table.paymentType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get installmentNumber => $composableBuilder(
+      column: $table.installmentNumber,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalInstallments => $composableBuilder(
+      column: $table.totalInstallments,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get paymentMethod => $composableBuilder(
+      column: $table.paymentMethod,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sourceBank => $composableBuilder(
+      column: $table.sourceBank, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get destinationAccount => $composableBuilder(
+      column: $table.destinationAccount,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -7688,6 +8381,24 @@ class $$TransactionsTableAnnotationComposer
 
   GeneratedColumn<String> get recurringFrequency => $composableBuilder(
       column: $table.recurringFrequency, builder: (column) => column);
+
+  GeneratedColumn<String> get paymentType => $composableBuilder(
+      column: $table.paymentType, builder: (column) => column);
+
+  GeneratedColumn<int> get installmentNumber => $composableBuilder(
+      column: $table.installmentNumber, builder: (column) => column);
+
+  GeneratedColumn<int> get totalInstallments => $composableBuilder(
+      column: $table.totalInstallments, builder: (column) => column);
+
+  GeneratedColumn<String> get paymentMethod => $composableBuilder(
+      column: $table.paymentMethod, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceBank => $composableBuilder(
+      column: $table.sourceBank, builder: (column) => column);
+
+  GeneratedColumn<String> get destinationAccount => $composableBuilder(
+      column: $table.destinationAccount, builder: (column) => column);
 }
 
 class $$TransactionsTableTableManager extends RootTableManager<
@@ -7726,6 +8437,12 @@ class $$TransactionsTableTableManager extends RootTableManager<
             Value<String?> source = const Value.absent(),
             Value<bool> isRecurring = const Value.absent(),
             Value<String?> recurringFrequency = const Value.absent(),
+            Value<String?> paymentType = const Value.absent(),
+            Value<int?> installmentNumber = const Value.absent(),
+            Value<int?> totalInstallments = const Value.absent(),
+            Value<String?> paymentMethod = const Value.absent(),
+            Value<String?> sourceBank = const Value.absent(),
+            Value<String?> destinationAccount = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TransactionsCompanion(
@@ -7739,6 +8456,12 @@ class $$TransactionsTableTableManager extends RootTableManager<
             source: source,
             isRecurring: isRecurring,
             recurringFrequency: recurringFrequency,
+            paymentType: paymentType,
+            installmentNumber: installmentNumber,
+            totalInstallments: totalInstallments,
+            paymentMethod: paymentMethod,
+            sourceBank: sourceBank,
+            destinationAccount: destinationAccount,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -7752,6 +8475,12 @@ class $$TransactionsTableTableManager extends RootTableManager<
             Value<String?> source = const Value.absent(),
             Value<bool> isRecurring = const Value.absent(),
             Value<String?> recurringFrequency = const Value.absent(),
+            Value<String?> paymentType = const Value.absent(),
+            Value<int?> installmentNumber = const Value.absent(),
+            Value<int?> totalInstallments = const Value.absent(),
+            Value<String?> paymentMethod = const Value.absent(),
+            Value<String?> sourceBank = const Value.absent(),
+            Value<String?> destinationAccount = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TransactionsCompanion.insert(
@@ -7765,6 +8494,12 @@ class $$TransactionsTableTableManager extends RootTableManager<
             source: source,
             isRecurring: isRecurring,
             recurringFrequency: recurringFrequency,
+            paymentType: paymentType,
+            installmentNumber: installmentNumber,
+            totalInstallments: totalInstallments,
+            paymentMethod: paymentMethod,
+            sourceBank: sourceBank,
+            destinationAccount: destinationAccount,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -10921,6 +11656,7 @@ typedef $$UserSettingsTableTableCreateCompanionBuilder
   Value<String> trendChartType,
   Value<String> incomeChartType,
   Value<String> expenseChartType,
+  Value<String> colorPalette,
   required DateTime createdAt,
   Value<DateTime?> updatedAt,
   Value<int> rowid,
@@ -10945,6 +11681,7 @@ typedef $$UserSettingsTableTableUpdateCompanionBuilder
   Value<String> trendChartType,
   Value<String> incomeChartType,
   Value<String> expenseChartType,
+  Value<String> colorPalette,
   Value<DateTime> createdAt,
   Value<DateTime?> updatedAt,
   Value<int> rowid,
@@ -11026,6 +11763,9 @@ class $$UserSettingsTableTableFilterComposer
   ColumnFilters<String> get expenseChartType => $composableBuilder(
       column: $table.expenseChartType,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get colorPalette => $composableBuilder(
+      column: $table.colorPalette, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -11112,6 +11852,10 @@ class $$UserSettingsTableTableOrderingComposer
       column: $table.expenseChartType,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get colorPalette => $composableBuilder(
+      column: $table.colorPalette,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -11182,6 +11926,9 @@ class $$UserSettingsTableTableAnnotationComposer
   GeneratedColumn<String> get expenseChartType => $composableBuilder(
       column: $table.expenseChartType, builder: (column) => column);
 
+  GeneratedColumn<String> get colorPalette => $composableBuilder(
+      column: $table.colorPalette, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -11236,6 +11983,7 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             Value<String> trendChartType = const Value.absent(),
             Value<String> incomeChartType = const Value.absent(),
             Value<String> expenseChartType = const Value.absent(),
+            Value<String> colorPalette = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> updatedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -11259,6 +12007,7 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             trendChartType: trendChartType,
             incomeChartType: incomeChartType,
             expenseChartType: expenseChartType,
+            colorPalette: colorPalette,
             createdAt: createdAt,
             updatedAt: updatedAt,
             rowid: rowid,
@@ -11282,6 +12031,7 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             Value<String> trendChartType = const Value.absent(),
             Value<String> incomeChartType = const Value.absent(),
             Value<String> expenseChartType = const Value.absent(),
+            Value<String> colorPalette = const Value.absent(),
             required DateTime createdAt,
             Value<DateTime?> updatedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -11305,6 +12055,7 @@ class $$UserSettingsTableTableTableManager extends RootTableManager<
             trendChartType: trendChartType,
             incomeChartType: incomeChartType,
             expenseChartType: expenseChartType,
+            colorPalette: colorPalette,
             createdAt: createdAt,
             updatedAt: updatedAt,
             rowid: rowid,
@@ -11750,6 +12501,180 @@ typedef $$RecurringTransactionsTableProcessedTableManager
         ),
         RecurringTransaction,
         PrefetchHooks Function()>;
+typedef $$UserAccountsTableCreateCompanionBuilder = UserAccountsCompanion
+    Function({
+  required String id,
+  required String name,
+  required String type,
+  Value<String?> bankName,
+  Value<String?> accountNumber,
+  Value<int> rowid,
+});
+typedef $$UserAccountsTableUpdateCompanionBuilder = UserAccountsCompanion
+    Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> type,
+  Value<String?> bankName,
+  Value<String?> accountNumber,
+  Value<int> rowid,
+});
+
+class $$UserAccountsTableFilterComposer
+    extends Composer<_$AppDatabase, $UserAccountsTable> {
+  $$UserAccountsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get bankName => $composableBuilder(
+      column: $table.bankName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get accountNumber => $composableBuilder(
+      column: $table.accountNumber, builder: (column) => ColumnFilters(column));
+}
+
+class $$UserAccountsTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserAccountsTable> {
+  $$UserAccountsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get bankName => $composableBuilder(
+      column: $table.bankName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get accountNumber => $composableBuilder(
+      column: $table.accountNumber,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$UserAccountsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserAccountsTable> {
+  $$UserAccountsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get bankName =>
+      $composableBuilder(column: $table.bankName, builder: (column) => column);
+
+  GeneratedColumn<String> get accountNumber => $composableBuilder(
+      column: $table.accountNumber, builder: (column) => column);
+}
+
+class $$UserAccountsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $UserAccountsTable,
+    UserAccount,
+    $$UserAccountsTableFilterComposer,
+    $$UserAccountsTableOrderingComposer,
+    $$UserAccountsTableAnnotationComposer,
+    $$UserAccountsTableCreateCompanionBuilder,
+    $$UserAccountsTableUpdateCompanionBuilder,
+    (
+      UserAccount,
+      BaseReferences<_$AppDatabase, $UserAccountsTable, UserAccount>
+    ),
+    UserAccount,
+    PrefetchHooks Function()> {
+  $$UserAccountsTableTableManager(_$AppDatabase db, $UserAccountsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserAccountsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserAccountsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserAccountsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String?> bankName = const Value.absent(),
+            Value<String?> accountNumber = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              UserAccountsCompanion(
+            id: id,
+            name: name,
+            type: type,
+            bankName: bankName,
+            accountNumber: accountNumber,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String name,
+            required String type,
+            Value<String?> bankName = const Value.absent(),
+            Value<String?> accountNumber = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              UserAccountsCompanion.insert(
+            id: id,
+            name: name,
+            type: type,
+            bankName: bankName,
+            accountNumber: accountNumber,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$UserAccountsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $UserAccountsTable,
+    UserAccount,
+    $$UserAccountsTableFilterComposer,
+    $$UserAccountsTableOrderingComposer,
+    $$UserAccountsTableAnnotationComposer,
+    $$UserAccountsTableCreateCompanionBuilder,
+    $$UserAccountsTableUpdateCompanionBuilder,
+    (
+      UserAccount,
+      BaseReferences<_$AppDatabase, $UserAccountsTable, UserAccount>
+    ),
+    UserAccount,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -11788,4 +12713,6 @@ class $AppDatabaseManager {
       $$UserSettingsTableTableTableManager(_db, _db.userSettingsTable);
   $$RecurringTransactionsTableTableManager get recurringTransactions =>
       $$RecurringTransactionsTableTableManager(_db, _db.recurringTransactions);
+  $$UserAccountsTableTableManager get userAccounts =>
+      $$UserAccountsTableTableManager(_db, _db.userAccounts);
 }

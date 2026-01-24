@@ -443,21 +443,45 @@ class FinanceService extends ChangeNotifier {
       date: db.date,
       description: db.description,
       source: db.source,
+      // Nuevos campos
+      paymentType: db.paymentType != null
+          ? models.PaymentType.values.firstWhere(
+              (e) => e.toString() == 'PaymentType.${db.paymentType}',
+              orElse: () => models.PaymentType.full,
+            )
+          : null,
+      installmentNumber: db.installmentNumber,
+      totalInstallments: db.totalInstallments,
+      paymentMethod: db.paymentMethod != null
+          ? models.PaymentMethod.values.firstWhere(
+              (e) => e.toString() == 'PaymentMethod.${db.paymentMethod}',
+              orElse: () => models.PaymentMethod.cash,
+            )
+          : null,
+      sourceBank: db.sourceBank,
+      destinationAccount: db.destinationAccount,
     );
   }
 
   TransactionsCompanion _toDbTransaction(models.Transaction transaction) {
-    return TransactionsCompanion.insert(
-      id: transaction.id,
-      title: transaction.title,
-      amount: transaction.amount,
-      type: transaction.type == models.TransactionType.income
+    return TransactionsCompanion(
+      id: Value(transaction.id),
+      title: Value(transaction.title),
+      amount: Value(transaction.amount),
+      type: Value(transaction.type == models.TransactionType.income
           ? 'income'
-          : 'expense',
-      category: transaction.category,
-      date: transaction.date,
+          : 'expense'),
+      category: Value(transaction.category),
+      date: Value(transaction.date),
       description: Value(transaction.description),
       source: Value(transaction.source),
+      // Nuevos campos
+      paymentType: Value(transaction.paymentType?.name),
+      installmentNumber: Value(transaction.installmentNumber),
+      totalInstallments: Value(transaction.totalInstallments),
+      paymentMethod: Value(transaction.paymentMethod?.name),
+      sourceBank: Value(transaction.sourceBank),
+      destinationAccount: Value(transaction.destinationAccount),
     );
   }
 
@@ -688,6 +712,16 @@ class FinanceService extends ChangeNotifier {
     } catch (_) {
       resetPeriod = models.BalanceResetPeriod.total;
     }
+
+    models.ColorPalette palette = models.ColorPalette.green;
+    try {
+      palette = models.ColorPalette.values.firstWhere(
+        (e) => e.name == db.colorPalette,
+        orElse: () => models.ColorPalette.green,
+      );
+    } catch (_) {
+      palette = models.ColorPalette.green;
+    }
     
     return models.UserSettings(
       id: db.id,
@@ -705,6 +739,7 @@ class FinanceService extends ChangeNotifier {
       balanceResetDayOfMonth: db.balanceResetDayOfMonth,
       balanceResetDayOfWeek: db.balanceResetDayOfWeek,
       theme: db.theme,
+      colorPalette: palette,
       trendChartType: db.trendChartType,
       incomeChartType: db.incomeChartType,
       expenseChartType: db.expenseChartType,
@@ -972,7 +1007,8 @@ class FinanceService extends ChangeNotifier {
     }
 
     if (category != null && category.isNotEmpty) {
-      filtered = filtered.where((t) => t.category == category).toList();
+      // Buscar tanto en categoría como en fuente de ingreso
+      filtered = filtered.where((t) => t.category == category || t.source == category).toList();
     }
 
     if (startDate != null) {
@@ -2021,6 +2057,28 @@ class FinanceService extends ChangeNotifier {
     }
   }
 
+  Future<void> updateColorPalette(models.ColorPalette palette) async {
+    try {
+      await _db.updateUserSettings(UserSettingsTableCompanion(
+        colorPalette: Value(palette.name),
+      ));
+      // Actualizar inmediatamente para respuesta instantánea
+      if (_userSettings != null) {
+        _userSettings = _userSettings!.copyWith(
+          colorPalette: palette,
+          updatedAt: DateTime.now(),
+        );
+        notifyListeners();
+      } else {
+        await _loadUserSettings();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error updating color palette: $e');
+      rethrow;
+    }
+  }
+
   Future<void> updateChartSettings({
     String? trendChartType,
     String? incomeChartType,
@@ -2182,6 +2240,576 @@ class FinanceService extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error deleting recurring transaction: $e');
+      rethrow;
+    }
+  }
+
+  // ========== BACKUP / RESTORE ==========
+  
+  /// Exporta todos los datos de la app a un Map que puede ser serializado a JSON
+  Future<Map<String, dynamic>> exportAllData() async {
+    try {
+      // Obtener todos los datos de la base de datos
+      final transactions = await _db.getAllTransactions();
+      final budgets = await _db.getAllBudgets();
+      final alerts = await _db.getAllAlerts();
+      final customCategories = await _db.getAllCustomCategories();
+      final customIncomeSources = await _db.getAllCustomIncomeSources();
+      final hiddenCategories = await _db.getAllHiddenDefaultCategories();
+      final hiddenSources = await _db.getAllHiddenDefaultIncomeSources();
+      final savingsGoals = await _db.getAllSavingsGoals();
+      final investments = await _db.getAllInvestments();
+      final loans = await _db.getAllLoans();
+      final userSettings = await _db.getUserSettings();
+      final recurringTransactions = await _db.getAllRecurringTransactions();
+      
+      // Obtener contribuciones y pagos para cada meta/préstamo
+      final Map<String, List<Map<String, dynamic>>> savingsContributions = {};
+      for (final goal in savingsGoals) {
+        final contributions = await _db.getContributionsByGoalId(goal.id);
+        savingsContributions[goal.id] = contributions.map((c) => {
+          'id': c.id,
+          'savingsGoalId': c.savingsGoalId,
+          'amount': c.amount,
+          'date': c.date.toIso8601String(),
+          'note': c.note,
+          'transactionId': c.transactionId,
+        }).toList();
+      }
+      
+      final Map<String, List<Map<String, dynamic>>> loanPayments = {};
+      for (final loan in loans) {
+        final payments = await _db.getPaymentsByLoanId(loan.id);
+        loanPayments[loan.id] = payments.map((p) => {
+          'id': p.id,
+          'loanId': p.loanId,
+          'amount': p.amount,
+          'date': p.date.toIso8601String(),
+          'installmentNumber': p.installmentNumber,
+          'notes': p.notes,
+          'transactionId': p.transactionId,
+        }).toList();
+      }
+      
+      // Obtener historial de inversiones
+      final Map<String, List<Map<String, dynamic>>> investmentHistory = {};
+      for (final inv in investments) {
+        final history = await _db.getInvestmentHistory(inv.id);
+        investmentHistory[inv.id] = history.map((h) => {
+          'id': h.id,
+          'investmentId': h.investmentId,
+          'value': h.value,
+          'date': h.date.toIso8601String(),
+        }).toList();
+      }
+      
+      return {
+        'version': 1,
+        'exportDate': DateTime.now().toIso8601String(),
+        'transactions': transactions.map((t) => {
+          'id': t.id,
+          'title': t.title,
+          'amount': t.amount,
+          'type': t.type,
+          'category': t.category,
+          'date': t.date.toIso8601String(),
+          'description': t.description,
+          'source': t.source,
+          'isRecurring': t.isRecurring,
+          'recurringFrequency': t.recurringFrequency,
+        }).toList(),
+        'budgets': budgets.map((b) => {
+          'id': b.id,
+          'category': b.category,
+          'maxAmount': b.maxAmount,
+          'createdAt': b.createdAt.toIso8601String(),
+          'updatedAt': b.updatedAt?.toIso8601String(),
+        }).toList(),
+        'alerts': alerts.map((a) => {
+          'id': a.id,
+          'category': a.category,
+          'type': a.type,
+          'currentAmount': a.currentAmount,
+          'maxAmount': a.maxAmount,
+          'percentage': a.percentage,
+          'createdAt': a.createdAt.toIso8601String(),
+          'isRead': a.isRead,
+        }).toList(),
+        'customCategories': customCategories.map((c) => c.name).toList(),
+        'customIncomeSources': customIncomeSources.map((c) => c.name).toList(),
+        'hiddenDefaultCategories': hiddenCategories.map((c) => c.name).toList(),
+        'hiddenDefaultIncomeSources': hiddenSources.map((c) => c.name).toList(),
+        'savingsGoals': savingsGoals.map((s) => {
+          'id': s.id,
+          'name': s.name,
+          'description': s.description,
+          'targetAmount': s.targetAmount,
+          'currentAmount': s.currentAmount,
+          'createdAt': s.createdAt.toIso8601String(),
+          'targetDate': s.targetDate?.toIso8601String(),
+          'status': s.status,
+          'iconName': s.iconName,
+          'color': s.color,
+          'contributionFrequency': s.contributionFrequency,
+          'notificationDays': s.notificationDays,
+          'notificationTime': s.notificationTime,
+        }).toList(),
+        'savingsContributions': savingsContributions,
+        'investments': investments.map((i) => {
+          'id': i.id,
+          'name': i.name,
+          'description': i.description,
+          'type': i.type,
+          'initialAmount': i.initialAmount,
+          'currentValue': i.currentValue,
+          'expectedReturnRate': i.expectedReturnRate,
+          'returnRatePeriod': i.returnRatePeriod,
+          'purchaseDate': i.purchaseDate.toIso8601String(),
+          'soldDate': i.soldDate?.toIso8601String(),
+          'soldAmount': i.soldAmount,
+          'status': i.status,
+          'platformOrBroker': i.platformOrBroker,
+          'notes': i.notes,
+          'compoundingFrequency': i.compoundingFrequency,
+          'iconName': i.iconName,
+          'color': i.color,
+          'notificationDays': i.notificationDays,
+          'notificationTime': i.notificationTime,
+        }).toList(),
+        'investmentHistory': investmentHistory,
+        'loans': loans.map((l) => {
+          'id': l.id,
+          'name': l.name,
+          'borrowerOrLender': l.borrowerOrLender,
+          'type': l.type,
+          'principalAmount': l.principalAmount,
+          'interestRate': l.interestRate,
+          'interestRatePeriod': l.interestRatePeriod,
+          'totalInstallments': l.totalInstallments,
+          'installmentAmount': l.installmentAmount,
+          'startDate': l.startDate.toIso8601String(),
+          'endDate': l.endDate?.toIso8601String(),
+          'paymentFrequency': l.paymentFrequency,
+          'status': l.status,
+          'notes': l.notes,
+          'paidAmount': l.paidAmount,
+          'paidInstallments': l.paidInstallments,
+          'iconName': l.iconName,
+          'color': l.color,
+          'notificationDays': l.notificationDays,
+          'notificationDayOfMonth': l.notificationDayOfMonth,
+          'notificationTime': l.notificationTime,
+        }).toList(),
+        'loanPayments': loanPayments,
+        'userSettings': userSettings != null ? {
+          'id': userSettings.id,
+          'monthStartDay': userSettings.monthStartDay,
+          'currency': userSettings.currency,
+          'currencySymbol': userSettings.currencySymbol,
+          'thousandsSeparator': userSettings.thousandsSeparator,
+          'decimalSeparator': userSettings.decimalSeparator,
+          'notificationsEnabled': userSettings.notificationsEnabled,
+          'budgetAlertsEnabled': userSettings.budgetAlertsEnabled,
+          'loanRemindersEnabled': userSettings.loanRemindersEnabled,
+          'savingsRemindersEnabled': userSettings.savingsRemindersEnabled,
+          'notificationPermissionAsked': userSettings.notificationPermissionAsked,
+          'balanceResetPeriod': userSettings.balanceResetPeriod,
+          'balanceResetDayOfMonth': userSettings.balanceResetDayOfMonth,
+          'balanceResetDayOfWeek': userSettings.balanceResetDayOfWeek,
+          'theme': userSettings.theme,
+          'trendChartType': userSettings.trendChartType,
+          'incomeChartType': userSettings.incomeChartType,
+          'expenseChartType': userSettings.expenseChartType,
+          'createdAt': userSettings.createdAt.toIso8601String(),
+          'updatedAt': userSettings.updatedAt?.toIso8601String(),
+        } : null,
+        'recurringTransactions': recurringTransactions.map((r) => {
+          'id': r.id,
+          'title': r.title,
+          'amount': r.amount,
+          'type': r.type,
+          'category': r.category,
+          'source': r.source,
+          'frequency': r.frequency,
+          'dayOfMonth': r.dayOfMonth,
+          'dayOfWeek': r.dayOfWeek,
+          'startDate': r.startDate.toIso8601String(),
+          'endDate': r.endDate?.toIso8601String(),
+          'lastProcessedDate': r.lastProcessedDate?.toIso8601String(),
+          'isActive': r.isActive,
+          'description': r.description,
+          'notificationsEnabled': r.notificationsEnabled,
+          'notificationHour': r.notificationHour,
+          'notificationMinute': r.notificationMinute,
+          'linkedFinanceModule': r.linkedFinanceModule,
+          'linkedLoanId': r.linkedLoanId,
+          'linkedSavingsGoalId': r.linkedSavingsGoalId,
+        }).toList(),
+      };
+    } catch (e) {
+      debugPrint('Error exporting data: $e');
+      rethrow;
+    }
+  }
+  
+  /// Importa todos los datos desde un Map (deserializado de JSON)
+  Future<void> importAllData(Map<String, dynamic> data) async {
+    try {
+      // Verificar versión del backup
+      final version = data['version'] as int? ?? 1;
+      if (version > 1) {
+        throw Exception('Versión de backup no soportada');
+      }
+      
+      // Importar transacciones
+      final transactions = data['transactions'] as List<dynamic>? ?? [];
+      for (final t in transactions) {
+        await _db.insertTransaction(db.TransactionsCompanion(
+          id: Value(t['id'] as String),
+          title: Value(t['title'] as String),
+          amount: Value((t['amount'] as num).toDouble()),
+          type: Value(t['type'] as String),
+          category: Value(t['category'] as String),
+          date: Value(DateTime.parse(t['date'] as String)),
+          description: Value(t['description'] as String?),
+          source: Value(t['source'] as String?),
+          isRecurring: Value(t['isRecurring'] as bool? ?? false),
+          recurringFrequency: Value(t['recurringFrequency'] as String?),
+        ));
+      }
+      
+      // Importar presupuestos
+      final budgets = data['budgets'] as List<dynamic>? ?? [];
+      for (final b in budgets) {
+        await _db.insertBudget(db.BudgetsCompanion(
+          id: Value(b['id'] as String),
+          category: Value(b['category'] as String),
+          maxAmount: Value((b['maxAmount'] as num).toDouble()),
+          createdAt: Value(DateTime.parse(b['createdAt'] as String)),
+          updatedAt: Value(b['updatedAt'] != null ? DateTime.parse(b['updatedAt'] as String) : null),
+        ));
+      }
+      
+      // Importar alertas
+      final alerts = data['alerts'] as List<dynamic>? ?? [];
+      for (final a in alerts) {
+        await _db.insertAlert(db.AlertsCompanion(
+          id: Value(a['id'] as String),
+          category: Value(a['category'] as String),
+          type: Value(a['type'] as String),
+          currentAmount: Value((a['currentAmount'] as num).toDouble()),
+          maxAmount: Value((a['maxAmount'] as num).toDouble()),
+          percentage: Value((a['percentage'] as num).toDouble()),
+          createdAt: Value(DateTime.parse(a['createdAt'] as String)),
+          isRead: Value(a['isRead'] as bool? ?? false),
+        ));
+      }
+      
+      // Importar categorías personalizadas
+      final customCategories = data['customCategories'] as List<dynamic>? ?? [];
+      for (final c in customCategories) {
+        try {
+          await _db.insertCustomCategory(c as String);
+        } catch (_) {}
+      }
+      
+      // Importar fuentes de ingreso personalizadas
+      final customIncomeSources = data['customIncomeSources'] as List<dynamic>? ?? [];
+      for (final c in customIncomeSources) {
+        try {
+          await _db.insertCustomIncomeSource(c as String);
+        } catch (_) {}
+      }
+      
+      // Importar categorías ocultas
+      final hiddenCategories = data['hiddenDefaultCategories'] as List<dynamic>? ?? [];
+      for (final c in hiddenCategories) {
+        try {
+          await _db.hideDefaultCategory(c as String);
+        } catch (_) {}
+      }
+      
+      // Importar fuentes ocultas
+      final hiddenSources = data['hiddenDefaultIncomeSources'] as List<dynamic>? ?? [];
+      for (final c in hiddenSources) {
+        try {
+          await _db.hideDefaultIncomeSource(c as String);
+        } catch (_) {}
+      }
+      
+      // Importar metas de ahorro
+      final savingsGoals = data['savingsGoals'] as List<dynamic>? ?? [];
+      for (final s in savingsGoals) {
+        await _db.insertSavingsGoal(db.SavingsGoalsCompanion(
+          id: Value(s['id'] as String),
+          name: Value(s['name'] as String),
+          description: Value(s['description'] as String?),
+          targetAmount: Value((s['targetAmount'] as num).toDouble()),
+          currentAmount: Value((s['currentAmount'] as num).toDouble()),
+          createdAt: Value(DateTime.parse(s['createdAt'] as String)),
+          targetDate: Value(s['targetDate'] != null ? DateTime.parse(s['targetDate'] as String) : null),
+          status: Value(s['status'] as String),
+          iconName: Value(s['iconName'] as String?),
+          color: Value(s['color'] as String?),
+          contributionFrequency: Value(s['contributionFrequency'] as String? ?? 'monthly'),
+          notificationDays: Value(s['notificationDays'] as String?),
+          notificationTime: Value(s['notificationTime'] as String?),
+        ));
+      }
+      
+      // Importar contribuciones de ahorro
+      final savingsContributions = data['savingsContributions'] as Map<String, dynamic>? ?? {};
+      for (final goalId in savingsContributions.keys) {
+        final contributions = savingsContributions[goalId] as List<dynamic>? ?? [];
+        for (final c in contributions) {
+          try {
+            await _db.into(_db.savingsContributions).insert(
+              db.SavingsContributionsCompanion(
+                id: Value(c['id'] as String),
+                savingsGoalId: Value(c['savingsGoalId'] as String),
+                amount: Value((c['amount'] as num).toDouble()),
+                date: Value(DateTime.parse(c['date'] as String)),
+                note: Value(c['note'] as String?),
+                transactionId: Value(c['transactionId'] as String?),
+              ),
+              mode: InsertMode.insertOrIgnore,
+            );
+          } catch (_) {}
+        }
+      }
+      
+      // Importar inversiones
+      final investments = data['investments'] as List<dynamic>? ?? [];
+      for (final i in investments) {
+        await _db.insertInvestment(db.InvestmentsCompanion(
+          id: Value(i['id'] as String),
+          name: Value(i['name'] as String),
+          description: Value(i['description'] as String?),
+          type: Value(i['type'] as String),
+          initialAmount: Value((i['initialAmount'] as num).toDouble()),
+          currentValue: Value((i['currentValue'] as num).toDouble()),
+          expectedReturnRate: Value((i['expectedReturnRate'] as num).toDouble()),
+          returnRatePeriod: Value(i['returnRatePeriod'] as String? ?? 'yearly'),
+          purchaseDate: Value(DateTime.parse(i['purchaseDate'] as String)),
+          soldDate: Value(i['soldDate'] != null ? DateTime.parse(i['soldDate'] as String) : null),
+          soldAmount: Value(i['soldAmount'] != null ? (i['soldAmount'] as num).toDouble() : null),
+          status: Value(i['status'] as String),
+          platformOrBroker: Value(i['platformOrBroker'] as String?),
+          notes: Value(i['notes'] as String?),
+          compoundingFrequency: Value(i['compoundingFrequency'] as int? ?? 12),
+          iconName: Value(i['iconName'] as String?),
+          color: Value(i['color'] as String?),
+          notificationDays: Value(i['notificationDays'] as String?),
+          notificationTime: Value(i['notificationTime'] as String?),
+        ));
+      }
+      
+      // Importar historial de inversiones
+      final investmentHistory = data['investmentHistory'] as Map<String, dynamic>? ?? {};
+      for (final invId in investmentHistory.keys) {
+        final history = investmentHistory[invId] as List<dynamic>? ?? [];
+        for (final h in history) {
+          try {
+            await _db.into(_db.investmentValueHistory).insert(
+              db.InvestmentValueHistoryCompanion(
+                id: Value(h['id'] as String),
+                investmentId: Value(h['investmentId'] as String),
+                value: Value((h['value'] as num).toDouble()),
+                date: Value(DateTime.parse(h['date'] as String)),
+              ),
+              mode: InsertMode.insertOrIgnore,
+            );
+          } catch (_) {}
+        }
+      }
+      
+      // Importar préstamos
+      final loans = data['loans'] as List<dynamic>? ?? [];
+      for (final l in loans) {
+        await _db.insertLoan(db.LoansCompanion(
+          id: Value(l['id'] as String),
+          name: Value(l['name'] as String),
+          borrowerOrLender: Value(l['borrowerOrLender'] as String?),
+          type: Value(l['type'] as String),
+          principalAmount: Value((l['principalAmount'] as num).toDouble()),
+          interestRate: Value((l['interestRate'] as num).toDouble()),
+          interestRatePeriod: Value(l['interestRatePeriod'] as String? ?? 'yearly'),
+          totalInstallments: Value(l['totalInstallments'] as int),
+          installmentAmount: Value((l['installmentAmount'] as num).toDouble()),
+          startDate: Value(DateTime.parse(l['startDate'] as String)),
+          endDate: Value(l['endDate'] != null ? DateTime.parse(l['endDate'] as String) : null),
+          paymentFrequency: Value(l['paymentFrequency'] as String? ?? 'monthly'),
+          status: Value(l['status'] as String),
+          notes: Value(l['notes'] as String?),
+          paidAmount: Value((l['paidAmount'] as num?)?.toDouble() ?? 0.0),
+          paidInstallments: Value(l['paidInstallments'] as int? ?? 0),
+          iconName: Value(l['iconName'] as String?),
+          color: Value(l['color'] as String?),
+          notificationDays: Value(l['notificationDays'] as String?),
+          notificationDayOfMonth: Value(l['notificationDayOfMonth'] as int?),
+          notificationTime: Value(l['notificationTime'] as String?),
+        ));
+      }
+      
+      // Importar pagos de préstamos
+      final loanPayments = data['loanPayments'] as Map<String, dynamic>? ?? {};
+      for (final loanId in loanPayments.keys) {
+        final payments = loanPayments[loanId] as List<dynamic>? ?? [];
+        for (final p in payments) {
+          try {
+            await _db.into(_db.loanPayments).insert(
+              db.LoanPaymentsCompanion(
+                id: Value(p['id'] as String),
+                loanId: Value(p['loanId'] as String),
+                amount: Value((p['amount'] as num).toDouble()),
+                date: Value(DateTime.parse(p['date'] as String)),
+                installmentNumber: Value(p['installmentNumber'] as int),
+                notes: Value(p['notes'] as String?),
+                transactionId: Value(p['transactionId'] as String?),
+              ),
+              mode: InsertMode.insertOrIgnore,
+            );
+          } catch (_) {}
+        }
+      }
+      
+      // Importar configuración del usuario
+      final userSettings = data['userSettings'] as Map<String, dynamic>?;
+      if (userSettings != null) {
+        await _db.updateUserSettings(db.UserSettingsTableCompanion(
+          monthStartDay: Value(userSettings['monthStartDay'] as int? ?? 1),
+          currency: Value(userSettings['currency'] as String? ?? 'COP'),
+          currencySymbol: Value(userSettings['currencySymbol'] as String? ?? '\$'),
+          thousandsSeparator: Value(userSettings['thousandsSeparator'] as String? ?? ','),
+          decimalSeparator: Value(userSettings['decimalSeparator'] as String? ?? '.'),
+          notificationsEnabled: Value(userSettings['notificationsEnabled'] as bool? ?? true),
+          budgetAlertsEnabled: Value(userSettings['budgetAlertsEnabled'] as bool? ?? true),
+          loanRemindersEnabled: Value(userSettings['loanRemindersEnabled'] as bool? ?? true),
+          savingsRemindersEnabled: Value(userSettings['savingsRemindersEnabled'] as bool? ?? true),
+          notificationPermissionAsked: Value(userSettings['notificationPermissionAsked'] as bool? ?? false),
+          balanceResetPeriod: Value(userSettings['balanceResetPeriod'] as String? ?? 'total'),
+          balanceResetDayOfMonth: Value(userSettings['balanceResetDayOfMonth'] as int?),
+          balanceResetDayOfWeek: Value(userSettings['balanceResetDayOfWeek'] as int?),
+          theme: Value(userSettings['theme'] as String?),
+          trendChartType: Value(userSettings['trendChartType'] as String? ?? 'bars'),
+          incomeChartType: Value(userSettings['incomeChartType'] as String? ?? 'pie'),
+          expenseChartType: Value(userSettings['expenseChartType'] as String? ?? 'pie'),
+        ));
+      }
+      
+      // Importar transacciones recurrentes
+      final recurringTransactions = data['recurringTransactions'] as List<dynamic>? ?? [];
+      for (final r in recurringTransactions) {
+        await _db.insertRecurringTransaction(db.RecurringTransactionsCompanion(
+          id: Value(r['id'] as String),
+          title: Value(r['title'] as String),
+          amount: Value((r['amount'] as num).toDouble()),
+          type: Value(r['type'] as String),
+          category: Value(r['category'] as String),
+          source: Value(r['source'] as String?),
+          frequency: Value(r['frequency'] as String),
+          dayOfMonth: Value(r['dayOfMonth'] as int?),
+          dayOfWeek: Value(r['dayOfWeek'] as int?),
+          startDate: Value(DateTime.parse(r['startDate'] as String)),
+          endDate: Value(r['endDate'] != null ? DateTime.parse(r['endDate'] as String) : null),
+          lastProcessedDate: Value(r['lastProcessedDate'] != null ? DateTime.parse(r['lastProcessedDate'] as String) : null),
+          isActive: Value(r['isActive'] as bool? ?? true),
+          description: Value(r['description'] as String?),
+          notificationsEnabled: Value(r['notificationsEnabled'] as bool? ?? false),
+          notificationHour: Value(r['notificationHour'] as int?),
+          notificationMinute: Value(r['notificationMinute'] as int?),
+          linkedFinanceModule: Value(r['linkedFinanceModule'] as String?),
+          linkedLoanId: Value(r['linkedLoanId'] as String?),
+          linkedSavingsGoalId: Value(r['linkedSavingsGoalId'] as String?),
+        ));
+      }
+      
+      // Recargar todos los datos
+      await _loadData();
+      notifyListeners();
+      
+    } catch (e) {
+      debugPrint('Error importing data: $e');
+      rethrow;
+    }
+  }
+  
+  /// Elimina todos los datos de la app
+  Future<void> clearAllData() async {
+    try {
+      // Obtener datos actuales de la base de datos (no de memoria)
+      final allTransactions = await _db.getAllTransactions();
+      final allBudgets = await _db.getAllBudgets();
+      final allCustomCategories = await _db.getAllCustomCategories();
+      final allCustomIncomeSources = await _db.getAllCustomIncomeSources();
+      final allSavingsGoals = await _db.getAllSavingsGoals();
+      final allInvestments = await _db.getAllInvestments();
+      final allLoans = await _db.getAllLoans();
+      final allRecurring = await _db.getAllRecurringTransactions();
+      
+      // Eliminar todas las transacciones
+      for (final t in allTransactions) {
+        await _db.deleteTransaction(t.id);
+      }
+      
+      // Eliminar todos los presupuestos
+      for (final b in allBudgets) {
+        await _db.deleteBudget(b.id);
+      }
+      
+      // Eliminar todas las alertas
+      await _db.clearAllAlerts();
+      
+      // Eliminar categorías personalizadas
+      for (final c in allCustomCategories) {
+        await _db.deleteCustomCategory(c.name);
+      }
+      
+      // Eliminar fuentes personalizadas
+      for (final c in allCustomIncomeSources) {
+        await _db.deleteCustomIncomeSource(c.name);
+      }
+      
+      // Restaurar categorías ocultas
+      await _db.unhideAllDefaultCategories();
+      await _db.unhideAllDefaultIncomeSources();
+      
+      // Eliminar metas de ahorro (incluye contribuciones)
+      for (final s in allSavingsGoals) {
+        await _db.deleteSavingsGoal(s.id);
+      }
+      
+      // Eliminar inversiones (incluye historial)
+      for (final i in allInvestments) {
+        await _db.deleteInvestment(i.id);
+      }
+      
+      // Eliminar préstamos (incluye pagos)
+      for (final l in allLoans) {
+        await _db.deleteLoan(l.id);
+      }
+      
+      // Eliminar transacciones recurrentes
+      for (final r in allRecurring) {
+        await _db.deleteRecurringTransaction(r.id);
+      }
+      
+      // Limpiar listas en memoria
+      _transactions.clear();
+      _budgets.clear();
+      _alerts.clear();
+      _customCategories.clear();
+      _customIncomeSources.clear();
+      _hiddenDefaultCategories.clear();
+      _hiddenDefaultIncomeSources.clear();
+      _savingsGoals.clear();
+      _investments.clear();
+      _loans.clear();
+      
+      notifyListeners();
+      
+    } catch (e) {
+      debugPrint('Error clearing data: $e');
       rethrow;
     }
   }

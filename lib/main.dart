@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'screens/main_navigation.dart';
 import 'services/finance_service.dart';
 import 'database/app_database.dart';
+import 'models/user_settings.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,7 @@ class _MyAppState extends State<MyApp> {
       child: Consumer<FinanceService>(
         builder: (context, financeService, _) {
           final themeValue = financeService.userSettings.theme;
+          final colorPalette = financeService.userSettings.colorPalette;
           // Si el tema es null o 'light', usar modo claro; si es 'dark', usar modo oscuro
           final isDarkMode = themeValue == 'dark';
 
@@ -47,24 +49,61 @@ class _MyAppState extends State<MyApp> {
           );
 
           return MaterialApp(
-            key: ValueKey('app_${isDarkMode ? 'dark' : 'light'}'),
-        title: 'Brote - Finanzas',
-        debugShowCheckedModeBanner: false,
-        theme: _buildTheme(),
-            darkTheme: _buildDarkTheme(),
+            title: 'Brote - Finanzas',
+            debugShowCheckedModeBanner: false,
+            theme: _buildTheme(colorPalette),
+            darkTheme: _buildDarkTheme(colorPalette),
             themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-        home: const MainNavigation(),
+            home: const MainNavigation(),
           );
         },
       ),
     );
   }
 
-  ThemeData _buildTheme() {
-    // Colores principales inspirados en naturaleza/crecimiento
-    const primaryColor = Color(0xFF2D6A4F);
-    const secondaryColor = Color(0xFF40916C);
-    const tertiaryColor = Color(0xFF74C69D);
+  // Obtener colores según la paleta seleccionada
+  Map<String, Color> _getPaletteColors(ColorPalette palette) {
+    switch (palette) {
+      case ColorPalette.green:
+        return {
+          'primary': const Color(0xFF2D6A4F),
+          'secondary': const Color(0xFF40916C),
+          'tertiary': const Color(0xFF74C69D),
+          'primaryDark': const Color(0xFF3D8B5F),
+          'secondaryDark': const Color(0xFF2E6B4A),
+        };
+      case ColorPalette.purple:
+        return {
+          'primary': const Color(0xFF6B21A8),
+          'secondary': const Color(0xFF7C3AED),
+          'tertiary': const Color(0xFFA78BFA),
+          'primaryDark': const Color(0xFF8B5CF6),
+          'secondaryDark': const Color(0xFF7C3AED),
+        };
+      case ColorPalette.pink:
+        return {
+          'primary': const Color(0xFFBE185D),
+          'secondary': const Color(0xFFDB2777),
+          'tertiary': const Color(0xFFF472B6),
+          'primaryDark': const Color(0xFFEC4899),
+          'secondaryDark': const Color(0xFFDB2777),
+        };
+      case ColorPalette.blue:
+        return {
+          'primary': const Color(0xFF1D4ED8),
+          'secondary': const Color(0xFF2563EB),
+          'tertiary': const Color(0xFF60A5FA),
+          'primaryDark': const Color(0xFF3B82F6),
+          'secondaryDark': const Color(0xFF2563EB),
+        };
+    }
+  }
+
+  ThemeData _buildTheme(ColorPalette palette) {
+    final colors = _getPaletteColors(palette);
+    final primaryColor = colors['primary']!;
+    final secondaryColor = colors['secondary']!;
+    final tertiaryColor = colors['tertiary']!;
     const backgroundColor = Color(0xFFF8FAF9);
     const surfaceColor = Colors.white;
     const errorColor = Color(0xFFE63946);
@@ -169,7 +208,7 @@ class _MyAppState extends State<MyApp> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryColor, width: 2),
+          borderSide: BorderSide(color: primaryColor, width: 2),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -196,7 +235,7 @@ class _MyAppState extends State<MyApp> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          side: const BorderSide(color: primaryColor),
+          side: BorderSide(color: primaryColor),
           textStyle: GoogleFonts.plusJakartaSans(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -224,11 +263,11 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  ThemeData _buildDarkTheme() {
-    // Colores principales para modo oscuro - verde más mate
-    const primaryColor = Color(0xFF3D8B5F); // Verde más mate para modo oscuro
-    const secondaryColor = Color(0xFF2E6B4A); // Verde secundario más mate
-    const tertiaryColor = Color(0xFF2D6A4F);
+  ThemeData _buildDarkTheme(ColorPalette palette) {
+    final colors = _getPaletteColors(palette);
+    final primaryColor = colors['primaryDark']!;
+    final secondaryColor = colors['secondaryDark']!;
+    final tertiaryColor = colors['tertiary']!;
     const backgroundColor = Color(0xFF121212);
     const surfaceColor = Color(0xFF1E1E1E);
     const errorColor = Color(0xFFEF5350);
@@ -336,7 +375,7 @@ class _MyAppState extends State<MyApp> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryColor, width: 2),
+          borderSide: BorderSide(color: primaryColor, width: 2),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -363,7 +402,7 @@ class _MyAppState extends State<MyApp> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          side: const BorderSide(color: primaryColor),
+          side: BorderSide(color: primaryColor),
           textStyle: GoogleFonts.plusJakartaSans(
             fontSize: 16,
             fontWeight: FontWeight.w600,

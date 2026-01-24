@@ -16,7 +16,7 @@ class TransactionsScreen extends StatefulWidget {
 class _TransactionsScreenState extends State<TransactionsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  String? _selectedCategory;
+  Set<String> _selectedCategories = {};
   DateTime? _startDate;
   DateTime? _endDate;
 
@@ -83,12 +83,19 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     FinanceService service,
     TransactionType? type,
   ) {
-    final transactions = service.searchTransactions(
+    var transactions = service.searchTransactions(
       type: type,
-      category: _selectedCategory,
       startDate: _startDate,
       endDate: _endDate,
     );
+    
+    // Filtrar por categorías/fuentes seleccionadas
+    if (_selectedCategories.isNotEmpty) {
+      transactions = transactions.where((t) => 
+        _selectedCategories.contains(t.category) || 
+        _selectedCategories.contains(t.source)
+      ).toList();
+    }
 
     if (transactions.isEmpty) {
       return _buildEmptyState(context, type);
@@ -317,121 +324,192 @@ class _TransactionsScreenState extends State<TransactionsScreen>
         builder: (context, setModalState) {
           final service = context.read<FinanceService>();
           
-          return Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          return DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            minChildSize: 0.5,
+            maxChildSize: 0.9,
+            expand: false,
+            builder: (context, scrollController) {
+              return Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Filtros',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Filtros',
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                            if (_selectedCategories.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${_selectedCategories.length}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedCategories.clear();
+                              _startDate = null;
+                              _endDate = null;
+                            });
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Limpiar'),
+                        ),
+                      ],
                     ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedCategory = null;
-                          _startDate = null;
-                          _endDate = null;
-                        });
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Limpiar'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Categoría',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final cat in service.allExpenseCategories)
-                      ChoiceChip(
-                        label: Text(cat),
-                        selected: _selectedCategory == cat,
-                        onSelected: (selected) {
-                          setModalState(() {
-                            _selectedCategory = selected ? cat : null;
-                          });
-                        },
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Rango de fechas',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
+                    const SizedBox(height: 12),
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _startDate ?? DateTime.now(),
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime.now(),
-                          );
-                          if (date != null) {
-                            setModalState(() => _startDate = date);
-                          }
-                        },
-                        icon: const Icon(Icons.calendar_today, size: 18),
-                        label: Text(
-                          _startDate != null
-                              ? DateFormat('d/M/yy').format(_startDate!)
-                              : 'Desde',
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Categoría de gasto',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                for (final cat in service.allExpenseCategories)
+                                  FilterChip(
+                                    label: Text(cat),
+                                    selected: _selectedCategories.contains(cat),
+                                    onSelected: (selected) {
+                                      setModalState(() {
+                                        if (selected) {
+                                          _selectedCategories.add(cat);
+                                        } else {
+                                          _selectedCategories.remove(cat);
+                                        }
+                                      });
+                                    },
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'Fuente de ingreso',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                for (final source in service.allIncomeSources)
+                                  FilterChip(
+                                    label: Text(source),
+                                    selected: _selectedCategories.contains(source),
+                                    onSelected: (selected) {
+                                      setModalState(() {
+                                        if (selected) {
+                                          _selectedCategories.add(source);
+                                        } else {
+                                          _selectedCategories.remove(source);
+                                        }
+                                      });
+                                    },
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'Rango de fechas',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () async {
+                                      final date = await showDatePicker(
+                                        context: context,
+                                        initialDate: _startDate ?? DateTime.now(),
+                                        firstDate: DateTime(2020),
+                                        lastDate: DateTime.now(),
+                                      );
+                                      if (date != null) {
+                                        setModalState(() => _startDate = date);
+                                      }
+                                    },
+                                    icon: const Icon(Icons.calendar_today, size: 18),
+                                    label: Text(
+                                      _startDate != null
+                                          ? DateFormat('d/M/yy').format(_startDate!)
+                                          : 'Desde',
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () async {
+                                      final date = await showDatePicker(
+                                        context: context,
+                                        initialDate: _endDate ?? DateTime.now(),
+                                        firstDate: DateTime(2020),
+                                        lastDate: DateTime.now(),
+                                      );
+                                      if (date != null) {
+                                        setModalState(() => _endDate = date);
+                                      }
+                                    },
+                                    icon: const Icon(Icons.calendar_today, size: 18),
+                                    label: Text(
+                                      _endDate != null
+                                          ? DateFormat('d/M/yy').format(_endDate!)
+                                          : 'Hasta',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _endDate ?? DateTime.now(),
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime.now(),
-                          );
-                          if (date != null) {
-                            setModalState(() => _endDate = date);
-                          }
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {});
+                          Navigator.pop(context);
                         },
-                        icon: const Icon(Icons.calendar_today, size: 18),
-                        label: Text(
-                          _endDate != null
-                              ? DateFormat('d/M/yy').format(_endDate!)
-                              : 'Hasta',
-                        ),
+                        child: const Text('Aplicar filtros'),
                       ),
                     ),
+                    const SizedBox(height: 12),
                   ],
                 ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {});
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Aplicar filtros'),
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
+              );
+            },
           );
         },
       ),
